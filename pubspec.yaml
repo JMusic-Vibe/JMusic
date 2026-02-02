@@ -1,0 +1,89 @@
+name: jmusic
+description: A cross-platform local music player with WebDAV sync and Metadata scraping.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+
+  # UI / UX
+  cupertino_icons: ^1.0.2
+  google_fonts: ^8.0.0
+  flutter_animate: ^4.5.0
+  cached_network_image: ^3.3.1
+  palette_generator: ^0.3.3+7 # For extracting colors from album art
+
+  # Audio
+  just_audio: ^0.9.40
+  just_audio_background: ^0.0.1-beta.14
+  just_audio_windows: ^0.2.1  # Windows 平台支持
+  audio_service: ^0.18.18
+  
+  # Storage & Database
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.2
+  shared_preferences: ^2.2.2
+  file_picker: ^10.3.10
+
+  # Network & Sync
+  dio: ^5.4.0
+  webdav_client: ^1.1.0
+
+  # Utils
+  permission_handler: ^11.2.0
+  uuid: ^4.3.3
+  intl: any
+  logger: ^2.0.2
+
+  # Metadata
+  id3: ^1.0.2 # or similar for reading tags
+  super_drag_and_drop: ^0.9.1
+  window_manager: ^0.5.1
+  system_proxy: ^0.1.0
+  rxdart: ^0.28.0  # 用于组合多个流
+  share_plus: ^12.0.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_dark_icon.png"
+  adaptive_icon_foreground: "assets/images/app_dark_icon.png"
+  adaptive_icon_background: "assets/images/app_dark_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/app_dark_icon.png"
+    background_color: "#2d0a50"
+    theme_color: "#2d0a50"
+  windows:
+    generate: true
+    image_path: "assets/images/app_dark_icon.png"
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: "assets/images/app_dark_icon.png"
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  riverpod_generator: ^2.3.9
+  build_runner: ^2.4.8
+  isar_generator: ^3.1.0+1
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - assets/images/

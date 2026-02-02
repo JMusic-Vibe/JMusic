@@ -1,0 +1,399 @@
+import 'dart:async';
+import 'package:async/async.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:j_music/core/services/audio_player_service.dart';
+import 'package:j_music/features/music_lib/domain/entities/song.dart';
+
+// Unified Playlist Stream that updates on player events OR manual metadata updates
+final playlistStreamProvider = StreamProvider<Playlist>((ref) {
+  final service = ref.watch(audioPlayerServiceProvider);
+
+  // Use an async* generator to yield initial state immediately
+  // and then forward the player's playlist stream. This avoids
+  // subtle StreamController lifecycle/race issues when the
+  // provider is created after the player already has a playlist.
+  return () async* {
+    yield service.player.state.playlist;
+    // Forward subsequent updates
+    yield* service.player.stream.playlist;
+  }();
+});
+
+// 播放状态 (是否正在播放)
+final isPlayingProvider = StreamProvider<bool>((ref) {
+  final playerService = ref.watch(audioPlayerServiceProvider);
+  // Ensure we get current state immediately as stream might only emit on change
+  return () async* {
+    yield playerService.player.state.playing;
+    yield* playerService.player.stream.playing;
+  }();
+});
+
+// 当前媒体信息 (MediaItem)
+final currentMediaItemProvider = StreamProvider<MediaItem?>((ref) {
+  final playlistStream = ref.watch(playlistStreamProvider.stream);
+  final service = ref.watch(audioPlayerServiceProvider);
+  final metadataUpdateStream = service.onMetadataChanged;
+  
+  // Combine playlist updates and metadata updates
+  final combinedStream = StreamGroup.merge<Playlist>([
+    playlistStream,
+    metadataUpdateStream.map((_) => service.player.state.playlist),
+  ]);
+  
+  return combinedStream.map((playlist) {
+      if (playlist.index < 0 || playlist.index >= playlist.medias.length) return null;
+      final media = playlist.medias[playlist.index];
+      
+      // Use helper to robustly find Song even if extras lost
+      final song = service.getSongFromMedia(media);
+      
+      if (song != null) {
+          return MediaItem(
+              id: song.id.toString(),
+              album: song.album,
+              title: song.title,
+              artist: song.artist,
+              artUri: song.coverPath != null 
+             ? (song.coverPath!.startsWith('http') 
+                 ? Uri.parse(song.coverPath!) 
+                 : Uri.file(song.coverPath!))
+             : null
+          );
+      }
+      return MediaItem(id: media.uri, title: 'Unknown');
+  });
+});
+
+// 播放进度
+final positionProvider = StreamProvider<Duration>((ref) {
+  final playerService = ref.watch(audioPlayerServiceProvider);
+  return playerService.player.stream.position;
+});
+
+// 总时长
+final durationProvider = StreamProvider<Duration?>((ref) {
+  final playerService = ref.watch(audioPlayerServiceProvider);
+  // Initial value + stream
+  return () async* {
+    yield playerService.player.state.duration;
+    yield* playerService.player.stream.duration;
+  }();
+});
+
+// 播放模式
+final shuffleModeEnabledProvider = StreamProvider<bool>((ref) {
+   final service = ref.watch(audioPlayerServiceProvider);
+   // Listen to our custom stream + initial state
+   return () async* {
+     yield service.isShuffleEnabled;
+     yield* service.shuffleStream;
+   }();
+});
+
+final loopModeProvider = StreamProvider<PlaylistMode>((ref) {
+   final player = ref.watch(audioPlayerServiceProvider).player;
+   return player.stream.playlistMode;
+});
+
+// Current Song (Reactive)
+final currentSongProvider = Provider<Song?>((ref) {
+  final playerService = ref.watch(audioPlayerServiceProvider);
+  final playlistAsync = ref.watch(playlistStreamProvider);
+  
+  return playlistAsync.when(
+    data: (playlist) {
+      if (playlist.index < 0 || playlist.index >= playlist.medias.length) return null;
+      return playerService.getSongFromMedia(playlist.medias[playlist.index]);
+    },
+    error: (_, __) => null,
+    loading: () => null,
+  );
+});
+
+// 当前播放队列 (暴露给 UI)
+final queueProvider = StreamProvider<List<MediaItem>>((ref) {
+  final service = ref.watch(audioPlayerServiceProvider);
+  final metadataUpdateStream = service.onMetadataChanged;
+
+  // Combine playlist updates and metadata updates
+  final combinedStream = StreamGroup.merge<Playlist>([
+    service.player.stream.playlist,
+    metadataUpdateStream.map((_) => service.player.state.playlist),
+  ]);
+
+  // Directly derive from the player's playlist stream but yield
+  // the current state first to avoid a loading state when the
+  // provider is created after the player already has a playlist
+  // (e.g. single-item queue restored or just added).
+  return () async* {
+    final initial = service.player.state.playlist;
+    yield initial.medias.map((media) {
+      final song = service.getSongFromMedia(media);
+      if (song != null) {
+        return MediaItem(
+          id: song.id.toString(),
+          album: song.album,
+          title: song.title,
+          artist: song.artist,
+          extras: {'song': song},
+          artUri: song.coverPath != null 
+              ? (song.coverPath!.startsWith('http') 
+                  ? Uri.parse(song.coverPath!) 
+                  : Uri.file(song.coverPath!))
+              : null,
+        );
+      }
+      return MediaItem(id: media.uri, title: 'Unknown');
+    }).toList();
+
+    await for (final playlist in combinedStream) {
+      yield playlist.medias.map((media) {
+        final song = service.getSongFromMedia(media);
+        if (song != null) {
+          return MediaItem(
+            id: song.id.toString(),
+            album: song.album,
+            title: song.title,
+            artist: song.artist,
+            extras: {'song': song},
+            artUri: song.coverPath != null 
+                ? (song.coverPath!.startsWith('http') 
+                    ? Uri.parse(song.coverPath!) 
+                    : Uri.file(song.coverPath!))
+                : null,
+          );
+        }
+        return MediaItem(id: media.uri, title: 'Unknown');
+      }).toList();
+    }
+  }();
+});
+
+
+// 控制器类 Notifier
+class PlayerController {
+  final AudioPlayerService _service;
+  final Ref _ref;
+
+  PlayerController(this._service, this._ref);
+
+  Future<void> playSingle(Song song) async {
+    final playlist = _service.player.state.playlist;
+    
+    // Fix Bug 1: If queue is empty, just play normally
+    if (playlist.medias.isEmpty) {
+        await play(song);
+        return;
+    }
+
+    int existingIndex = -1;
+    
+    // Find song in current playlist
+    for(int i=0; i<playlist.medias.length; i++) {
+        final media = playlist.medias[i];
+        final s = media.extras?['song'] as Song?;
+        if (s?.id == song.id) {
+            existingIndex = i;
+            break;
+        }
+    }
+    
+    final currentIndex = playlist.index;
+    
+    // If playing the exact same song instance currently, trigger play if paused
+    if (existingIndex == currentIndex && existingIndex != -1) {
+       if (!_service.player.state.playing) {
+          await _service.player.play();
+       }
+       return;
+    }
+
+    if (existingIndex != -1) {
+        // Song exists in queue. Move it to next.
+        // Target is always currentIndex + 1 (the spot after current song)
+        int targetIndex = currentIndex + 1;
+        
+        // Fix moving logic based on ReorderableListView analysis:
+        // move(from, to) seems to work best without manual index adjustments for "remove" shift
+        // when using media_kit (or at least consistently with reorderQueue fix).
+        
+        // However, we want strict logical placement here.
+        // If moving from BEFORE (0) to AFTER (5). Visual: 0->6.
+        // If indices are A(0)...Curr(5)...
+        // We want A to be at 6.
+        // Call move(0, 6).
+        
+        if (existingIndex < currentIndex) {
+             // Moving something earlier to later.
+             await _service.move(existingIndex, targetIndex); 
+        } else {
+             // Moving something later to be closer.
+             // A(9) -> Target(6) (After Curr(5)).
+             if (existingIndex != targetIndex) {
+                 await _service.move(existingIndex, targetIndex);
+             }
+        }
+        
+        // Calculate the jump index after move
+        int jumpIndex = targetIndex;
+        if (jumpIndex >= playlist.medias.length) {
+          jumpIndex = playlist.medias.length - 1;
+        }
+        await _service.player.jump(jumpIndex);
+    } else {
+        // Add new song to next
+        await _service.addToNext(song);
+        await _service.player.jump(currentIndex + 1);
+    }
+    
+    // Ensure playing
+    if (!_service.player.state.playing) {
+       await _service.player.play();
+    }
+  }
+
+  Future<void> play(Song song) async {
+    await _service.playSong(song);
+  }
+  
+  Future<void> addToQueue(Song song) async {
+    await _service.addToEnd(song);
+  }
+
+  Future<void> addToNext(Song song) async {
+    await _service.addToNext(song);
+  }
+  
+  Future<void> removeFromQueue(int index) async {
+    await _service.removeAt(index);
+  }
+  
+  Future<void> reorderQueue(int oldIndex, int newIndex) async {
+    // 修复 Bug 2: 向下拖动时，不需要减 1。
+    // ReorderableListView 在向下移动时提供的 newIndex 包含了被移出项的占位，
+    // move(old, new) 的底层实现似乎正好对应了这个 newIndex。
+    // 例如拖动 0 到 1 后面，newIndex 是 2。执行 move(0, 2) 正确达到了目的。
+    // if (oldIndex < newIndex) {
+    //   newIndex -= 1;
+    // }
+    await _service.move(oldIndex, newIndex);
+  }
+  
+  Future<void> clearQueue() async {
+    await _service.setQueue([], initialIndex: 0, autoPlay: false);
+  }
+
+  // Set the playlist context, but maybe start from specific song
+  Future<void> setQueue(List<Song> songs, {Song? startSong}) async {
+    int targetIndex = 0;
+    if (startSong != null) {
+      targetIndex = songs.indexWhere((s) => s.id == startSong.id);
+      if (targetIndex == -1) targetIndex = 0;
+    }
+    
+    final currentPlaylist = _service.player.state.playlist;
+    bool isSameQueue = false;
+
+    if (currentPlaylist.medias.length == songs.length) {
+         isSameQueue = true;
+         for (int i = 0; i < songs.length; i++) {
+             final media = currentPlaylist.medias[i];
+             final song = media.extras?['song'] as Song?;
+             if (song?.id != songs[i].id) {
+                 isSameQueue = false;
+                 break;
+             }
+         }
+    }
+
+    if (isSameQueue) {
+       try {
+           await _service.player.jump(targetIndex);
+           if (!_service.player.state.playing) {
+               await _service.player.play();
+           }
+       } catch (e) {
+           await _service.setQueue(songs, initialIndex: targetIndex);
+       }
+    } else {
+       await _service.setQueue(songs, initialIndex: targetIndex);
+    }
+  }
+
+  Future<void> togglePlay() async {
+    await _service.player.playOrPause();
+  }
+  
+  Future<void> startPlay() async {
+    await _service.player.play();
+  }
+  
+  Future<void> seek(Duration position) async {
+    await _service.seek(position);
+  }
+  
+  Future<void> next() async {
+    await _service.next();
+  }
+  
+  Future<void> previous() async {
+    await _service.previous();
+  }
+  
+  Future<void> toggleShuffle() async {
+      final service = _service;
+      final enabled = !service.isShuffleEnabled;
+      await service.setShuffle(enabled);
+  }
+
+  Future<void> cyclePlaybackMode() async {
+      final isShuffle = _service.isShuffleEnabled;
+      final mode = _service.player.state.playlistMode;
+      
+      // Cycle: Shuffle -> Sequential (Loop None) -> Loop All -> Loop Single -> Shuffle
+      if (isShuffle) {
+          // Switch to Sequential
+          await _service.setShuffle(false);
+          await _service.player.setPlaylistMode(PlaylistMode.none);
+      } else if (mode == PlaylistMode.none) {
+          // Switch to List Loop
+          await _service.player.setPlaylistMode(PlaylistMode.loop);
+      } else if (mode == PlaylistMode.loop) {
+          // Switch to Single Loop
+          await _service.player.setPlaylistMode(PlaylistMode.single);
+      } else {
+          // Switch to Shuffle (Logic based)
+          // Ensure loop is OFF or Loop All? Logic shuffle handles jump.
+          // MediaKit should be in Loop None or Loop All so it doesn't stop?
+          await _service.player.setPlaylistMode(PlaylistMode.loop); 
+          await _service.setShuffle(true);
+      }
+  }
+  
+  Future<void> toggleLoop() async {
+      final current = _service.player.state.playlistMode;
+      final next = current == PlaylistMode.none 
+          ? PlaylistMode.loop 
+          : current == PlaylistMode.loop 
+             ? PlaylistMode.single 
+             : PlaylistMode.none;
+      await _service.player.setPlaylistMode(next);
+  }
+
+  // Seek to a specific index in the current sequence (start at position 0)
+  Future<void> seekToIndex(int index) async {
+    try {
+      await _service.player.jump(index);
+    } catch (e) {
+      print('[PlayerController] seekToIndex error: $e');
+    }
+  }
+}
+
+final playerControllerProvider = Provider<PlayerController>((ref) {
+  final service = ref.watch(audioPlayerServiceProvider);
+  return PlayerController(service, ref);
+});

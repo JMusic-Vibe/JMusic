@@ -1,0 +1,292 @@
+{
+    "@@locale": "zh_Hant",
+    "appName": "JMusic",
+    "home": "首頁",
+    "library": "音樂庫",
+    "playlists": "播放清單",
+    "more": "更多",
+    "sync": "同步",
+    "scraper": "刮削器",
+    "settings": "設定",
+    
+    "clear": "清空",
+    "playingQueue": "播放佇列",
+
+    "language": "語言",
+    "theme": "主題",
+    "storageEvents": "存儲與緩存",
+    "syncSettings": "同步設定",
+    "serverSettings": "服務器設定",
+    "defaultPage": "默認啟動頁",
+    "scraperSettings": "刮削設定",
+    "usePrimaryArtistForScraper": "刮削僅使用主歌手",
+    "usePrimaryArtistForScraperDesc": "啟用後，刮削將僅使用主歌手進行查詢；停用時會包含客席/合作歌手。",
+    "audioSettings": "音頻與播放",    "playbackSettings": "播放設置",
+    "crossfadeEnabled": "啟用淡入淡出",
+    "crossfadeEnabledDesc": "歌曲切換時啟用淡入淡出效果，提供更流暢的聽覺體驗",
+    "crossfadeDuration": "淡入淡出時長",
+    "crossfadeEnabledInfo": "已啟用淡入淡出,歌曲將平滑過渡",
+    "crossfadeDisabledInfo": "淡入淡出已禁用,歌曲將直接切換",
+    "proxySettings": "網絡代理",
+    "about": "關於",
+    
+    "themeLight": "淺色",
+    "themeDark": "深色",
+    "themeSystem": "跟隨系統",
+
+    "systemProxy": "系統代理",
+    "noProxy": "無代理",
+    "customProxy": "自訂代理",
+    "port": "通訊埠",
+    "ipAddress": "IP位址",
+    "save": "儲存",
+    
+    "recentlyPlayed": "最近播放",
+    "recentlyImported": "最近添加",
+    "toBeScraped": "待刮削",
+    
+    "noData": "還沒有音樂，快去添加吧",
+    "scanMusic": "掃描音樂",
+    
+    "batchScrape": "批量刮削",
+    "batchScrapeRunning": "正在後台刮削...",
+    "batchScrapeResult": "刮削報告",
+    "successCount": "成功: {count}",
+    "failCount": "失敗: {count}",
+    "confirm": "確定",
+    "cancel": "取消",
+    "delete": "刪除",
+    "editTags": "編輯標籤", 
+    "addToPlaylist": "添加到播放清單",
+    "playAll": "播放全部",
+
+    "deleteConfirm": "確認刪除這 {count} 首歌曲嗎？",
+    "deleteSingleConfirm": "確認刪除 \"{title}\" 嗎？",
+    
+    "importMusic": "導入音樂",
+    "manualSync": "手動同步",
+    "developing": "功能開發中",
+    "importInLibrary": "請到音樂庫進行導入",
+    
+    "homeTitle": "首頁",
+    "importMusicTooltip": "導入音樂",
+    "syncFeatureDeveloping": "同步功能開發中",
+    "noMusicData": "暫無數據\n請先前往資料庫導入音樂",
+    
+    "scrapedCompletedTitle": "批量刮削完成",
+    "totalTasks": "總計任務: {count}",
+    "hide": "隱藏",
+    
+    "createPlaylist": "新建播放清單",
+    "noPlaylists": "暫無播放清單",
+    "playlistTitle": "播放清單",
+    "confirmDelete": "確認刪除?",
+    "edit": "編輯",
+    "playlistName": "播放清單名稱",
+    "playlistNameHint": "我的最愛",
+    "create": "創建",
+    "songCount": "{count} 首歌曲",
+    
+    "addedToPlaylist": "已添加到 \"{name}\"",
+    "@addedToPlaylist": {
+        "placeholders": { "name": {} }
+    },
+    "songsAlreadyInPlaylist": "已存在於 \"{playlistName}\"",
+    "@songsAlreadyInPlaylist": {
+        "placeholders": {
+            "playlistName": {}
+        }
+    },
+    "syncCenter": "同步中心",
+    "addSyncAccount": "新增同步賬號",
+    "openListNotSupported": "OpenAList 暫未支持",
+    "noSyncAccount": "暫無同步賬號",
+    "addSyncAccountHint": "點擊右上角 + 號添加 WebDAV 或 Alist 賬號",
+    "connected": "已連接",
+    "paused": "已暫停",
+    "accountName": "賬戶名稱",
+    "removeSyncConfigConfirm": "這將移除此同步源配置",
+    "checkSyncNow": "同步",
+    
+    "searchUnarchived": "搜索未歸檔歌曲...",
+    "selectedCount": "{count} 已選擇",
+    "scraperCenter": "刮削中心",
+    "refresh": "刷新",
+    "taskRunningBackground": "任務已後台運行",
+    
+    "unknownArtist": "未知藝術家",
+    "unknownAlbum": "未知專輯",
+    "nowPlaying": "正在播放",
+    "manualMatchMetadata": "手動匹配元數據",
+    "lyricsComingSoon": "歌詞功能即將上線...",
+    
+    "syncCenterSubtitle": "手動同步與差異檢查",
+    "scraperCenterSubtitle": "手動刮削與候選確認",
+    "settingsSubtitle": "存儲、音頻、同步與刮削策略",
+
+    "deletePlaylist": "刪除播放清單",
+    "confirmDeletePlaylist": "確定要刪除 \"{name}\"?",
+    "@confirmDeletePlaylist": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "clearPlaylist": "清空播放清單",
+    "confirmClearPlaylist": "確定要清空 \"{name}\" 的所有歌曲嗎?",
+    "@confirmClearPlaylist": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "rename": "重新命名",
+    "importCover": "匯入封面",
+    "coverImported": "封面已匯入",
+    "clearCover": "清空封面",
+    "confirmClearCover": "確定要清空 \"{name}\" 的封面嗎?",
+    "@confirmClearCover": { "placeholders": { "name": {} } },
+    "emptyPlaylist": "播放清單為空",
+    "playbackError": "無法開始播放：{error}",
+    "@playbackError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "selectAll": "全選 / 取消全選",
+    "search": "搜尋",
+    "noMatchingSongs": "沒有找到匹配的歌曲",
+    "allSongsScraped": "恭喜，所有歌曲都已刮削！",
+    "foundUnscrapedSongs": "發現 {count} 首未刮削的歌曲",
+    "@foundUnscrapedSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "deleteSongs": "刪除歌曲",
+    "confirmDeleteSongs": "刪除 {count} 首選中的歌曲?\n(只會從音樂庫移除，檔案保留)",
+    "@confirmDeleteSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "songsDeleted": "已刪除 {count} 首歌曲",
+    "@songsDeleted": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "addedToQueue": "已將 {count} 首歌曲添加到佇列",
+    "@addedToQueue": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "pleaseSelectDetailed": "請先選擇要刮削的歌曲",
+    "batchScrapeStarted": "批量刮削任務已啟動",
+    "scanning": "掃描中...",
+    "addedCompSongs": "已添加 {count} 首歌曲",
+    "@addedCompSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "processingFiles": "正在處理拖入的檔案...",
+    "importedSongs": "已導入 {count} 首歌曲",
+    "@importedSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "addFolder": "添加資料夾",
+    "emptyLibrary": "音樂庫為空",
+    "addMusicFolder": "添加音樂資料夾",
+    "unknown": "未知",
+    "noItemsFound": "沒有找到項目",
+    "searchViewType": "搜尋 {viewType}...",
+    "@searchViewType": {
+        "placeholders": {
+            "viewType": {}
+        }
+    },
+    "forYou": "為你推薦",
+    "viewDetails": "查看詳情",
+    "songDetails": "歌曲詳情",
+    "filePath": "檔案路徑",
+    "fileName": "檔案名稱",
+    "duration": "時長",
+    "size": "大小",
+    "dateAdded": "添加日期",
+    "lastPlayed": "最後播放",
+    "genre": "流派",
+    "year": "年份",
+    "trackNumber": "音軌號",
+    "discNumber": "碟號",
+    "lyrics": "歌詞",
+    "copyToClipboard": "複製到剪貼簿",
+    "fullPath": "完整路徑",
+    "webdav": "WebDAV",
+    "openalist": "OpenAList",
+    "webdavConfigTitle": "WebDAV 配置",
+    "webdavUrlLabel": "WebDAV URL (例如 https://dav.example.com)",
+    "username": "用戶名",
+    "password": "密碼",
+    "musicFolderPath": "音樂文件夾路徑 (例如 /Music)",
+    "identify": "識別",
+    "identificationRules": "識別規則",
+    "rulesTooltip": "規則：藝術家/專輯/歌曲 或 文件名",
+    "scanComplete": "掃描完成。識別了 {count} 首歌曲。",
+    "@scanComplete": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "scanError": "錯誤：{error}",
+    "@scanError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "permissionDenied": "存儲權限被拒絕",
+    "scanningFile": "正在掃描: {fileName}",
+    "@scanningFile": {
+        "placeholders": {
+            "fileName": {}
+        }
+    },
+    "sourceLocal": "本地",
+    "sourceCloud": "雲端",
+    "webdavAccountsCache": "WebDAV 賬戶緩存",
+    "clearCacheForAccount": "清除 {accountName} 的緩存？",
+    "@clearCacheForAccount": {
+        "placeholders": {
+            "accountName": {}
+        }
+    },
+    "accountCacheCleared": "賬戶緩存已清除",
+    "clearLegacyCache": "清除所有舊版緩存的 WebDAV 歌曲？",
+    "legacyCacheCleared": "舊版緩存已清除",
+    "clearCache": "清除緩存",
+    "scrapeAgain": "重新刮削",
+    "songDeletedWithTitle": "已刪除 \"{title}\"",
+    "@songDeletedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "cacheClearedWithTitle": "已清除 \"{title}\" 的緩存",
+    "@cacheClearedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "addedToFavorites": "已添加到收藏",
+    "removedFromFavorites": "已從收藏中移除",
+    "favoritesPlaylistName": "收藏",
+    "favoritesPlaylistDescription": "我喜歡的歌曲"
+    ,
+    "playlistAlreadyExists": "名為 \"{playlistName}\" 的播放清單已存在",
+    "@playlistAlreadyExists": {
+        "placeholders": {
+            "playlistName": {}
+        }
+    }
+}

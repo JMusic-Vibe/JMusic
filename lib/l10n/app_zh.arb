@@ -1,0 +1,339 @@
+{
+    "@@locale": "zh",
+    "appName": "JMusic",
+    "home": "首页",
+    "library": "音乐库",
+    "playlists": "歌单",
+    "more": "更多",
+    "sync": "同步",
+    "scraper": "刮削",
+    "settings": "设置",
+    
+    "clear": "清空",
+    "playingQueue": "播放队列",
+
+    "language": "语言",
+    "theme": "主题",
+    "storageEvents": "存储与缓存",
+    "syncSettings": "同步设置",
+    "serverSettings": "服务器设置",
+    "defaultPage": "默认启动页",
+    "scraperSettings": "刮削设置",
+    "usePrimaryArtistForScraper": "刮削仅使用主歌手",
+    "usePrimaryArtistForScraperDesc": "启用后，刮削将仅使用主歌手进行查询；禁用时会包含客座/合作歌手。",
+    "audioSettings": "音频与播放",
+    "playbackSettings": "播放设置",
+    "crossfadeEnabled": "启用淡入淡出",
+    "crossfadeEnabledDesc": "歌曲切换时启用淡入淡出效果，提供更流畅的听觉体验",
+    "crossfadeDuration": "淡入淡出时长",
+    "crossfadeDurationDesc": "设置歌曲间淡入淡出效果的持续时间",
+    "seconds": "{count} 秒",
+    "@seconds": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "crossfadeEnabledInfo": "已启用淡入淡出,歌曲将平滑过渡",
+    "crossfadeDisabledInfo": "淡入淡出已禁用,歌曲将直接切换",
+    "proxySettings": "网络代理",
+    "about": "关于",
+    
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统",
+
+    "systemProxy": "系统代理",
+    "noProxy": "无代理",
+    "customProxy": "自定义代理",
+    "port": "端口",
+    "ipAddress": "IP地址",
+    "save": "保存",
+    
+    "recentlyPlayed": "最近播放",
+    "recentlyImported": "最近导入",
+    "toBeScraped": "待刮削处理",
+    
+    "noData": "暂无数据，请先导入",
+    "scanMusic": "扫描音乐",
+    
+    "batchScrape": "批量刮削",
+    "batchScrapeRunning": "后台刮削中...",
+    "batchScrapeResult": "刮削报告",
+    "successCount": "成功: {count}",
+    "@successCount": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "failCount": "失败: {count}",
+    "@failCount": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "confirm": "确定",
+    "cancel": "取消",
+    "delete": "删除",
+    "editTags": "编辑标签", 
+    "addToPlaylist": "添加到歌单",
+    "playAll": "播放全部",
+
+    "deleteConfirm": "确定删除选中的 {count} 首歌曲吗？",
+    "@deleteConfirm": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "deleteSingleConfirm": "确定删除 \"{title}\" 吗？",
+    "@deleteSingleConfirm": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    
+    "importMusic": "导入音乐",
+    "manualSync": "手动同步",
+    "developing": "功能开发中",
+    "importInLibrary": "请前往资料库导入",
+    
+    "homeTitle": "首页",
+    "importMusicTooltip": "导入音乐",
+    "syncFeatureDeveloping": "同步功能开发中",
+    "noMusicData": "暂无数据\n请先前往资料库导入音乐",
+    
+    "scrapedCompletedTitle": "批量刮削完成",
+    "totalTasks": "总计任务: {count}",
+    "@totalTasks": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "hide": "隐藏",
+    
+    "createPlaylist": "新建歌单",
+    "noPlaylists": "暂无歌单",
+    "playlistTitle": "歌单",
+    "confirmDelete": "确认删除?",
+    "edit": "编辑",
+    "playlistName": "歌单名称",
+    "confirmDelete": "确认删除?",
+    "playlistNameHint": "我的最爱",
+    "create": "创建",
+    "songCount": "{count} 首歌曲",
+    "@songCount": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "addedToPlaylist": "已添加到 \"{name}\"",
+    "@addedToPlaylist": {
+        "placeholders": { "name": {} }
+    },
+    "songsAlreadyInPlaylist": "已存在于 \"{playlistName}\"",
+    "@songsAlreadyInPlaylist": {
+        "placeholders": {
+            "playlistName": {}
+        }
+    },
+    "toBeScrapedSubtitle": "{count} 首歌曲元数据不全",
+    "@toBeScrapedSubtitle": {
+        "placeholders": { "count": {} }
+    },
+    "defaultPageDescription": "选择应用启动时显示的默认页面",
+    
+    "syncCenter": "同步中心",
+    "addSyncAccount": "新增同步账号",
+    "openListNotSupported": "OpenAList 暂未支持",
+    "noSyncAccount": "暂无同步账号",
+    "addSyncAccountHint": "点击右上角 + 号添加 WebDAV 或 Alist 账号",
+    "connected": "已连接",
+    "paused": "已暂停",    "accountName": "账户名称",    "removeSyncConfigConfirm": "这将移除此同步源配置",
+    "checkSyncNow": "同步",
+    
+    "searchUnarchived": "搜索未归档歌曲...",
+    "selectedCount": "{count} 已选择",
+    "@selectedCount": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "scraperCenter": "刮削中心",
+    "refresh": "刷新",
+    "taskRunningBackground": "任务已后台运行",
+    
+    "unknownArtist": "未知艺术家",
+    "unknownAlbum": "未知专辑",
+    "nowPlaying": "正在播放",
+    "manualMatchMetadata": "手动匹配元数据",
+    "lyricsComingSoon": "歌词功能即将上线...",
+    
+    "syncCenterSubtitle": "手动同步与差异检查",
+    "scraperCenterSubtitle": "手动刮削与候选确认",
+    "settingsSubtitle": "存储、音频、同步与刮削策略",
+
+    "deletePlaylist": "删除歌单",
+    "confirmDeletePlaylist": "确定要删除 \"{name}\" 吗?",
+    "@confirmDeletePlaylist": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "clearPlaylist": "清空歌单",
+    "confirmClearPlaylist": "确定要清空 \"{name}\" 的所有歌曲吗?",
+    "@confirmClearPlaylist": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "rename": "重命名",
+    "importCover": "导入封面",
+    "coverImported": "封面已导入",
+    "clearCover": "清空封面",
+    "confirmClearCover": "确定要清空 \"{name}\" 的封面吗?",
+    "@confirmClearCover": { "placeholders": { "name": {} } },
+    "emptyPlaylist": "歌单是空的",
+    "playbackError": "无法开始播放: {error}",
+    "@playbackError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "selectAll": "全选/取消全选",
+    "search": "搜索",
+    "noMatchingSongs": "没有找到匹配的歌曲",
+    "allSongsScraped": "恭喜，所有歌曲都已刮削完成！",
+    "foundUnscrapedSongs": "发现 {count} 首未归档歌曲",
+    "@foundUnscrapedSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "deleteSongs": "删除歌曲",
+    "confirmDeleteSongs": "确定要删除选中的 {count} 首歌曲吗？\n(仅从库中删除，文件保留)",
+    "@confirmDeleteSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "songsDeleted": "已删除 {count} 首歌曲",
+    "@songsDeleted": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "addedToQueue": "已添加到播放 {count} 首歌曲",
+    "@addedToQueue": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "pleaseSelectDetailed": "请先选择要刮削的歌曲",
+    "batchScrapeStarted": "已启动后台刮削任务",
+    "scanning": "扫描中...",
+    "addedCompSongs": "已添加 {count} 首歌曲",
+    "@addedCompSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "processingFiles": "正在处理文件...",
+    "importedSongs": "已导入 {count} 首歌曲",
+    "@importedSongs": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "addFolder": "添加文件夹",
+    "emptyLibrary": "资料库为空",
+    "addMusicFolder": "添加音乐文件夹",
+    "unknown": "未知",
+    "noItemsFound": "未找到项目",
+    "searchViewType": "搜索 {viewType}...",
+    "@searchViewType": {
+        "placeholders": {
+            "viewType": {}
+        }
+    },
+    "forYou": "为你推荐",
+    "viewDetails": "查看详情",
+    "songDetails": "歌曲详情",
+    "filePath": "文件路径",
+    "fileName": "文件名",
+    "duration": "时长",
+    "size": "大小",
+    "dateAdded": "添加日期",
+    "lastPlayed": "最后播放",
+    "genre": "流派",
+    "year": "年份",
+    "trackNumber": "音轨号",
+    "discNumber": "碟号",
+    "lyrics": "歌词",
+    "copyToClipboard": "复制到剪贴板",
+    "fullPath": "完整路径",
+    "webdav": "WebDAV",
+    "openalist": "OpenAList",
+    "webdavConfigTitle": "WebDAV 配置",
+    "webdavUrlLabel": "WebDAV URL (例如 https://dav.example.com)",
+    "username": "用户名",
+    "password": "密码",
+    "musicFolderPath": "音乐文件夹路径 (例如 /Music)",
+    "identify": "识别",
+    "identificationRules": "识别规则",
+    "rulesTooltip": "规则：艺术家/专辑/歌曲 或 文件名",
+    "scanComplete": "扫描完成。识别了 {count} 首歌曲。",
+    "@scanComplete": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "scanError": "错误：{error}",
+    "@scanError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "permissionDenied": "存储权限被拒绝",
+    "scanningFile": "正在扫描: {fileName}",
+    "@scanningFile": {
+        "placeholders": {
+            "fileName": {}
+        }
+    },
+    "sourceLocal": "本地",
+    "sourceCloud": "云端",
+    "webdavAccountsCache": "WebDAV 账户缓存",
+    "clearCacheForAccount": "清除 {accountName} 的缓存？",
+    "@clearCacheForAccount": {
+        "placeholders": {
+            "accountName": {}
+        }
+    },
+    "accountCacheCleared": "账户缓存已清除",
+    "clearLegacyCache": "清除所有旧版缓存的 WebDAV 歌曲？",
+    "legacyCacheCleared": "旧版缓存已清除",
+    "clearCache": "清除缓存",
+    "scrapeAgain": "重新刮削",
+    "songDeletedWithTitle": "已删除 \"{title}\"",
+    "@songDeletedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "cacheClearedWithTitle": "已清除 \"{title}\" 的缓存",
+    "@cacheClearedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "addedToFavorites": "已添加到收藏",
+    "removedFromFavorites": "已从收藏中移除",
+    "favoritesPlaylistName": "收藏",
+    "favoritesPlaylistDescription": "我喜欢的歌曲"
+    ,
+    "playlistAlreadyExists": "名为 \"{playlistName}\" 的歌单已存在",
+    "@playlistAlreadyExists": {
+        "placeholders": {
+            "playlistName": {}
+        }
+    }
+}

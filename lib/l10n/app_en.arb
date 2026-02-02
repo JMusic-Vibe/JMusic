@@ -1,0 +1,255 @@
+{
+    "@@locale": "en",
+    "appName": "JMusic",
+    "home": "Home",
+    "library": "Library",
+    "playlists": "Playlists",
+    "more": "More",
+    "sync": "Sync",
+    "scraper": "Scraper",
+    "settings": "Settings",
+
+    "clear": "Clear",
+    "playingQueue": "Playing Queue",
+
+    "language": "Language",
+    "theme": "Theme",
+    "storageEvents": "Storage & Cache",
+    "syncSettings": "Sync Settings",
+    "serverSettings": "Server Settings",
+    "defaultPage": "Default Page",
+    "scraperSettings": "Scraper Settings",
+    "usePrimaryArtistForScraper": "Use primary artist for scraping",
+    "usePrimaryArtistForScraperDesc": "When enabled, the scraper will query using the primary artist only; otherwise it will include featured and collaborating artists.",
+    "audioSettings": "Audio & Playback",
+    "playbackSettings": "Playback Settings",
+    "crossfadeEnabled": "Enable Crossfade",
+    "crossfadeEnabledDesc": "Enable crossfade effect when switching songs for a smoother listening experience",
+    "crossfadeDuration": "Crossfade Duration",
+    "crossfadeDurationDesc": "Set the duration of the crossfade effect between songs",
+    "seconds": "{count} seconds",
+    "@seconds": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "crossfadeEnabledInfo": "Crossfade enabled, songs will transition smoothly",
+    "crossfadeDisabledInfo": "Crossfade disabled, songs will switch directly",
+    "proxySettings": "Network Proxy",
+    "about": "About",
+    
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+
+    "systemProxy": "System Proxy",
+    "noProxy": "No Proxy",
+    "customProxy": "Custom Proxy",
+    "port": "Port",
+    "ipAddress": "Ip Address",
+    "save": "Save",
+    
+    "recentlyPlayed": "Recently Played",
+    "recentlyImported": "Recently Added",
+    "toBeScraped": "Missing Metadata",
+    
+    "noData": "No music found. Please import.",
+    "scanMusic": "Scan Music",
+    
+    "batchScrape": "Batch Scrape",
+    "batchScrapeRunning": "Scraping in background...",
+    "batchScrapeResult": "Scrape Report",
+    "successCount": "Success: {count}",
+    "failCount": "Fail: {count}",
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "editTags": "Edit Tags", 
+    "addToPlaylist": "Add to Playlist",
+    "playAll": "Play All",
+
+    "deleteConfirm": "Delete {count} selected songs?",
+    "deleteSingleConfirm": "Delete \"{title}\"?",
+    
+    "importMusic": "Import Music",
+    "manualSync": "Sync Now",
+    "developing": "Coming Soon",
+    "importInLibrary": "Go to Library to import",
+    
+    "homeTitle": "Home",
+    "importMusicTooltip": "Import Music",
+    "syncFeatureDeveloping": "Sync feature is under development",
+    "noMusicData": "No data available\nPlease import music in Library first",
+    
+    "scrapedCompletedTitle": "Batch Scrape Completed",
+    "totalTasks": "Total Tasks: {count}",
+    "hide": "Hide",
+    
+    "createPlaylist": "New Playlist",
+    "noPlaylists": "No Playlists",
+    "playlistTitle": "Playlists",
+    "confirmDelete": "Delete?",
+    "playlistName": "Playlist Name",
+    "playlistNameHint": "My Favorites",
+    "create": "Create",
+    "songCount": "{count} songs",
+    "addedToPlaylist": "Added to \"{name}\"",
+    "@addedToPlaylist": {
+        "placeholders": { "name": {} }
+    },
+    "songsAlreadyInPlaylist": "Songs already exist in \"{playlistName}\"",
+    "@songsAlreadyInPlaylist": {
+        "placeholders": {
+            "playlistName": {}
+        }
+    },
+    "toBeScrapedSubtitle": "{count} songs missing metadata",
+    "@toBeScrapedSubtitle": {
+        "placeholders": { "count": {} }
+    },
+    "defaultPageDescription": "Select the default page to show when the app starts",
+    
+    "syncCenter": "Sync Center",
+    "addSyncAccount": "Add Sync Account",
+    "openListNotSupported": "OpenAList not supported yet",
+    "noSyncAccount": "No Sync Accounts",
+    "addSyncAccountHint": "Tap + at top right to add WebDAV or Alist account",
+    "connected": "Connected",
+    "edit": "Edit",
+    "paused": "Paused",
+    "accountName": "Account Name",
+    "removeSyncConfigConfirm": "This will remove this sync configuration",
+    "checkSyncNow": "Sync",
+    
+    "searchUnarchived": "Search unarchived songs...",
+    "selectedCount": "{count} selected",
+    "scraperCenter": "Scraper Center",
+    "refresh": "Refresh",
+    "taskRunningBackground": "Task running in background",
+    
+    "unknownArtist": "Unknown Artist",
+    "unknownAlbum": "Unknown Album",
+    "nowPlaying": "Now Playing",
+    "manualMatchMetadata": "Manual Match Metadata",
+    "lyricsComingSoon": "Lyrics coming soon...",
+    
+    "syncCenterSubtitle": "Manual sync & Diff check",
+    "scraperCenterSubtitle": "Manual scrape & Candidate confirm",
+    "settingsSubtitle": "Storage, Audio, Sync & Scraper Strategy",
+
+    "deletePlaylist": "Delete Playlist",
+    "confirmDeletePlaylist": "Are you sure you want to delete \"{name}\"?",
+    "clearPlaylist": "Clear Playlist",
+    "confirmClearPlaylist": "Are you sure you want to clear all songs from \"{name}\"?",
+    "rename": "Rename",
+    "importCover": "Import Cover",
+    "coverImported": "Cover imported",
+    "clearCover": "Clear Cover",
+    "confirmClearCover": "Are you sure you want to clear the cover for \"{name}\"?",
+    "@confirmClearCover": { "placeholders": { "name": {} } },
+    "emptyPlaylist": "Playlist is empty",
+    "playbackError": "Could not start playback: {error}",
+    "selectAll": "Select All / Deselect All",
+    "search": "Search",
+    "noMatchingSongs": "No matching songs found",
+    "allSongsScraped": "Congratulations, all songs scraped!",
+    "foundUnscrapedSongs": "Found {count} unscraped songs",
+    "deleteSongs": "Delete Songs",
+    "confirmDeleteSongs": "Delete {count} selected songs?\n(Only removes from library, files are kept)",
+    "songsDeleted": "Deleted {count} songs",
+    "addedToQueue": "Added {count} songs to queue",
+    "pleaseSelectDetailed": "Please select songs to scrape first",
+    "batchScrapeStarted": "Batch scrape task started",
+    "scanning": "Scanning...",
+    "addedCompSongs": "Added {count} songs",
+    "processingFiles": "Processing dropped files...",
+    "importedSongs": "Imported {count} songs",
+    "addFolder": "Add Folder",
+    "emptyLibrary": "Library is empty",
+    "addMusicFolder": "Add Music Folder",
+    "unknown": "Unknown",
+    "noItemsFound": "No items found",
+    "searchViewType": "Search {viewType}...",
+    "forYou": "For You",
+    "viewDetails": "View Details",
+    "songDetails": "Song Details",
+    "filePath": "File Path",
+    "fileName": "File Name",
+    "duration": "Duration",
+    "size": "Size",
+    "dateAdded": "Date Added",
+    "lastPlayed": "Last Played",
+    "genre": "Genre",
+    "year": "Year",
+    "trackNumber": "Track Number",
+    "discNumber": "Disc Number",
+    "lyrics": "Lyrics",
+    "copyToClipboard": "Copy to Clipboard",
+    "fullPath": "Full Path",
+    "webdav": "WebDAV",
+    "openalist": "OpenAList",
+    "webdavConfigTitle": "WebDAV Configuration",
+    "webdavUrlLabel": "WebDAV URL (e.g. https://dav.example.com)",
+    "username": "Username",
+    "password": "Password",
+    "musicFolderPath": "Music Folder Path (e.g. /Music)",
+    "identify": "Identify",
+    "identificationRules": "Identification Rules",
+    "rulesTooltip": "Rules: Artist/Album/Song or Filename",
+    "scanComplete": "Scan complete. Identified {count} songs.",
+    "@scanComplete": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "scanError": "Error: {error}",
+    "@scanError": {
+        "placeholders": {
+            "error": {}
+        }
+    },
+    "permissionDenied": "Storage permission denied",
+    "scanningFile": "Scanning: {fileName}",
+    "@scanningFile": {
+        "placeholders": {
+            "fileName": {}
+        }
+    },
+    "sourceLocal": "Local",
+    "sourceCloud": "Cloud",
+    "webdavAccountsCache": "WebDAV Accounts Cache",
+    "clearCacheForAccount": "Clear cache for {accountName}?",
+    "@clearCacheForAccount": {
+        "placeholders": {
+            "accountName": {}
+        }
+    },
+    "accountCacheCleared": "Account cache cleared",
+    "clearLegacyCache": "Clear all legacy cached WebDAV songs?",
+    "legacyCacheCleared": "Legacy cache cleared",
+    "clearCache": "Clear Cache",
+    "scrapeAgain": "Scrape Again",
+    "songDeletedWithTitle": "Deleted \"{title}\"",
+    "@songDeletedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "cacheClearedWithTitle": "Cleared cache for \"{title}\"",
+    "@cacheClearedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "addedToFavorites": "Added to Favorites",
+    "removedFromFavorites": "Removed from Favorites",
+    "favoritesPlaylistName": "Favorites",
+    "favoritesPlaylistDescription": "My favorite songs"
+    ,
+    "playlistAlreadyExists": "A playlist named \"{playlistName}\" already exists",
+    "@playlistAlreadyExists": {
+        "placeholders": {
+            "playlistName": {}
+        }
+    }
+}
