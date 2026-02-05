@@ -106,6 +106,9 @@ android/gradlew.bat
 android/local.properties
 android/generated/
 android/key.properties
+android/*.keystore
+android/*.jks
+jmusic.keystore
 
 # iOS
 ios/.generated/
