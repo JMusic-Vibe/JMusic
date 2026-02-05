@@ -1,19 +1,52 @@
 # JMusic
 
+<p align="center">
+  <img src="assets/images/app_dark_icon.png" alt="JMusic Logo" width="200"/>
+</p>
+
 [English](README_en.md) | 中文
 
-一个跨平台的本地音乐播放器，支持 WebDAV 同步，并内置 OpenList 本地服务用于高级文件访问。
+一个跨平台的本地音乐与视频播放器，支持 WebDAV 访问，并内置 OpenList 本地服务用于网盘的在线访问。
+
+----------------------------------
 
 ## 项目特色
 
-- 本地音乐库扫描与管理
-- 播放队列、迷你播放器、视频播放
-- 播放列表与基本库管理
-- WebDAV 同步与配置
-- 内置 OpenList 服务管理（本地服务）
-- 元数据刮削与 ID3 标签解析
-- OpenList 代理支持
-- 已测试平台：Windows、Android（iOS/macOS/Linux 仍在完善中）
+- 🔍 本地音乐库扫描与管理
+- ▶️ 播放队列、迷你播放器、视频播放
+- 📁 播放列表与基本库管理
+
+
+- 🧩 内置 OpenList 服务管理（本地服务）
+- 🏷️ 元数据刮削与 ID3 标签解析：
+  - 本地歌曲识别
+  - [Itunes](https://www.apple.com/hk/itunes/)
+  - [MusicBrainZ](https://musicbrainz.org/)
+  - [Lrclib](https://lrclib.net) 
+  - [千古八方的LRC歌词服务器](https://tools.rangotec.com/qqlrcup)
+- 🌐 OpenList 原生服务支持
+
+## 功能展示
+<p align="center">
+<img src="readme_graph/win_home_page.png" alt="win_home_page" width="45%" style="margin-right:5%"/>
+<img src="readme_graph/win_batch_scrapyer.png" alt="win_batch_scrapyer" width="45%"/>
+</p>
+<p align="center">
+<img src="readme_graph/win_scrapyer.png" alt="win_scrapyer" width="45%" style="margin-right:5%"/>
+<img src="readme_graph/win_openlist.png" alt="win_openlist" width="45%"/>
+</p>
+
+<p align="center">
+<img src="readme_graph/p1.jpg" alt="p1" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/p2.jpg" alt="p2" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/p3.jpg" alt="p3" width="32%"/>
+</p>
+
+<p align="center">
+<img src="readme_graph/h1.jpg" alt="h1" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/h2.jpg" alt="h2" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/h3.jpg" alt="h3" width="32%"/>
+</p>
 
 ## OpenList 集成说明
 
@@ -95,5 +128,15 @@ flutter run
 
 - OpenList 后端：https://github.com/OpenListTeam/OpenList（AGPL-3.0）
 - OpenList 前端：https://github.com/OpenListTeam/OpenList-Frontend
+
+发布或分发时请遵循其许可证与引用要求。
+
+## 许可证
+
+本项目采用 GPL-3.0 许可证。详情请见 [LICENSE](LICENSE) 文件。
+
+## 致谢
+
+感谢所有贡献者和开源社区的支持，特别是 OpenList 项目的开发者们。
 
 发布或分发时请遵循其许可证与引用要求。

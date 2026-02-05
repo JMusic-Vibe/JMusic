@@ -1,19 +1,51 @@
 # JMusic
 
+<p align="center">
+  <img src="assets/images/app_dark_icon.png" alt="JMusic Logo" width="200"/>
+</p>
+
 English | [中文](README.md)
 
-A cross-platform local music player with WebDAV sync and a built-in OpenList server for advanced file access.
+A cross-platform local music and video player with WebDAV access, and a built-in OpenList local service for online cloud drive access.
+
+----------------------------------
 
 ## Features
 
-- Local music library scan and management
-- Playback queue, mini player, and video playback
-- Playlists and basic library organization
-- WebDAV sync and configuration
-- Built-in OpenList server management (local service)
-- Metadata scraping and ID3 tag parsing
-- Proxy support for OpenList access
-- Tested on Windows and Android (iOS/macOS/Linux work-in-progress)
+- 🔍 Local music library scan and management
+- ▶️ Playback queue, mini player, and video playback
+- 📁 Playlists and basic library organization
+- ☁️ WebDAV sync and configuration
+- 🧩 Built-in OpenList server management (local service)
+- 🏷️ Metadata scraping and ID3 tag parsing:
+  - Local song recognition
+  - [iTunes](https://www.apple.com/hk/itunes/)
+  - [MusicBrainz](https://musicbrainz.org/)
+  - [Lrclib](https://lrclib.net)
+  - [QianGuBaFang's LRC Lyric Server](https://tools.rangotec.com/qqlrcup)
+- 🌐 OpenList native service support
+
+## Feature Showcase
+<p align="center">
+<img src="readme_graph/win_home_page.png" alt="win_home_page" width="45%" style="margin-right:5%"/>
+<img src="readme_graph/win_batch_scrapyer.png" alt="win_batch_scrapyer" width="45%"/>
+</p>
+<p align="center">
+<img src="readme_graph/win_scrapyer.png" alt="win_scrapyer" width="45%" style="margin-right:5%"/>
+<img src="readme_graph/win_openlist.png" alt="win_openlist" width="45%"/>
+</p>
+
+<p align="center">
+<img src="readme_graph/p1.jpg" alt="p1" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/p2.jpg" alt="p2" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/p3.jpg" alt="p3" width="32%"/>
+</p>
+
+<p align="center">
+<img src="readme_graph/h1.jpg" alt="h1" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/h2.jpg" alt="h2" width="32%" style="margin-right:1%"/>
+<img src="readme_graph/h3.jpg" alt="h3" width="32%"/>
+</p>
 
 ## OpenList Integration
 
@@ -95,5 +127,15 @@ This project integrates the following upstream projects:
 
 - OpenList backend: https://github.com/OpenListTeam/OpenList (AGPL-3.0)
 - OpenList frontend: https://github.com/OpenListTeam/OpenList-Frontend
+
+Please follow their licenses and attribution requirements when redistributing.
+
+## License
+
+This project is licensed under GPL-3.0. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+Thanks to all contributors and the open-source community, especially the developers of the OpenList project.
 
 Please follow their licenses and attribution requirements when redistributing.
