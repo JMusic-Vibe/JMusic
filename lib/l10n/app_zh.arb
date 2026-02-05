@@ -4,7 +4,24 @@
     "home": "首页",
     "library": "音乐库",
     "playlists": "歌单",
+    "playlistRecommendations": "播放列表推荐",
     "more": "更多",
+    "playVideo": "播放视频",
+    "restoreOriginalInfo": "恢复原始信息",
+    "restoreOriginalInfoConfirm": "是否恢复 {count} 首的原始信息？",
+    "@restoreOriginalInfoConfirm": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreOriginalInfoSuccess": "已恢复 {count} 首",
+    "@restoreOriginalInfoSuccess": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreOriginalInfoFailed": "没有可恢复的原始信息",
+    "batchRestore": "批量恢复",
     "sync": "同步",
     "scraper": "刮削",
     "settings": "设置",
@@ -15,18 +32,50 @@
     "language": "语言",
     "theme": "主题",
     "storageEvents": "存储与缓存",
+    "coverCache": "封面缓存",
+    "clearCoverCacheConfirm": "清除封面缓存？",
+    "coverCacheCleared": "封面缓存已清除",
+    "artistAvatarCache": "歌手头像缓存",
+    "clearArtistAvatarCacheConfirm": "清除歌手头像缓存？",
+    "artistAvatarCacheCleared": "歌手头像缓存已清除",
+    "embeddedCoverCache": "内嵌封面缓存",
+    "clearEmbeddedCoverCacheConfirm": "清除内嵌封面缓存？",
+    "embeddedCoverCacheCleared": "内嵌封面缓存已清除",
+    "appDataSize": "应用数据占用",
+    "logExport": "导出日志",
+    "logFileSize": "日志大小",
+    "logExported": "日志已导出",
+    "clearLogs": "清空日志",
+    "clearLogsConfirm": "清空日志？",
+    "logsCleared": "日志已清空",
+    "scrapeCompleteWithLyrics": "刮削完成：专辑信息已更新，歌词已找到",
+    "scrapeCompleteNoLyrics": "刮削完成：专辑信息已更新，未找到歌词",
+    "artistNameLabel": "歌手名称",
     "syncSettings": "同步设置",
     "serverSettings": "服务器设置",
     "defaultPage": "默认启动页",
     "scraperSettings": "刮削设置",
     "usePrimaryArtistForScraper": "刮削仅使用主歌手",
     "usePrimaryArtistForScraperDesc": "启用后，刮削将仅使用主歌手进行查询；禁用时会包含客座/合作歌手。",
+    "scraperMatchSources": "匹配来源",
+    "scraperSourceAtLeastOne": "请至少启用一个来源",
+    "scraperSongSources": "歌曲刮削源",
+    "scraperArtistSources": "歌手刮削源",
+    "scraperLyricsSources": "歌词刮削源",
     "audioSettings": "音频与播放",
     "playbackSettings": "播放设置",
+    "desktopVolume": "桌面端音量",
     "crossfadeEnabled": "启用淡入淡出",
     "crossfadeEnabledDesc": "歌曲切换时启用淡入淡出效果，提供更流畅的听觉体验",
     "crossfadeDuration": "淡入淡出时长",
     "crossfadeDurationDesc": "设置歌曲间淡入淡出效果的持续时间",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "loopingOn": "循环：开",
+    "loopingOff": "循环：关",
+    "scraperSourceLrclib": "lrclib",
+    "scraperSourceRangotec": "rangotec",
+    "scraperLyricsSourcesFixed": "歌词刮削源固定为 lrclib + rangotec",
     "seconds": "{count} 秒",
     "@seconds": {
         "placeholders": {
@@ -77,6 +126,7 @@
     "editTags": "编辑标签", 
     "addToPlaylist": "添加到歌单",
     "playAll": "播放全部",
+    "play": "播放",
 
     "deleteConfirm": "确定删除选中的 {count} 首歌曲吗？",
     "@deleteConfirm": {
@@ -143,7 +193,7 @@
     
     "syncCenter": "同步中心",
     "addSyncAccount": "新增同步账号",
-    "openListNotSupported": "OpenAList 暂未支持",
+    "openListNotSupported": "OpenList 暂未支持",
     "noSyncAccount": "暂无同步账号",
     "addSyncAccountHint": "点击右上角 + 号添加 WebDAV 或 Alist 账号",
     "connected": "已连接",
@@ -158,6 +208,20 @@
         }
     },
     "scraperCenter": "刮削中心",
+    "scraperCategoryAll": "全部问题",
+    "scraperCategoryUnscraped": "未刮削",
+    "scraperCategoryScraped": "已刮削",
+    "scraperCategoryHasLyrics": "有歌词",
+    "scraperCategoryNoLyrics": "无歌词",
+    "scraperCategoryMissingCover": "缺少封面",
+    "scraperCategoryMissingInfo": "缺少作者/专辑",
+    "scraperCategoryArtists": "歌手",
+    "scraperSourceMusicBrainz": "MusicBrainz",
+    "scraperSourceItunes": "iTunes",
+    "scraperSourceLabel": "来源：{source}",
+    "@scraperSourceLabel": {
+        "placeholders": { "source": {} }
+    },
     "refresh": "刷新",
     "taskRunningBackground": "任务已后台运行",
     
@@ -166,6 +230,10 @@
     "nowPlaying": "正在播放",
     "manualMatchMetadata": "手动匹配元数据",
     "lyricsComingSoon": "歌词功能即将上线...",
+    "lyricsModeOff": "歌词：关闭",
+    "lyricsModeCompact": "歌词：封面下方",
+    "lyricsModeFull": "歌词：全屏显示",
+    "noLyricsFound": "未找到歌词",
     
     "syncCenterSubtitle": "手动同步与差异检查",
     "scraperCenterSubtitle": "手动刮削与候选确认",
@@ -271,9 +339,12 @@
     "copyToClipboard": "复制到剪贴板",
     "fullPath": "完整路径",
     "webdav": "WebDAV",
-    "openalist": "OpenAList",
+    "openlist": "OpenList",
     "webdavConfigTitle": "WebDAV 配置",
     "webdavUrlLabel": "WebDAV URL (例如 https://dav.example.com)",
+    "keepAliveTitle": "保活",
+    "keepAliveDescription": "如熄屏时连接断开，请在系统设置中允许应用自启动。",
+    "openAutoStart": "打开自启动设置",
     "username": "用户名",
     "password": "密码",
     "musicFolderPath": "音乐文件夹路径 (例如 /Music)",
@@ -313,6 +384,15 @@
     "legacyCacheCleared": "旧版缓存已清除",
     "clearCache": "清除缓存",
     "scrapeAgain": "重新刮削",
+    "scrapeArtistAvatars": "刮削歌手头像",
+    "manualMatchArtist": "手动匹配歌手",
+    "batchScrapeArtists": "批量刮削歌手",
+    "scrapeArtistAvatarsResult": "已更新 {count} 个歌手头像",
+    "@scrapeArtistAvatarsResult": {
+        "placeholders": {
+            "count": {}
+        }
+    },
     "songDeletedWithTitle": "已删除 \"{title}\"",
     "@songDeletedWithTitle": {
         "placeholders": {
@@ -321,6 +401,12 @@
     },
     "cacheClearedWithTitle": "已清除 \"{title}\" 的缓存",
     "@cacheClearedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "cannotAccessSong": "无法访问歌曲文件：{title}",
+    "@cannotAccessSong": {
         "placeholders": {
             "title": {}
         }
@@ -335,5 +421,60 @@
         "placeholders": {
             "playlistName": {}
         }
-    }
+    },
+    "resetAdminPasswordTitle": "重置管理员密码",
+    "resetFailed": "重置失败",
+    "unknownError": "未知错误",
+    "newPasswordGenerated": "新密码已生成",
+    "usernameAdmin": "用户名：admin",
+    "newPassword": "新密码：{pwd}",
+    "@newPassword": {
+        "placeholders": {
+            "pwd": {}
+        }
+    },
+    "portAndProxy": "端口与代理",
+    "invalidPort": "端口无效",
+    "proxyHostEmpty": "代理地址不能为空",
+    "invalidProxyPort": "代理端口无效",
+    "savedRestartRequired": "已保存，需重启后生效",
+    "openListService": "OpenList 服务",
+    "statusRunning": "状态: 运行中",
+    "statusStopped": "状态: 已停止",
+    "address": "地址: http://{address}:{port}",
+    "@address": {
+        "placeholders": {
+            "address": {},
+            "port": {}
+        }
+    },
+    "stop": "停止",
+    "start": "启动",
+    "managementPage": "管理页面",
+    "accessManagementPage": "访问 OpenList 管理页面：",
+    "startServiceFirst": "请先启动 OpenList 服务",
+    "openInApp": "APP内打开",
+    "openInBrowser": "浏览器打开",
+    "adminInfo": "管理员信息",
+    "saveCredentials": "请保存：\n用户名：admin\n初始密码：{password}",
+    "@saveCredentials": {
+        "placeholders": {
+            "password": {}
+        }
+    },
+    "saved": "我已保存",
+    "defaultUsernameAdmin": "默认用户名：admin",
+    "resetPassword": "重置密码",
+    "stopServiceToModify": "停止服务后才可修改",
+    "serviceRunningLocked": "服务运行中，已锁定",
+    "stopServiceExitHint": "请手动停止 OpenList 后再退出软件，才能停止 OpenList",
+    "saveFailed": "保存失败",
+    "openListManagement": "OpenList 管理",
+    "openInApp": "APP内打开",
+    "openInBrowser": "浏览器打开",
+    "noProxy": "无代理",
+    "systemProxy": "系统代理", 
+    "customProxy": "自定义代理",
+    "autoStartOpenListOnAppLaunch": "自动启动OpenList",
+    "autoStartOpenListDescription": "启用后，APP启动时将自动启动OpenList服务"
 }

@@ -1,8 +1,17 @@
 {
   "zh_Hant": [
+    "scrapeCompleteWithLyrics",
+    "scrapeCompleteNoLyrics",
+    "artistNameLabel",
+    "desktopVolume",
     "crossfadeDurationDesc",
     "seconds",
     "toBeScrapedSubtitle",
-    "defaultPageDescription"
+    "defaultPageDescription",
+    "scraperCategoryArtists",
+    "scrapeArtistAvatars",
+    "manualMatchArtist",
+    "batchScrapeArtists",
+    "scrapeArtistAvatarsResult"
   ]
 }

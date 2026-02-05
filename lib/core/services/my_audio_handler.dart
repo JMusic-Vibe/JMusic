@@ -2,19 +2,23 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
+import 'package:jmusic/core/services/toast_service.dart';
 
 /// 自定义AudioHandler用于后台播放、通知栏控制、锁屏控制等
 class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer _player;
   final _playlist = <MediaItem>[];
   final _songCache = <String, Song>{};
+  ProcessingState _lastProcessingState = ProcessingState.idle;
   
   // 淡入淡出相关
   bool _crossfadeEnabled = false;
   Duration _crossfadeDuration = const Duration(seconds: 3);
   Timer? _fadeTimer;
+  Timer? _loadingTimeoutTimer;
   
   // 用于存储每首歌的原始Song对象
   Song? getSongById(String id) => _songCache[id];
@@ -38,6 +42,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   }
 
   void _init() {
+    Future.microtask(_configureAudioSession);
     // 监听播放器状态变化并同步到AudioService
     _player.playbackEventStream.listen(_broadcastState);
     
@@ -76,6 +81,40 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         queue.add(_playlist);
       }
     });
+
+    // 监听播放事件，尝试在加载/缓冲失败时自动跳到下一首并通知UI
+    _player.playbackEventStream.listen((event) {
+      final prevState = _lastProcessingState;
+      _lastProcessingState = event.processingState;
+      _handleLoadingState(event.processingState);
+      try {
+        if (event.processingState == ProcessingState.idle &&
+            prevState != ProcessingState.idle &&
+            !_player.playing) {
+          // Likely failed to load or unreachable. Skip to next if possible.
+          final idx = _player.currentIndex ?? -1;
+          final seqLen = _player.sequence?.length ?? 0;
+          if (idx >= 0 && idx < seqLen) {
+            // Avoid false positives when local file exists and playback is fine
+            try {
+              final song = _songCache[_playlist[idx].id];
+              if (song != null && song.sourceType == SourceType.local) {
+                final file = File(song.path);
+                if (file.existsSync()) {
+                  return;
+                }
+              }
+            } catch (_) {}
+            try {
+              toastService.show('cannotAccessSong', args: {'title': _playlist[idx].title});
+            } catch (_) {}
+            try {
+              skipToNext();
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    });
     
     // 监听播放完成,实现自动淡出效果
     _player.positionStream.listen((position) {
@@ -105,6 +144,52 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         }
       }
     });
+  }
+
+  Future<void> _configureAudioSession() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+
+      session.becomingNoisyEventStream.listen((_) {
+        pause();
+      });
+
+      session.interruptionEventStream.listen((event) {
+        if (event.begin) {
+          if (event.type == AudioInterruptionType.pause || event.type == AudioInterruptionType.duck) {
+            pause();
+          }
+        }
+      });
+    } catch (e) {
+      print('[MyAudioHandler] AudioSession config error: $e');
+    }
+  }
+
+  void _handleLoadingState(ProcessingState state) {
+    if (state == ProcessingState.loading || state == ProcessingState.buffering) {
+      _loadingTimeoutTimer?.cancel();
+      _loadingTimeoutTimer = Timer(const Duration(seconds: 20), () {
+        if (_player.processingState == ProcessingState.loading || _player.processingState == ProcessingState.buffering) {
+          final idx = _player.currentIndex ?? -1;
+          if (idx >= 0 && idx < _playlist.length) {
+            try {
+              toastService.show('cannotAccessSong', args: {'title': _playlist[idx].title});
+            } catch (_) {}
+          }
+          if (_player.hasNext) {
+            try {
+              skipToNext();
+            } catch (_) {}
+          } else {
+            pause();
+          }
+        }
+      });
+    } else {
+      _loadingTimeoutTimer?.cancel();
+    }
   }
 
   /// 启用/禁用歌曲间淡入淡 
@@ -280,33 +365,42 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> setPlaylist(List<Song> songs, {int initialIndex = 0}) async {
     _playlist.clear();
     _songCache.clear();
-    
+
     if (songs.isEmpty) {
-      // 清空播放列表时，设置空的audioSource以重置播放器状 
+      // 清空播放列表时，设置空的audioSource以重置播放器状态
       await _player.setAudioSource(ConcatenatingAudioSource(children: []));
       queue.add(_playlist);
       mediaItem.add(null);
       return;
     }
-    
+
     final audioSources = <AudioSource>[];
-    
+
+    // We build media list only for songs that produced a valid AudioSource.
     for (final song in songs) {
-      final mediaItem = _createMediaItem(song);
-      _playlist.add(mediaItem);
-      _songCache[mediaItem.id] = song;
-      
-      final audioSource = await _createAudioSource(song);
-      audioSources.add(audioSource);
+      try {
+        final audioSource = await _createAudioSource(song);
+        final mediaItem = _createMediaItem(song);
+
+        _playlist.add(mediaItem);
+        _songCache[mediaItem.id] = song;
+        audioSources.add(audioSource);
+      } catch (e) {
+        // Emit toast request to UI and skip this song
+        try {
+          toastService.show('cannotAccessSong', args: {'title': song.title ?? ''});
+        } catch (_) {}
+        print('[MyAudioHandler] Skipping song due to audio source error: ${song.path}, error: $e');
+      }
     }
-    
+
     final playlist = ConcatenatingAudioSource(children: audioSources);
     await _player.setAudioSource(
       playlist,
-      initialIndex: initialIndex,
+      initialIndex: initialIndex.clamp(0, audioSources.length > 0 ? audioSources.length - 1 : 0),
       initialPosition: Duration.zero,
     );
-    
+
     queue.add(_playlist);
     if (initialIndex >= 0 && initialIndex < _playlist.length) {
       mediaItem.add(_playlist[initialIndex]);
@@ -315,22 +409,29 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   /// 添加歌曲到播放列表末 
   Future<void> addToQueue(Song song) async {
-    final mediaItem = _createMediaItem(song);
-    _playlist.add(mediaItem);
-    _songCache[mediaItem.id] = song;
-    
-    final audioSource = await _createAudioSource(song);
-    final concatenating = _player.audioSource as ConcatenatingAudioSource?;
-    if (concatenating != null) {
-      await concatenating.add(audioSource);
-    }
-    
-    queue.add(_playlist);
-    
-    // 确保当前播放的mediaItem仍然正确
-    final currentIndex = _player.currentIndex;
-    if (currentIndex != null && currentIndex >= 0 && currentIndex < _playlist.length) {
-      this.mediaItem.add(_playlist[currentIndex]);
+    try {
+      final audioSource = await _createAudioSource(song);
+      final mediaItem = _createMediaItem(song);
+      _playlist.add(mediaItem);
+      _songCache[mediaItem.id] = song;
+
+      final concatenating = _player.audioSource as ConcatenatingAudioSource?;
+      if (concatenating != null) {
+        await concatenating.add(audioSource);
+      }
+
+      queue.add(_playlist);
+
+      // 确保当前播放的mediaItem仍然正确
+      final currentIndex = _player.currentIndex;
+      if (currentIndex != null && currentIndex >= 0 && currentIndex < _playlist.length) {
+        this.mediaItem.add(_playlist[currentIndex]);
+      }
+    } catch (e) {
+      try {
+        toastService.show('cannotAccessSong', args: {'title': song.title ?? ''});
+      } catch (_) {}
+      print('[MyAudioHandler] Failed to addToQueue, skipping song: ${song.path}, error: $e');
     }
   }
 
@@ -359,6 +460,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         this.mediaItem.add(_playlist[newCurrentIndex]);
       }
     } catch (e) {
+      try {
+        toastService.show('cannotAccessSong', args: {'title': song.title ?? ''});
+      } catch (_) {}
       print('[MyAudioHandler] Failed to add song to next: ${song.title}, error: $e');
       // 不添加无效的歌曲到队 
     }
@@ -404,6 +508,11 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     if (target < 0) target = 0;
     if (target >= _playlist.length) target = _playlist.length - 1;
 
+    final currentIndexBefore = _player.currentIndex;
+    final currentId = (currentIndexBefore != null && currentIndexBefore >= 0 && currentIndexBefore < _playlist.length)
+      ? _playlist[currentIndexBefore].id
+      : null;
+
     final item = _playlist.removeAt(from);
     _playlist.insert(target, item);
 
@@ -418,11 +527,13 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     }
 
     queue.add(_playlist);
-    
-    // 强制更新当前播放的mediaItem，避免拖动时的UI闪烁
-    final currentIndex = _player.currentIndex;
-    if (currentIndex != null && currentIndex >= 0 && currentIndex < _playlist.length) {
-      mediaItem.add(_playlist[currentIndex]);
+
+    // 保持当前播放的 MediaItem 指向同一首歌，避免拖动时图标闪烁
+    if (currentId != null) {
+      final newIndex = _playlist.indexWhere((item) => item.id == currentId);
+      if (newIndex != -1) {
+        mediaItem.add(_playlist[newIndex]);
+      }
     }
   }
 
@@ -454,7 +565,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     Uri uri;
     Map<String, String>? headers;
     // 优先根据 sourceType 判断
-    if (song.sourceType == SourceType.webdav) {
+    if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
       // WebDAV 资源：上层已构建 URL 或者会提供可访问路 
       uri = Uri.parse(song.path);
       // 如果上层通过 Song.remoteUrl 传入 auth header（如 Basic ...），在这里设 headers

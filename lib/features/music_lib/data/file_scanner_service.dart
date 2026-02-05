@@ -7,24 +7,28 @@ import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:jmusic/core/services/database_service.dart';
+import 'package:jmusic/core/services/song_metadata_cache_service.dart';
 import 'package:jmusic/features/music_lib/domain/entities/album.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
 import 'package:jmusic/core/utils/artist_parser.dart';
 
 final fileScannerServiceProvider = Provider<FileScannerService>((ref) {
   final dbService = ref.watch(databaseServiceProvider);
-  return FileScannerService(dbService);
+  final metaCache = ref.watch(songMetadataCacheServiceProvider);
+  return FileScannerService(dbService, metaCache);
 });
 
 typedef ScanProgressCallback = void Function(int current, int total, String currentFile);
 
 class FileScannerService {
   final DatabaseService _dbService;
+  final SongMetadataCacheService _metaCache;
 
-  FileScannerService(this._dbService);
+  FileScannerService(this._dbService, this._metaCache);
 
   // 支持的格式
-  static const _supportedExtensions = {'.mp3', '.flac', '.m4a', '.wav', '.ogg'};
+  static const _videoExtensions = {'.mp4', '.mkv', '.avi', '.mov', '.rmvb', '.webm', '.flv', '.m3u8'};
+  static const _supportedExtensions = {'.mp3', '.flac', '.m4a', '.wav', '.ogg', ..._videoExtensions};
 
   /// 批量处理导入的路径（文件或文件夹）
   Future<int> scanPaths(List<String> paths, {ScanProgressCallback? onProgress}) async {
@@ -251,8 +255,10 @@ class FileScannerService {
     String? date;
     bool hasMetadata = false;
     String? coverPath;
+    String? lyrics;
 
     final ext = p.extension(file.path).toLowerCase();
+    final isVideo = _videoExtensions.contains(ext);
 
     // 根据不同的文件格式读取元数据
     if (ext == '.mp3') {
@@ -294,16 +300,40 @@ class FileScannerService {
     final parsedArtists = parseArtists(artist);
     final primary = parsedArtists.isNotEmpty ? parsedArtists.first : artist;
 
-    return Song()
+    lyrics = isVideo ? null : await _loadLocalLyrics(file);
+
+    final song = Song()
       ..path = file.path
+      ..mediaType = isVideo ? MediaType.video : MediaType.audio
       ..title = title
       ..artist = primary
       ..artists = parsedArtists
       ..album = album
       ..year = int.tryParse(date ?? '')
       ..coverPath = coverPath
+      ..lyrics = lyrics
       ..dateAdded = DateTime.now()
       ..size = await file.length();
+
+    await _metaCache.applyIfMissing(song);
+    return song;
+  }
+
+  Future<String?> _loadLocalLyrics(File audioFile) async {
+    try {
+      final dir = audioFile.parent.path;
+      final baseName = p.basenameWithoutExtension(audioFile.path);
+      final lrcPath = p.join(dir, '$baseName.lrc');
+      final lrcFile = File(lrcPath);
+      if (await lrcFile.exists()) {
+        final text = await lrcFile.readAsString(encoding: utf8);
+        final trimmed = text.trim();
+        return trimmed.isNotEmpty ? trimmed : null;
+      }
+    } catch (e) {
+      print('Error reading local lyrics for ${audioFile.path}: $e');
+    }
+    return null;
   }
 
   /// 读取 MP3 文件的元数据

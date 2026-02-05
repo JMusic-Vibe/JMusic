@@ -10,6 +10,7 @@ class CoverArt extends StatefulWidget {
   final double? height;
   final BoxFit fit;
   final String? cacheKey;
+  final bool isVideo;
 
   const CoverArt({
     super.key, 
@@ -17,7 +18,8 @@ class CoverArt extends StatefulWidget {
     this.width, 
     this.height, 
     this.fit = BoxFit.cover, 
-    this.cacheKey
+    this.cacheKey,
+    this.isVideo = false,
   });
 
   @override
@@ -54,6 +56,12 @@ class _CoverArtState extends State<CoverArt> {
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'Connection': 'keep-alive',
           },
+          imageBuilder: (context, imageProvider) => _wrapWithBadge(Image(
+            image: imageProvider,
+            width: widget.width,
+            height: widget.height,
+            fit: widget.fit,
+          )),
           placeholder: (context, url) => _loading(),
           errorWidget: (context, url, error) {
             // 如果加载失败，在日志中打印详情方便排查代理问题
@@ -77,13 +85,13 @@ class _CoverArtState extends State<CoverArt> {
         }
 
         if (!file.existsSync()) return _placeholder();
-        return Image.file(
+        return _wrapWithBadge(Image.file(
           file,
           width: widget.width,
           height: widget.height,
           fit: widget.fit,
           errorBuilder: (_, __, ___) => _error(),
-        );
+        ));
       }
     } catch (e) {
       print('[CoverArt] Catch Error: $e');
@@ -102,14 +110,40 @@ class _CoverArtState extends State<CoverArt> {
     width: widget.width,
     height: widget.height,
     color: Theme.of(context).colorScheme.surfaceVariant,
-    child: Icon(Icons.broken_image, color: Theme.of(context).colorScheme.onSurfaceVariant),
+    child: Icon(
+      widget.isVideo ? Icons.videocam : Icons.broken_image,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
   );
 
   Widget _placeholder() => Container(
     width: widget.width,
     height: widget.height,
     color: Theme.of(context).colorScheme.surfaceVariant,
-    child: Icon(Icons.music_note, color: Theme.of(context).colorScheme.onSurfaceVariant),
+    child: Icon(widget.isVideo ? Icons.videocam : Icons.music_note, color: Theme.of(context).colorScheme.onSurfaceVariant),
   );
+
+  Widget _wrapWithBadge(Widget child) {
+    if (!widget.isVideo) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          right: 4,
+          bottom: 4,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 2)],
+            ),
+            child: Icon(Icons.videocam, size: 12, color: Theme.of(context).colorScheme.onSurface),
+          ),
+        ),
+      ],
+    );
+  }
 }
 

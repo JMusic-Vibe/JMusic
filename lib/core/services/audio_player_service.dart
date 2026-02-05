@@ -84,6 +84,26 @@ class AudioPlayerService {
     final crossfadeDuration = _prefs.getCrossfadeDuration();
     _audioHandler.setCrossfadeEnabled(crossfadeEnabled);
     _audioHandler.setCrossfadeDuration(Duration(seconds: crossfadeDuration));
+
+    // 恢复播放模式（随机/循环）
+    try {
+      await _player.setShuffleModeEnabled(_prefs.shuffleEnabled);
+      final loopMode = switch (_prefs.loopMode) {
+        'one' => LoopMode.one,
+        'all' => LoopMode.all,
+        _ => LoopMode.off,
+      };
+      await _player.setLoopMode(loopMode);
+    } catch (e) {
+      print('[AudioPlayerService] Failed to restore playback mode: $e');
+    }
+
+    // 恢复桌面端音量设置
+    try {
+      await _player.setVolume(_prefs.desktopVolume.clamp(0.0, 1.0));
+    } catch (e) {
+      print('[AudioPlayerService] Failed to restore volume: $e');
+    }
     
     _isInitialized = true;
   }
@@ -105,6 +125,36 @@ class AudioPlayerService {
       if (!playing) {
         _savePlaybackState();
       }
+      
+      // Handle playback completion
+      if (state.processingState == ProcessingState.completed) {
+        final currentIndex = _player.currentIndex ?? 0;
+        final queueLength = _player.sequence?.length ?? 0;
+        final loopMode = _player.loopMode;
+        final shuffleEnabled = _player.shuffleModeEnabled;
+        
+        bool willAutoAdvance = false;
+        
+        if (loopMode == LoopMode.one) {
+          // Single song loop, will replay current song
+          willAutoAdvance = true;
+        } else if (loopMode == LoopMode.all) {
+          // Playlist loop, will go to next or first
+          willAutoAdvance = true;
+        } else if (shuffleEnabled) {
+          // Shuffle enabled, will play random next
+          willAutoAdvance = true;
+        } else {
+          // No loop, no shuffle, check if has next
+          willAutoAdvance = currentIndex < queueLength - 1;
+        }
+        
+        if (!willAutoAdvance) {
+          // No auto advance, pause playback
+          print('[AudioPlayerService] Playback completed, no auto advance, pausing');
+          _audioHandler.pause();
+        }
+      }
     });
     
     // 监听当前索引变化
@@ -122,6 +172,14 @@ class AudioPlayerService {
   }
 
   // ==================== 播放控制 ====================
+
+  double getVolume() => _player.volume;
+
+  Future<void> setVolume(double volume) async {
+    final v = volume.clamp(0.0, 1.0);
+    await _player.setVolume(v);
+    await _prefs.setDesktopVolume(v);
+  }
 
   /// 播放单首歌曲（替换当前队列）
   Future<void> playSong(Song song) async {
@@ -159,7 +217,7 @@ class AudioPlayerService {
     final processed = <Song>[];
     
     for (final song in songs) {
-      if (song.sourceType == SourceType.webdav) {
+      if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
         final processedSong = await _processWebDavSong(song);
         processed.add(processedSong);
       } else {
@@ -205,6 +263,8 @@ class AudioPlayerService {
     String webDavUrl = '';
     String webDavUser = '';
     String webDavPassword = '';
+    String? openListToken;
+    SourceType effectiveSource = song.sourceType;
 
     if (song.syncConfigId != null) {
       if (!_syncConfigCache.containsKey(song.syncConfigId)) {
@@ -218,6 +278,8 @@ class AudioPlayerService {
         webDavUrl = config.url ?? '';
         webDavUser = config.username ?? '';
         webDavPassword = config.password ?? '';
+        openListToken = config.token;
+        effectiveSource = config.type == SyncType.openlist ? SourceType.openlist : SourceType.webdav;
         print('[AudioPlayerService] _processWebDavSong: using SyncConfig id=${song.syncConfigId} url=${webDavUrl} for song id=${song.id}');
       }
     } else {
@@ -234,7 +296,10 @@ class AudioPlayerService {
     }
 
     // 构建WebDAV URL
-    String cleanUrl = webDavUrl;
+    String cleanUrl = webDavUrl.trim();
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'http://$cleanUrl';
+    }
     if (cleanUrl.endsWith('/')) cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
     String path = song.path;
     if (!path.startsWith('/')) path = '/$path';
@@ -244,10 +309,12 @@ class AudioPlayerService {
 
     print('[AudioPlayerService] _processWebDavSong: constructed WebDAV URL: $fullUrl (id=${song.id})');
 
-    // 如果有用户名/密码，将其编码为 Basic auth 并放 Song.remoteUrl 字段，供创建 AudioSource 时使 
+    // 如果有用户名/密码或 token，将其编码为 Authorization 并放 Song.remoteUrl 字段
     String? authHeader;
     try {
-      if (webDavUser.isNotEmpty) {
+      if (openListToken != null && openListToken!.isNotEmpty) {
+        authHeader = 'Bearer $openListToken';
+      } else if (webDavUser.isNotEmpty) {
         final cred = base64.encode(utf8.encode('$webDavUser:$webDavPassword'));
         authHeader = 'Basic $cred';
       }
@@ -256,7 +323,15 @@ class AudioPlayerService {
     }
 
     // 返回时明确标记为 webdav 源，并把 authHeader 放到 remoteUrl 字段（用于传 header 
-    return song.copyWith(path: fullUrl, sourceType: SourceType.webdav, remoteUrl: authHeader);
+    return song.copyWith(path: fullUrl, sourceType: effectiveSource, remoteUrl: authHeader);
+  }
+
+  /// Resolve a song to a playable path (local or remote) without touching the audio queue.
+  Future<Song> resolvePlayableSong(Song song) async {
+    if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
+      return _processWebDavSong(song);
+    }
+    return song;
   }
 
   /// 添加歌曲到队列末 
@@ -300,7 +375,7 @@ class AudioPlayerService {
   Future<void> play() => _audioHandler.play();
 
   /// 暂停
-  Future<void> pause() => _player.pause();
+  Future<void> pause() => _audioHandler.pause();
 
   /// 停止
   Future<void> stop() => _player.stop();
@@ -320,11 +395,18 @@ class AudioPlayerService {
   /// 设置随机播放
   Future<void> setShuffleMode(bool enabled) async {
     await _player.setShuffleModeEnabled(enabled);
+    await _prefs.setShuffleEnabled(enabled);
   }
 
   /// 设置循环模式
   Future<void> setLoopMode(LoopMode mode) async {
     await _player.setLoopMode(mode);
+    final prefsValue = switch (mode) {
+      LoopMode.one => 'one',
+      LoopMode.all => 'all',
+      LoopMode.off => 'off',
+    };
+    await _prefs.setLoopMode(prefsValue);
   }
 
   AudioServiceRepeatMode _repeatModeFromLoopMode(LoopMode mode) {
@@ -362,7 +444,10 @@ class AudioPlayerService {
 
   /// 更新歌曲元数 
   Future<void> updateMetadata(Song updatedSong) async {
-    await _audioHandler.updateSongMetadata(updatedSong);
+    final processed = (updatedSong.sourceType == SourceType.webdav || updatedSong.sourceType == SourceType.openlist)
+        ? await _processWebDavSong(updatedSong)
+        : updatedSong;
+    await _audioHandler.updateSongMetadata(processed);
   }
 
   // ==================== 持久 ====================

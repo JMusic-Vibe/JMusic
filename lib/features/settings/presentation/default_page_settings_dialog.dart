@@ -34,47 +34,43 @@ class _DefaultPageSettingsDialogState extends ConsumerState<DefaultPageSettingsD
       _PageOption(label: l10n.settings, icon: Icons.settings),
     ];
 
-    return AlertDialog(
-      title: Text(
-        l10n.defaultPage,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.defaultPage),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          // Text(
-          //   l10n.defaultPageDescription,
-          //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          //   ),
-          const SizedBox(height: 16),
-          ...List.generate(pageOptions.length, (index) {
-            final option = pageOptions[index];
-            return RadioListTile<int>(
-              title: Row(
-                children: [
-                  Icon(option.icon, size: 20),
-                  const SizedBox(width: 12),
-                  Text(option.label),
-                ],
-              ),
-              value: index,
-              groupValue: _selectedIndex,
-              onChanged: (value) async {
-                setState(() {
-                  _selectedIndex = value!;
-                });
-                await ref.read(preferencesServiceProvider).setDefaultPageIndex(value!);
-              },
-            );
-          }),
+          Card(
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                ...List.generate(pageOptions.length, (index) {
+                  final option = pageOptions[index];
+                  return RadioListTile<int>(
+                    title: Row(
+                      children: [
+                        Icon(option.icon, size: 20),
+                        const SizedBox(width: 12),
+                        Text(option.label),
+                      ],
+                    ),
+                    value: index,
+                    groupValue: _selectedIndex,
+                    onChanged: (value) async {
+                      setState(() {
+                        _selectedIndex = value!;
+                      });
+                      await ref.read(preferencesServiceProvider).setDefaultPageIndex(value!);
+                    },
+                  );
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.confirm),
-        ),
-      ],
     );
   }
 }

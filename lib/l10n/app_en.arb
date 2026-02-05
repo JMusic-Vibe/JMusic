@@ -4,7 +4,24 @@
     "home": "Home",
     "library": "Library",
     "playlists": "Playlists",
+    "playlistRecommendations": "Playlist Picks",
     "more": "More",
+    "playVideo": "Play Video",
+    "restoreOriginalInfo": "Restore Original Info",
+    "restoreOriginalInfoConfirm": "Restore original info for {count} item(s)?",
+    "@restoreOriginalInfoConfirm": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreOriginalInfoSuccess": "Restored {count} item(s)",
+    "@restoreOriginalInfoSuccess": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreOriginalInfoFailed": "No original info to restore",
+    "batchRestore": "Batch Restore",
     "sync": "Sync",
     "scraper": "Scraper",
     "settings": "Settings",
@@ -15,18 +32,50 @@
     "language": "Language",
     "theme": "Theme",
     "storageEvents": "Storage & Cache",
+    "coverCache": "Cover Cache",
+    "clearCoverCacheConfirm": "Clear cover cache?",
+    "coverCacheCleared": "Cover cache cleared",
+    "artistAvatarCache": "Artist Avatar Cache",
+    "clearArtistAvatarCacheConfirm": "Clear artist avatar cache?",
+    "artistAvatarCacheCleared": "Artist avatar cache cleared",
+    "embeddedCoverCache": "Embedded Cover Cache",
+    "clearEmbeddedCoverCacheConfirm": "Clear embedded cover cache?",
+    "embeddedCoverCacheCleared": "Embedded cover cache cleared",
+    "appDataSize": "App Data Size",
+    "logExport": "Export Logs",
+    "logFileSize": "Log Size",
+    "logExported": "Logs exported",
+    "clearLogs": "Clear Logs",
+    "clearLogsConfirm": "Clear logs?",
+    "logsCleared": "Logs cleared",
+    "scrapeCompleteWithLyrics": "Scrape complete: album info updated, lyrics found",
+    "scrapeCompleteNoLyrics": "Scrape complete: album info updated, lyrics not found",
+    "artistNameLabel": "Artist Name",
     "syncSettings": "Sync Settings",
     "serverSettings": "Server Settings",
     "defaultPage": "Default Page",
     "scraperSettings": "Scraper Settings",
     "usePrimaryArtistForScraper": "Use primary artist for scraping",
     "usePrimaryArtistForScraperDesc": "When enabled, the scraper will query using the primary artist only; otherwise it will include featured and collaborating artists.",
+    "scraperMatchSources": "Match Sources",
+    "scraperSourceAtLeastOne": "Please enable at least one source",
+    "scraperSongSources": "Song scraping sources",
+    "scraperArtistSources": "Artist scraping sources",
+    "scraperLyricsSources": "Lyrics scraping sources",
+    "scraperSourceLrclib": "lrclib",
+    "scraperSourceRangotec": "rangotec",
+    "scraperLyricsSourcesFixed": "Lyrics sources are fixed to lrclib + rangotec",
     "audioSettings": "Audio & Playback",
     "playbackSettings": "Playback Settings",
+    "desktopVolume": "Desktop Volume",
     "crossfadeEnabled": "Enable Crossfade",
     "crossfadeEnabledDesc": "Enable crossfade effect when switching songs for a smoother listening experience",
     "crossfadeDuration": "Crossfade Duration",
     "crossfadeDurationDesc": "Set the duration of the crossfade effect between songs",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "loopingOn": "Looping: On",
+    "loopingOff": "Looping: Off",
     "seconds": "{count} seconds",
     "@seconds": {
         "placeholders": {
@@ -67,6 +116,7 @@
     "editTags": "Edit Tags", 
     "addToPlaylist": "Add to Playlist",
     "playAll": "Play All",
+    "play": "Play",
 
     "deleteConfirm": "Delete {count} selected songs?",
     "deleteSingleConfirm": "Delete \"{title}\"?",
@@ -111,7 +161,7 @@
     
     "syncCenter": "Sync Center",
     "addSyncAccount": "Add Sync Account",
-    "openListNotSupported": "OpenAList not supported yet",
+    "openListNotSupported": "OpenList not supported yet",
     "noSyncAccount": "No Sync Accounts",
     "addSyncAccountHint": "Tap + at top right to add WebDAV or Alist account",
     "connected": "Connected",
@@ -124,6 +174,20 @@
     "searchUnarchived": "Search unarchived songs...",
     "selectedCount": "{count} selected",
     "scraperCenter": "Scraper Center",
+    "scraperCategoryAll": "All Issues",
+    "scraperCategoryUnscraped": "Not Scraped",
+    "scraperCategoryScraped": "Scraped",
+    "scraperCategoryHasLyrics": "Has Lyrics",
+    "scraperCategoryNoLyrics": "No Lyrics",
+    "scraperCategoryMissingCover": "Missing Cover",
+    "scraperCategoryMissingInfo": "Missing Artist/Album",
+    "scraperCategoryArtists": "Artists",
+    "scraperSourceMusicBrainz": "MusicBrainz",
+    "scraperSourceItunes": "iTunes",
+    "scraperSourceLabel": "Source: {source}",
+    "@scraperSourceLabel": {
+        "placeholders": { "source": {} }
+    },
     "refresh": "Refresh",
     "taskRunningBackground": "Task running in background",
     
@@ -132,6 +196,10 @@
     "nowPlaying": "Now Playing",
     "manualMatchMetadata": "Manual Match Metadata",
     "lyricsComingSoon": "Lyrics coming soon...",
+    "lyricsModeOff": "Lyrics: Off",
+    "lyricsModeCompact": "Lyrics: Under cover",
+    "lyricsModeFull": "Lyrics: Full screen",
+    "noLyricsFound": "No lyrics found",
     
     "syncCenterSubtitle": "Manual sync & Diff check",
     "scraperCenterSubtitle": "Manual scrape & Candidate confirm",
@@ -187,9 +255,12 @@
     "copyToClipboard": "Copy to Clipboard",
     "fullPath": "Full Path",
     "webdav": "WebDAV",
-    "openalist": "OpenAList",
+    "openlist": "OpenList",
     "webdavConfigTitle": "WebDAV Configuration",
     "webdavUrlLabel": "WebDAV URL (e.g. https://dav.example.com)",
+    "keepAliveTitle": "Keepalive",
+    "keepAliveDescription": "If connection drops when the screen sleeps, allow auto-start in system settings.",
+    "openAutoStart": "Open auto-start settings",
     "username": "Username",
     "password": "Password",
     "musicFolderPath": "Music Folder Path (e.g. /Music)",
@@ -229,6 +300,15 @@
     "legacyCacheCleared": "Legacy cache cleared",
     "clearCache": "Clear Cache",
     "scrapeAgain": "Scrape Again",
+    "scrapeArtistAvatars": "Scrape Artist Avatars",
+    "manualMatchArtist": "Manual Match Artist",
+    "batchScrapeArtists": "Batch Scrape Artists",
+    "scrapeArtistAvatarsResult": "Updated {count} artist avatars",
+    "@scrapeArtistAvatarsResult": {
+        "placeholders": {
+            "count": {}
+        }
+    },
     "songDeletedWithTitle": "Deleted \"{title}\"",
     "@songDeletedWithTitle": {
         "placeholders": {
@@ -237,6 +317,12 @@
     },
     "cacheClearedWithTitle": "Cleared cache for \"{title}\"",
     "@cacheClearedWithTitle": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "cannotAccessSong": "Cannot access song file: {title}",
+    "@cannotAccessSong": {
         "placeholders": {
             "title": {}
         }
@@ -251,5 +337,57 @@
         "placeholders": {
             "playlistName": {}
         }
-    }
+    },
+    "resetAdminPasswordTitle": "Reset Admin Password",
+    "resetFailed": "Reset Failed",
+    "unknownError": "Unknown Error",
+    "newPasswordGenerated": "New Password Generated",
+    "usernameAdmin": "Username: admin",
+    "newPassword": "New Password: {pwd}",
+    "@newPassword": {
+        "placeholders": {
+            "pwd": {}
+        }
+    },
+    "portAndProxy": "Port & Proxy",
+    "invalidPort": "Invalid Port",
+    "proxyHostEmpty": "Proxy Host Cannot Be Empty",
+    "invalidProxyPort": "Invalid Proxy Port",
+    "savedRestartRequired": "Saved, restart required to take effect",
+    "openListService": "OpenList Service",
+    "statusRunning": "Status: Running",
+    "statusStopped": "Status: Stopped",
+    "address": "Address: http://{address}:{port}",
+    "@address": {
+        "placeholders": {
+            "address": {},
+            "port": {}
+        }
+    },
+    "stop": "Stop",
+    "start": "Start",
+    "managementPage": "Management Page",
+    "accessManagementPage": "Access OpenList Management Page:",
+    "startServiceFirst": "Please start the OpenList service first",
+    "openInApp": "Open in App",
+    "openInBrowser": "Open in Browser",
+    "adminInfo": "Admin Information",
+    "saveCredentials": "Please save:\nUsername: admin\nInitial Password: {password}",
+    "@saveCredentials": {
+        "placeholders": {
+            "password": {}
+        }
+    },
+    "saved": "Saved",
+    "defaultUsernameAdmin": "Default Username: admin",
+    "resetPassword": "Reset Password",
+    "stopServiceToModify": "Stop the service to modify",
+    "serviceRunningLocked": "Service is running, locked",
+    "stopServiceExitHint": "Stop OpenList manually before exiting the app so the service can be stopped",
+    "saveFailed": "Save Failed",
+    "openListManagement": "OpenList Management",
+    "openInApp": "Open in App",
+    "openInBrowser": "Open in Browser",
+    "autoStartOpenListOnAppLaunch": "Auto-start OpenList",
+    "autoStartOpenListDescription": "When enabled, the app will automatically start the OpenList service on launch"
 }

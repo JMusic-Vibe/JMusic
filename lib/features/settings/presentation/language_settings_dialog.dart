@@ -15,50 +15,49 @@ class LanguageSettingsDialog extends ConsumerWidget {
     final savedLocaleStr = ref.watch(preferencesServiceProvider).locale;
 
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(
-        l10n.language,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.language),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          _buildRadioTile(
-            context,
-            ref,
-            title: AppLocalizations.of(context)!.themeSystem,
-            value: 'system',
-            groupValue: savedLocaleStr,
-          ),
-          _buildRadioTile(
-             context,
-            ref,
-            title: '简体中文',
-            value: 'zh',
-            groupValue: savedLocaleStr,
-          ),
-          _buildRadioTile(
-             context,
-            ref,
-            title: '繁體中文',
-            value: 'zh_Hant',
-            groupValue: savedLocaleStr,
-          ),
-          _buildRadioTile(
-             context,
-            ref,
-            title: 'English',
-            value: 'en',
-            groupValue: savedLocaleStr,
+          Card(
+            child: Column(
+              children: [
+                _buildRadioTile(
+                  context,
+                  ref,
+                  title: AppLocalizations.of(context)!.themeSystem,
+                  value: 'system',
+                  groupValue: savedLocaleStr,
+                ),
+                _buildRadioTile(
+                   context,
+                  ref,
+                  title: '简体中文',
+                  value: 'zh',
+                  groupValue: savedLocaleStr,
+                ),
+                _buildRadioTile(
+                   context,
+                  ref,
+                  title: '繁體中文',
+                  value: 'zh_Hant',
+                  groupValue: savedLocaleStr,
+                ),
+                _buildRadioTile(
+                   context,
+                  ref,
+                  title: 'English',
+                  value: 'en',
+                  groupValue: savedLocaleStr,
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-      ],
     );
   }
 

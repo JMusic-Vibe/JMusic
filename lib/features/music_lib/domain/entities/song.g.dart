@@ -385,12 +385,12 @@ const _SongmediaTypeValueEnumMap = {
 const _SongsourceTypeEnumValueMap = {
   'local': 0,
   'webdav': 1,
-  'openalist': 2,
+  'openlist': 2,
 };
 const _SongsourceTypeValueEnumMap = {
   0: SourceType.local,
   1: SourceType.webdav,
-  2: SourceType.openalist,
+  2: SourceType.openlist,
 };
 
 Id _songGetId(Song object) {

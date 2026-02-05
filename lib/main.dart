@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,8 +19,10 @@ import 'core/widgets/custom_title_bar.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/database_service.dart';
 import 'core/services/audio_player_service.dart';
+import 'core/services/log_service.dart';
 import 'core/network/global_http_overrides.dart';
 import 'core/network/system_proxy_helper.dart';
+import 'features/sync/openlist/openlist_service_manager.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'core/services/my_audio_handler.dart';
@@ -37,6 +41,12 @@ void main() async {
   await SystemProxyHelper.refreshProxy();
   
   final prefs = await SharedPreferences.getInstance();
+  await LogService.instance.init();
+
+  FlutterError.onError = (details) {
+    LogService.instance.e('FlutterError', details.exception, details.stack);
+    FlutterError.presentError(details);
+  };
 
   // 初始化全局 HTTP 代理设置 (影响 Image.network 等)
   HttpOverrides.global = GlobalHttpOverrides(prefs);
@@ -46,6 +56,12 @@ void main() async {
     final size = WidgetsBinding.instance.window.physicalSize / WidgetsBinding.instance.window.devicePixelRatio;
     if (size.shortestSide < 600) { // 小屏设备（手机）
       await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    } else { // 大屏设备（平板）
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
     }
   }
 
@@ -55,7 +71,7 @@ void main() async {
       size: Size(1280, 800),
       minimumSize: Size(400, 600),
       center: true,
-      title: 'J-Music',
+      title: 'JMusic',
       titleBarStyle: TitleBarStyle.hidden,
     );
     windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -64,12 +80,21 @@ void main() async {
     });
   }
   
-  runApp(ProviderScope(
-    overrides: [
-      preferencesServiceProvider.overrideWithValue(PreferencesService(prefs)),
-      myAudioHandlerProvider.overrideWithValue(audioHandler),
-    ],
-    child: const JMusicApp(),
+  runZonedGuarded(() {
+    runApp(ProviderScope(
+      overrides: [
+        preferencesServiceProvider.overrideWithValue(PreferencesService(prefs)),
+        myAudioHandlerProvider.overrideWithValue(audioHandler),
+      ],
+      child: const JMusicApp(),
+    ));
+  }, (error, stack) {
+    LogService.instance.e('Uncaught error', error, stack);
+  }, zoneSpecification: ZoneSpecification(
+    print: (self, parent, zone, line) {
+      LogService.instance.i(line);
+      parent.print(zone, line);
+    },
   ));
 }
 
@@ -87,6 +112,7 @@ class _JMusicAppState extends ConsumerState<JMusicApp> {
     // 延迟到下一帧，确保所有provider都初始化�?
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _restoreLastQueue();
+      _autoStartOpenListIfEnabled();
     });
   }
 
@@ -95,13 +121,21 @@ class _JMusicAppState extends ConsumerState<JMusicApp> {
     await audioPlayerService.restoreLastQueue();
   }
 
+  Future<void> _autoStartOpenListIfEnabled() async {
+    final prefs = ref.read(preferencesServiceProvider);
+    if (prefs.openListAutoStart) {
+      final controller = ref.read(openListServiceControllerProvider.notifier);
+      await controller.start();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(languageProvider);
     
     return MaterialApp(
-      title: 'J-Music',
+      title: 'JMusic',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,

@@ -23,6 +23,11 @@ class SyncConfigRepository {
     return isar.syncConfigs.filter().isEnabledEqualTo(true).findAll();
   }
 
+  Future<SyncConfig?> getConfigById(int id) async {
+    final isar = await _dbService.db;
+    return isar.syncConfigs.get(id);
+  }
+
   Future<void> saveConfig(SyncConfig config) async {
     final isar = await _dbService.db;
     await isar.writeTxn(() async {

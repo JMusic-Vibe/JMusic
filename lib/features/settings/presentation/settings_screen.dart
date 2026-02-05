@@ -8,6 +8,7 @@ import 'package:jmusic/features/settings/presentation/language_settings_dialog.d
 import 'package:jmusic/features/settings/presentation/storage_settings_dialog.dart';
 import 'package:jmusic/features/settings/presentation/scraper_settings_dialog.dart';
 import 'package:jmusic/features/settings/presentation/playback_settings_dialog.dart';
+import 'package:jmusic/features/sync/openlist/openlist_settings_screen.dart';
 import 'package:jmusic/core/theme/theme_provider.dart';
 import 'package:jmusic/core/services/preferences_service.dart';
 import 'package:jmusic/core/localization/language_provider.dart';
@@ -67,9 +68,8 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.language),
             subtitle: Text(getLanguageText()),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const LanguageSettingsDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LanguageSettingsDialog()),
               );
             },
           ),
@@ -78,9 +78,8 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.theme),
             subtitle: Text(getThemeModeText(themeMode)),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const ThemeSettingsDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ThemeSettingsDialog()),
               );
             },
           ),
@@ -89,9 +88,8 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.defaultPage), 
             subtitle: Text(getDefaultPageText(defaultPageIndex)),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const DefaultPageSettingsDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DefaultPageSettingsDialog()),
               );
             },
           ),
@@ -99,9 +97,8 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.storage_outlined),
             title: Text(l10n.storageEvents),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const StorageSettingsDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StorageSettingsDialog()),
               );
             },
           ),
@@ -109,9 +106,8 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.auto_awesome_outlined),
             title: Text(l10n.scraperSettings),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const ScraperSettingsDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ScraperSettingsDialog()),
               );
             },
           ),
@@ -119,9 +115,8 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.tune_outlined),
             title: Text(l10n.audioSettings),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const PlaybackSettingsDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PlaybackSettingsDialog()),
               );
             },
           ),
@@ -129,9 +124,19 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.public_outlined), 
             title: Text(l10n.proxySettings),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const ProxyConfigDialog(),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ProxyConfigDialog()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud_circle_outlined),
+            title: Text(l10n.openlist),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const OpenListSettingsScreen(),
+                ),
               );
             },
           ),

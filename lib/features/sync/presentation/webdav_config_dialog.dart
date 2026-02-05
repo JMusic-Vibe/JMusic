@@ -33,6 +33,13 @@ class _WebdavConfigDialogState extends ConsumerState<WebdavConfigDialog> {
     _pathController = TextEditingController(text: widget.config?.path ?? '/');
   }
 
+  String _normalizeUrl(String input) {
+    final value = input.trim();
+    if (value.isEmpty) return value;
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    return 'http://$value';
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -52,8 +59,8 @@ class _WebdavConfigDialogState extends ConsumerState<WebdavConfigDialog> {
       
       final config = widget.config ?? SyncConfig();
       config.name = _nameController.text.trim();
-      config.type = SyncType.webdav;
-      config.url = _urlController.text.trim();
+      config.type = widget.config?.type ?? SyncType.webdav;
+      config.url = _normalizeUrl(_urlController.text);
       config.username = _userController.text.trim();
       config.password = _passwordController.text;
       config.path = _pathController.text.trim();
@@ -172,7 +179,7 @@ class _WebdavConfigDialogState extends ConsumerState<WebdavConfigDialog> {
                     TextField(
                       controller: _urlController,
                       decoration: InputDecoration(
-                        hintText: 'https://example.com/webdav',
+                        hintText: 'http://example.com:80/webdav',
                         prefixIcon: Icon(
                           Icons.link,
                           color: theme.colorScheme.onSurfaceVariant,

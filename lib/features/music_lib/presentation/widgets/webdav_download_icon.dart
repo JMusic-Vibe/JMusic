@@ -18,7 +18,7 @@ class WebDavDownloadIcon extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (song.sourceType != SourceType.webdav && song.sourceType != SourceType.openalist) {
+    if (song.sourceType != SourceType.webdav && song.sourceType != SourceType.openlist) {
       return const SizedBox.shrink();
     }
 

@@ -331,7 +331,7 @@ class SongDetailsDialog extends ConsumerWidget {
 
   Future<String> _resolveFullPath(WidgetRef ref) async {
     // If not webdav, return original path
-    if (song.sourceType != SourceType.webdav) return song.path;
+    if (song.sourceType != SourceType.webdav && song.sourceType != SourceType.openlist) return song.path;
 
     // Prefer explicit remoteUrl if present
     if (song.remoteUrl != null && song.remoteUrl!.isNotEmpty) return song.remoteUrl!;

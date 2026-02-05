@@ -5,18 +5,29 @@ import 'package:jmusic/core/widgets/capsule_toast.dart';
 import 'package:jmusic/core/widgets/bottom_action_sheet.dart';
 import 'package:jmusic/features/scraper/presentation/batch_scraper_service.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:async';
 import 'dart:io';
+import 'dart:io';
+import 'dart:ui';
 import 'package:jmusic/core/widgets/cover_art.dart';
 import 'package:jmusic/features/music_lib/data/file_scanner_service.dart';
 import 'package:jmusic/core/services/database_service.dart';
+import 'package:jmusic/core/services/song_metadata_cache_service.dart';
+import 'package:jmusic/core/services/cover_cache_service.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
+import 'package:jmusic/features/music_lib/domain/entities/artist.dart';
 import 'package:jmusic/features/player/presentation/player_providers.dart';
+import 'package:jmusic/features/player/presentation/video_playback.dart';
 import 'package:isar/isar.dart';
+import 'package:jmusic/features/music_lib/domain/entities/playlist.dart';
 import 'package:jmusic/features/playlists/presentation/playlist_selection_dialog.dart';
+import 'package:jmusic/features/playlists/data/playlist_repository.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_search_dialog.dart';
 import 'package:jmusic/features/scraper/data/musicbrainz_service.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
 import 'package:jmusic/features/scraper/presentation/scrape_progress_dialog.dart';
+import 'package:jmusic/features/scraper/presentation/artist_search_dialog.dart';
 import 'package:jmusic/features/music_lib/presentation/widgets/file_drop_zone.dart';
 import 'package:jmusic/features/music_lib/presentation/widgets/webdav_download_icon.dart';
 import 'package:jmusic/features/music_lib/presentation/tag_editor_dialog.dart';
@@ -49,6 +60,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   
   // For non-song views (Folders, Artists, etc.)
   List<String>? _groupedItems; // Stores list of artists/albums/folders
+  final Map<String, String?> _groupCoverMap = {}; // Album -> coverPath
+  final Map<String, String?> _artistCoverMap = {}; // Artist -> coverPath
+  final Map<String, String?> _artistAvatarMap = {}; // Artist -> avatar path
+  final Map<String, String> _groupedFolderPathMap = {}; // Display -> raw folder path
+
+  StreamSubscription<List<Artist>>? _artistSub;
   
   final Set<int> _selectedIds = {};
   final TextEditingController _searchCtrl = TextEditingController();
@@ -78,7 +95,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     super.initState();
     // If a filter is provided, we are in "Drill Down" mode, so force 'songs' view
     if (widget.filter != null) {
-      _viewMode = LibraryViewMode.songs;
+      // Keep folder view for folder drill-down to allow deeper navigation
+      if (widget.filter!.type != FilterType.folder) {
+        _viewMode = LibraryViewMode.songs;
+      } else {
+        _viewMode = LibraryViewMode.folders;
+      }
     }
     _searchFocus.addListener(() {
       if (!_searchFocus.hasFocus && _showSearch) {
@@ -86,6 +108,35 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       }
     });
     _loadData(); // Replaces _updateSongsStream
+    _watchArtists();
+  }
+
+  Future<void> _watchArtists() async {
+    final db = await ref.read(databaseServiceProvider).db;
+    _artistSub?.cancel();
+    _artistSub = db.artists.where().watch(fireImmediately: true).listen((artists) {
+      if (!mounted) return;
+      final map = <String, String?>{};
+      for (final artist in artists) {
+        String? path;
+        final local = artist.localImagePath;
+        if (local != null && local.isNotEmpty) {
+          final file = File(local);
+          if (file.existsSync()) {
+            path = local;
+          }
+        }
+        path ??= artist.imageUrl;
+        if (path != null && path.isNotEmpty) {
+          map[artist.name] = path;
+        }
+      }
+      setState(() {
+        _artistAvatarMap
+          ..clear()
+          ..addAll(map);
+      });
+    });
   }
 
   void _onViewModeChanged(LibraryViewMode mode) {
@@ -98,6 +149,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _showSearch = false; // Hide search when switching views
       _songsStream = null;
       _groupedItems = null;
+      _groupCoverMap.clear();
+      _artistCoverMap.clear();
+      // Keep artist avatar cache so switching tabs doesn't drop already loaded avatars.
     });
     _loadData();
   }
@@ -118,6 +172,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (_viewMode == LibraryViewMode.songs || _viewMode == LibraryViewMode.webdav) {
       _initSongStream(db);
     } else {
+      if (_viewMode == LibraryViewMode.folders && widget.filter?.type == FilterType.folder) {
+        _initSongStream(db);
+      } else {
+        _songsStream = null;
+      }
       _loadGroupedData(db);
     }
   }
@@ -145,7 +204,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     // WebDAV view mode
     if (_viewMode == LibraryViewMode.webdav) {
-      query = query.sourceTypeEqualTo(SourceType.webdav);
+      query = query.group((g) => g
+        .sourceTypeEqualTo(SourceType.webdav)
+        .or()
+        .sourceTypeEqualTo(SourceType.openlist)
+      );
     }
 
     // 2. Apply Search
@@ -187,20 +250,89 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       if (!mounted) return;
       
       final Set<String> items = {};
+      _groupCoverMap.clear();
+      _artistCoverMap.clear();
+      _groupedFolderPathMap.clear();
+
+      bool matchesFilter(Song song) {
+        final filter = widget.filter;
+        if (filter == null) return true;
+        switch (filter.type) {
+          case FilterType.artist:
+            return song.artist == filter.value || song.artists.contains(filter.value);
+          case FilterType.album:
+            return song.album == filter.value;
+          case FilterType.folder:
+            return _isWithinOrEqual(filter.value, song.path);
+        }
+      }
+
+      Map<int?, String?> commonRemoteRoots = {};
+      if (_viewMode == LibraryViewMode.folders && widget.filter?.type != FilterType.folder) {
+        final remoteDirsByConfig = <int?, List<String>>{};
+        for (final s in songs.where((s) => s.sourceType == SourceType.webdav || s.sourceType == SourceType.openlist)) {
+          final key = s.syncConfigId;
+          remoteDirsByConfig.putIfAbsent(key, () => []);
+          remoteDirsByConfig[key]!.add(p.dirname(s.path));
+        }
+        for (final entry in remoteDirsByConfig.entries) {
+          commonRemoteRoots[entry.key] = _commonPathPrefix(entry.value);
+        }
+      }
       
       for (final song in songs) {
+        if (!matchesFilter(song)) continue;
         if (_viewMode == LibraryViewMode.artists) {
-          if (song.artists.isNotEmpty) {
-           items.addAll(song.artists.where((a) => a.isNotEmpty));
-          } else {
-           items.add(song.artist);
+          final artistList = song.artists.isNotEmpty ? song.artists : [song.artist];
+          for (final artist in artistList) {
+            if (artist.isEmpty) continue;
+            items.add(artist);
+            final existing = _artistCoverMap[artist];
+            if ((existing == null || existing.isEmpty) && (song.coverPath?.isNotEmpty ?? false)) {
+              _artistCoverMap[artist] = song.coverPath;
+            }
           }
         } else if (_viewMode == LibraryViewMode.albums) {
           items.add(song.album);
+          if (song.album.isNotEmpty) {
+            final existing = _groupCoverMap[song.album];
+            if ((existing == null || existing.isEmpty) && (song.coverPath?.isNotEmpty ?? false)) {
+              _groupCoverMap[song.album] = song.coverPath;
+            }
+          }
         } else if (_viewMode == LibraryViewMode.folders) {
            // Parent dir; for WebDAV include base URL
            String dir = p.dirname(song.path);
-           if (song.sourceType == SourceType.webdav) {
+           String display = dir;
+           String? baseRoot;
+
+           if (widget.filter?.type == FilterType.folder) {
+             baseRoot = widget.filter!.value;
+           } else if (song.sourceType == SourceType.local) {
+             final rootPrefix = p.rootPrefix(dir);
+             baseRoot = rootPrefix.isNotEmpty ? rootPrefix : null;
+           } else if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
+             baseRoot = commonRemoteRoots[song.syncConfigId];
+           }
+
+           if (baseRoot != null && _isWithinOrEqual(baseRoot, dir)) {
+             final relative = p.relative(dir, from: baseRoot);
+             final firstSegment = _firstSegment(relative);
+             if (relative.isEmpty || relative == '.') {
+               // Skip the base folder itself to avoid self-recursive navigation.
+               continue;
+             }
+             if (firstSegment.isNotEmpty && firstSegment != '.') {
+               if (song.sourceType == SourceType.local && widget.filter?.type != FilterType.folder) {
+                 display = p.join(baseRoot, firstSegment);
+               } else {
+                 display = firstSegment;
+               }
+               dir = p.join(baseRoot, firstSegment);
+             } else {
+               display = p.basename(dir);
+             }
+           } else if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
              String base = '';
              if (song.syncConfigId != null && configUrlMap.containsKey(song.syncConfigId)) {
                base = configUrlMap[song.syncConfigId]!;
@@ -214,14 +346,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                // Decode percent-encoding for display if possible. Some remote paths
                // may contain stray '%' sequences which throw; fallback to raw.
                try {
-                 items.add(Uri.decodeFull(combined));
+                 display = Uri.decodeFull(combined);
                } catch (_) {
-                 items.add(combined);
+                 display = combined;
                }
-               continue;
              }
            }
-           items.add(dir);
+
+           _addFolderItem(items, display, dir);
         }
       }
       
@@ -268,10 +400,50 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   @override
   void dispose() {
+    _artistSub?.cancel();
     _searchCtrl.dispose();
     _searchFocus.dispose();
     super.dispose();
   } 
+
+  String? _commonPathPrefix(List<String> paths) {
+    if (paths.isEmpty) return null;
+    final normalized = paths.map((p) => p.replaceAll('\\', '/')).toList();
+    final split = normalized.map((p) => p.split('/')).toList();
+    final minLen = split.map((s) => s.length).reduce((a, b) => a < b ? a : b);
+    int idx = 0;
+    while (idx < minLen) {
+      final part = split[0][idx];
+      if (split.any((s) => s[idx].toLowerCase() != part.toLowerCase())) break;
+      idx++;
+    }
+    if (idx == 0) return null;
+    final common = split[0].sublist(0, idx).join('/');
+    // Avoid returning root-only paths (e.g., "C:" or "/")
+    if (common == '/' || RegExp(r'^[a-zA-Z]:$').hasMatch(common)) return null;
+    return common;
+  }
+
+  String _firstSegment(String relative) {
+    if (relative.isEmpty || relative == '.') return '';
+    final parts = relative.replaceAll('\\', '/').split('/');
+    return parts.isNotEmpty ? parts.first : '';
+  }
+
+  bool _isWithinOrEqual(String base, String path) {
+    final normalizedBase = base.replaceAll('\\', '/');
+    final normalizedPath = path.replaceAll('\\', '/');
+    return normalizedPath == normalizedBase || normalizedPath.startsWith('$normalizedBase/');
+  }
+
+  void _addFolderItem(Set<String> items, String display, String path) {
+    var key = display;
+    if (_groupedFolderPathMap.containsKey(key) && _groupedFolderPathMap[key] != path) {
+      key = path;
+    }
+    items.add(key);
+    _groupedFolderPathMap[key] = path;
+  }
 
   // OLD _updateSongsStream REMOVED
 
@@ -297,6 +469,42 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     });
   }
 
+  void _showSelectionActionsSheet() {
+    final l10n = AppLocalizations.of(context)!;
+    BottomActionSheet.show(
+      context,
+      title: l10n.selectedCount(_selectedIds.length),
+      actions: [
+        ActionItem(
+          icon: Icons.playlist_add,
+          title: l10n.addToPlaylist,
+          onTap: _addToPlaylistSelected,
+        ),
+        ActionItem(
+          icon: Icons.edit,
+          title: l10n.editTags,
+          onTap: _editSelectedTags,
+        ),
+        ActionItem(
+          icon: Icons.auto_fix_high,
+          title: l10n.batchScrape,
+          onTap: _scrapeSelected,
+        ),
+        ActionItem(
+          icon: Icons.restore,
+          title: l10n.batchRestore,
+          onTap: _restoreSelected,
+        ),
+        ActionItem(
+          icon: Icons.delete,
+          title: l10n.delete,
+          color: Theme.of(context).colorScheme.error,
+          onTap: _deleteSelected,
+        ),
+      ],
+    );
+  }
+
   Future<void> _deleteSelected() async {
     final l10n = AppLocalizations.of(context)!;
     final count = _selectedIds.length;
@@ -314,9 +522,36 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     if (confirmed == true) {
       final db = await ref.read(databaseServiceProvider).db;
+      final metaCache = ref.read(songMetadataCacheServiceProvider);
+      final songsNullable = await db.songs.getAll(_selectedIds.toList());
+      final songs = songsNullable.whereType<Song>().toList();
+      await metaCache.saveMany(songs);
+
+      // 清理内嵌封面缓存文件（仅本地缓存路径）
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final embeddedDir = '${appDir.path}/j_music/${CoverCacheService.embeddedCoverSubDir}';
+        for (final song in songs) {
+          final cover = song.coverPath;
+          if (cover == null || cover.isEmpty) continue;
+          if (cover.startsWith(embeddedDir)) {
+            final file = File(cover);
+            if (file.existsSync()) {
+              await file.delete();
+            }
+          }
+        }
+      } catch (_) {}
       await db.writeTxn(() async {
+        // Delete songs
         await db.songs.deleteAll(_selectedIds.toList());
       });
+
+      // Remove deleted song IDs from playlists via repository (in a separate DB txn)
+      {
+        final repo = PlaylistRepository(ref.read(databaseServiceProvider));
+        await repo.removeSongIdsFromPlaylists(_selectedIds.toList());
+      }
       
       // Update Player Queue
       await ref.read(audioPlayerServiceProvider).removeSongs(_selectedIds.toList());
@@ -351,6 +586,52 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           builder: (_) => TagEditorDialog(songs: songs),
         );
         _clearSelection();
+      }
+    }
+  }
+
+  Future<void> _restoreSelected() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedIds.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.restoreOriginalInfo),
+        content: Text(l10n.restoreOriginalInfoConfirm(_selectedIds.length)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.confirm)),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final restored = await ref.read(scraperControllerProvider).restoreSongsMetadata(_selectedIds.toList());
+      _clearSelection();
+      if (mounted) {
+        CapsuleToast.show(context, restored > 0 ? l10n.restoreOriginalInfoSuccess(restored) : l10n.restoreOriginalInfoFailed);
+      }
+    }
+  }
+
+  Future<void> _restoreSingle(Song song) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.restoreOriginalInfo),
+        content: Text(l10n.restoreOriginalInfoConfirm(1)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.confirm)),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final restored = await ref.read(scraperControllerProvider).restoreSongMetadata(song.id);
+      if (mounted) {
+        CapsuleToast.show(context, restored ? l10n.restoreOriginalInfoSuccess(1) : l10n.restoreOriginalInfoFailed);
       }
     }
   }
@@ -392,7 +673,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final songs = await query.build().findAll();
     if (songs.isNotEmpty) {
       await ref.read(playerControllerProvider).setQueue(songs);
-       if (mounted) {
+      if (mounted) {
         CapsuleToast.show(context, l10n.addedToQueue(songs.length));
       }
     }
@@ -402,6 +683,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (_selectedIds.isEmpty) {
       if (mounted) CapsuleToast.show(context, l10n.pleaseSelectDetailed);
+      return;
+    }
+
+    final prefs = ref.read(preferencesServiceProvider);
+    if (!prefs.scraperSourceMusicBrainz && !prefs.scraperSourceItunes) {
+      if (mounted) CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
       return;
     }
 
@@ -600,27 +887,23 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 tooltip: l10n.selectAll,
               ),
               IconButton(
-                icon: const Icon(Icons.playlist_add),
-                onPressed: _addToPlaylistSelected,
-                tooltip: l10n.addToPlaylist,
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: _editSelectedTags,
-                tooltip: l10n.editTags,
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: _deleteSelected,
-                tooltip: l10n.delete,
-              ),
-              IconButton(
-                icon: const Icon(Icons.auto_fix_high),
-                onPressed: _scrapeSelected,
-                tooltip: l10n.batchScrape,
+                icon: const Icon(Icons.more_vert),
+                onPressed: _showSelectionActionsSheet,
+                tooltip: l10n.more,
               ),
             ] : [
               // Default actions
+              if (widget.filter != null && widget.filter!.type == FilterType.artist)
+                 IconButton(
+                  icon: const Icon(Icons.person_search),
+                  onPressed: () async {
+                    await showDialog(
+                      context: context,
+                      builder: (_) => ArtistSearchDialog(artistName: widget.filter!.value),
+                    );
+                  },
+                  tooltip: l10n.scrapeArtistAvatars,
+                ),
               if (widget.filter != null || _viewMode == LibraryViewMode.songs)
                  IconButton(
                   icon: const Icon(Icons.play_circle_fill),
@@ -712,6 +995,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
          return const Center(child: CircularProgressIndicator());
       }
       if (_groupedItems!.isEmpty) {
+        if (_viewMode == LibraryViewMode.folders && widget.filter?.type == FilterType.folder) {
+          return _buildSongsList();
+        }
         return Center(child: Text(l10n.noItemsFound));
       }
       
@@ -730,10 +1016,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
            if (display.isEmpty) display = l10n.unknown;
            
            return ListTile(
-             leading: CircleAvatar(
-               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-               child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onPrimaryContainer),
-             ),
+            leading: _viewMode == LibraryViewMode.albums
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: CoverArt(path: _groupCoverMap[item], fit: BoxFit.cover, isVideo: false),
+                    ),
+                  )
+                : _viewMode == LibraryViewMode.artists && (_artistAvatarMap[item]?.isNotEmpty ?? false)
+                    ? ClipOval(
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: CoverArt(path: _artistAvatarMap[item], fit: BoxFit.cover, isVideo: false),
+                        ),
+                      )
+                    : CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                      ),
              title: Text(display), 
              trailing: const Icon(Icons.chevron_right),
              onTap: () {
@@ -742,10 +1045,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                if (_viewMode == LibraryViewMode.folders) type = FilterType.folder;
                else if (_viewMode == LibraryViewMode.artists) type = FilterType.artist;
                else type = FilterType.album;
+
+                final filterValue = _viewMode == LibraryViewMode.folders
+                  ? (_groupedFolderPathMap[item] ?? item)
+                  : item;
                
                // Use direct push of LibraryScreen
                Navigator.push(context, MaterialPageRoute(
-                 builder: (_) => LibraryScreen(filter: SongFilter(type, item)),
+                 builder: (_) => LibraryScreen(filter: SongFilter(type, filterValue)),
                ));
              },
            );
@@ -786,10 +1093,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       final songs = snapshot.data!;
                       // Keep reference to currently displayed songs for Select All
                       _currentDisplayedSongs = songs;
+                      final showHeader = widget.filter != null &&
+                          (widget.filter!.type == FilterType.artist || widget.filter!.type == FilterType.album);
                       return ListView.builder(
-                        itemCount: songs.length,
+                        itemCount: showHeader ? songs.length + 1 : songs.length,
                         itemBuilder: (context, index) {
-                          final song = songs[index];
+                          if (showHeader && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                              child: _buildFilterHeader(songs),
+                            );
+                          }
+                          final song = songs[showHeader ? index - 1 : index];
                           final isScrapingThis = scrapingIds.contains(song.id);
                           final isSelected = _selectedIds.contains(song.id);
                           
@@ -805,7 +1120,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                   width: 48,
                                   height: 48,
                                   color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
-                                  child: _buildCover(song.coverPath),
+                                  child: _buildCover(song.coverPath, isVideo: song.mediaType == MediaType.video),
                                 ),
                             title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
                             subtitle: Text('${song.artists.isNotEmpty ? song.artists.join(' / ') : song.artist} • ${song.album}', maxLines: 1, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
@@ -814,7 +1129,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                               : Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (song.sourceType == SourceType.webdav)
+                                    if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist)
                                       Padding(
                                         padding: const EdgeInsets.only(right: 8.0),
                                         child: WebDavDownloadIcon(song: song),
@@ -837,7 +1152,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                             enabled: !isScrapingThis,
                                             onTap: () => _deleteSingle(song),
                                           ),
-                                          if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openalist)
+                                          if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist)
                                             ActionItem(
                                               icon: Icons.clear,
                                               title: l10n.clearCache,
@@ -863,6 +1178,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                               builder: (_) => SongDetailsDialog(song: song),
                                             ),
                                           ),
+                                          if (song.mediaType == MediaType.video)
+                                            ActionItem(
+                                              icon: Icons.movie,
+                                              title: l10n.playVideo,
+                                              onTap: () => openVideoPlayer(context, ref, song),
+                                            ),
                                           ActionItem(
                                             icon: Icons.auto_fix_high,
                                             title: l10n.scrapeAgain,
@@ -871,6 +1192,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                               context: context,
                                               builder: (_) => ScraperSearchDialog(song: song),
                                             ),
+                                          ),
+                                          ActionItem(
+                                            icon: Icons.restore,
+                                            title: l10n.restoreOriginalInfo,
+                                            onTap: () => _restoreSingle(song),
                                           ),
                                         ];
                                         BottomActionSheet.show(context, actions: actions);
@@ -914,14 +1240,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     if (confirmed == true) {
       // If WebDAV, also remove cache
-      if (song.sourceType == SourceType.webdav) {
-        await ref.read(webDavServiceProvider).removeSongCache(song.path);
+      if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
+        await ref.read(webDavServiceProvider).removeSongCache(song.path, subDir: song.syncConfigId?.toString());
       }
       
       final db = await ref.read(databaseServiceProvider).db;
       await db.writeTxn(() async {
         await db.songs.delete(song.id);
       });
+
+      // Remove reference from playlists via repository
+      {
+        final repo = PlaylistRepository(ref.read(databaseServiceProvider));
+        await repo.removeSongIdsFromPlaylists([song.id]);
+      }
       
       // Update Player Queue
       await ref.read(audioPlayerServiceProvider).removeSongs([song.id]);
@@ -935,11 +1267,169 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  Widget _buildCover(String? path) {
-    if (path == null) return const Icon(Icons.music_note);
+  Widget _buildCover(String? path, {bool isVideo = false}) {
     return CoverArt(
       path: path,
       fit: BoxFit.cover,
+      isVideo: isVideo,
+    );
+  }
+
+  String? _firstCoverPath(Iterable<Song> songs) {
+    for (final song in songs) {
+      final cover = song.coverPath;
+      if (cover != null && cover.isNotEmpty) return cover;
+    }
+    return null;
+  }
+
+  Widget _buildFilterHeader(List<Song> songs) {
+    final filter = widget.filter;
+    if (filter == null) return const SizedBox.shrink();
+    if (filter.type == FilterType.artist) {
+      return _buildArtistHeader(filter.value, songs);
+    }
+    if (filter.type == FilterType.album) {
+      return _buildAlbumHeader(filter.value, songs);
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildArtistHeader(String artist, List<Song> songs) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final coverPath = _artistAvatarMap[artist] ?? _firstCoverPath(songs);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          if (coverPath != null && coverPath.isNotEmpty)
+            Positioned.fill(
+              child: CoverArt(path: coverPath, fit: BoxFit.cover, isVideo: false),
+            )
+          else
+            Positioned.fill(
+              child: Container(color: theme.colorScheme.surfaceContainerHighest),
+            ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(color: theme.colorScheme.surface.withOpacity(0.6)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                if (coverPath != null && coverPath.isNotEmpty)
+                  ClipOval(
+                    child: SizedBox(
+                      width: 72,
+                      height: 72,
+                      child: CoverArt(path: coverPath, fit: BoxFit.cover, isVideo: false),
+                    ),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 36,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    child: Icon(Icons.person, color: theme.colorScheme.onPrimaryContainer, size: 32),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        artist.isEmpty ? l10n.unknownArtist : artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.songCount(songs.length),
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlbumHeader(String album, List<Song> songs) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final coverPath = _firstCoverPath(songs);
+    final artistDisplay = songs.isNotEmpty
+        ? (songs.first.artists.isNotEmpty ? songs.first.artists.join(' / ') : songs.first.artist)
+        : l10n.unknownArtist;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          if (coverPath != null && coverPath.isNotEmpty)
+            Positioned.fill(
+              child: CoverArt(path: coverPath, fit: BoxFit.cover, isVideo: false),
+            )
+          else
+            Positioned.fill(
+              child: Container(color: theme.colorScheme.surfaceContainerHighest),
+            ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(color: theme.colorScheme.surface.withOpacity(0.6)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: CoverArt(path: coverPath, fit: BoxFit.cover, isVideo: false),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        album.isEmpty ? l10n.unknownAlbum : album,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        artistDisplay.isEmpty ? l10n.unknownArtist : artistDisplay,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.songCount(songs.length),
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

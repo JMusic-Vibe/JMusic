@@ -21,7 +21,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlists => '歌单';
 
   @override
+  String get playlistRecommendations => '播放列表推荐';
+
+  @override
   String get more => '更多';
+
+  @override
+  String get playVideo => '播放视频';
+
+  @override
+  String get restoreOriginalInfo => '恢复原始信息';
+
+  @override
+  String restoreOriginalInfoConfirm(Object count) {
+    return '是否恢复 $count 首的原始信息？';
+  }
+
+  @override
+  String restoreOriginalInfoSuccess(Object count) {
+    return '已恢复 $count 首';
+  }
+
+  @override
+  String get restoreOriginalInfoFailed => '没有可恢复的原始信息';
+
+  @override
+  String get batchRestore => '批量恢复';
 
   @override
   String get sync => '同步';
@@ -48,6 +73,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get storageEvents => '存储与缓存';
 
   @override
+  String get coverCache => '封面缓存';
+
+  @override
+  String get clearCoverCacheConfirm => '清除封面缓存？';
+
+  @override
+  String get coverCacheCleared => '封面缓存已清除';
+
+  @override
+  String get artistAvatarCache => '歌手头像缓存';
+
+  @override
+  String get clearArtistAvatarCacheConfirm => '清除歌手头像缓存？';
+
+  @override
+  String get artistAvatarCacheCleared => '歌手头像缓存已清除';
+
+  @override
+  String get embeddedCoverCache => '内嵌封面缓存';
+
+  @override
+  String get clearEmbeddedCoverCacheConfirm => '清除内嵌封面缓存？';
+
+  @override
+  String get embeddedCoverCacheCleared => '内嵌封面缓存已清除';
+
+  @override
+  String get appDataSize => '应用数据占用';
+
+  @override
+  String get logExport => '导出日志';
+
+  @override
+  String get logFileSize => '日志大小';
+
+  @override
+  String get logExported => '日志已导出';
+
+  @override
+  String get clearLogs => '清空日志';
+
+  @override
+  String get clearLogsConfirm => '清空日志？';
+
+  @override
+  String get logsCleared => '日志已清空';
+
+  @override
+  String get scrapeCompleteWithLyrics => '刮削完成：专辑信息已更新，歌词已找到';
+
+  @override
+  String get scrapeCompleteNoLyrics => '刮削完成：专辑信息已更新，未找到歌词';
+
+  @override
+  String get artistNameLabel => '歌手名称';
+
+  @override
   String get syncSettings => '同步设置';
 
   @override
@@ -67,10 +149,28 @@ class AppLocalizationsZh extends AppLocalizations {
       '启用后，刮削将仅使用主歌手进行查询；禁用时会包含客座/合作歌手。';
 
   @override
+  String get scraperMatchSources => '匹配来源';
+
+  @override
+  String get scraperSourceAtLeastOne => '请至少启用一个来源';
+
+  @override
+  String get scraperSongSources => '歌曲刮削源';
+
+  @override
+  String get scraperArtistSources => '歌手刮削源';
+
+  @override
+  String get scraperLyricsSources => '歌词刮削源';
+
+  @override
   String get audioSettings => '音频与播放';
 
   @override
   String get playbackSettings => '播放设置';
+
+  @override
+  String get desktopVolume => '桌面端音量';
 
   @override
   String get crossfadeEnabled => '启用淡入淡出';
@@ -83,6 +183,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get crossfadeDurationDesc => '设置歌曲间淡入淡出效果的持续时间';
+
+  @override
+  String get mute => '静音';
+
+  @override
+  String get unmute => '取消静音';
+
+  @override
+  String get loopingOn => '循环：开';
+
+  @override
+  String get loopingOff => '循环：关';
+
+  @override
+  String get scraperSourceLrclib => 'lrclib';
+
+  @override
+  String get scraperSourceRangotec => 'rangotec';
+
+  @override
+  String get scraperLyricsSourcesFixed => '歌词刮削源固定为 lrclib + rangotec';
 
   @override
   String seconds(Object count) {
@@ -179,6 +300,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playAll => '播放全部';
+
+  @override
+  String get play => '播放';
 
   @override
   String deleteConfirm(Object count) {
@@ -279,7 +403,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addSyncAccount => '新增同步账号';
 
   @override
-  String get openListNotSupported => 'OpenAList 暂未支持';
+  String get openListNotSupported => 'OpenList 暂未支持';
 
   @override
   String get noSyncAccount => '暂无同步账号';
@@ -314,6 +438,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scraperCenter => '刮削中心';
 
   @override
+  String get scraperCategoryAll => '全部问题';
+
+  @override
+  String get scraperCategoryUnscraped => '未刮削';
+
+  @override
+  String get scraperCategoryScraped => '已刮削';
+
+  @override
+  String get scraperCategoryHasLyrics => '有歌词';
+
+  @override
+  String get scraperCategoryNoLyrics => '无歌词';
+
+  @override
+  String get scraperCategoryMissingCover => '缺少封面';
+
+  @override
+  String get scraperCategoryMissingInfo => '缺少作者/专辑';
+
+  @override
+  String get scraperCategoryArtists => '歌手';
+
+  @override
+  String get scraperSourceMusicBrainz => 'MusicBrainz';
+
+  @override
+  String get scraperSourceItunes => 'iTunes';
+
+  @override
+  String scraperSourceLabel(Object source) {
+    return '来源：$source';
+  }
+
+  @override
   String get refresh => '刷新';
 
   @override
@@ -333,6 +492,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lyricsComingSoon => '歌词功能即将上线...';
+
+  @override
+  String get lyricsModeOff => '歌词：关闭';
+
+  @override
+  String get lyricsModeCompact => '歌词：封面下方';
+
+  @override
+  String get lyricsModeFull => '歌词：全屏显示';
+
+  @override
+  String get noLyricsFound => '未找到歌词';
 
   @override
   String get syncCenterSubtitle => '手动同步与差异检查';
@@ -513,13 +684,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webdav => 'WebDAV';
 
   @override
-  String get openalist => 'OpenAList';
+  String get openlist => 'OpenList';
 
   @override
   String get webdavConfigTitle => 'WebDAV 配置';
 
   @override
   String get webdavUrlLabel => 'WebDAV URL (例如 https://dav.example.com)';
+
+  @override
+  String get keepAliveTitle => '保活';
+
+  @override
+  String get keepAliveDescription => '如熄屏时连接断开，请在系统设置中允许应用自启动。';
+
+  @override
+  String get openAutoStart => '打开自启动设置';
 
   @override
   String get username => '用户名';
@@ -587,6 +767,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scrapeAgain => '重新刮削';
 
   @override
+  String get scrapeArtistAvatars => '刮削歌手头像';
+
+  @override
+  String get manualMatchArtist => '手动匹配歌手';
+
+  @override
+  String get batchScrapeArtists => '批量刮削歌手';
+
+  @override
+  String scrapeArtistAvatarsResult(Object count) {
+    return '已更新 $count 个歌手头像';
+  }
+
+  @override
   String songDeletedWithTitle(Object title) {
     return '已删除 \"$title\"';
   }
@@ -594,6 +788,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String cacheClearedWithTitle(Object title) {
     return '已清除 \"$title\" 的缓存';
+  }
+
+  @override
+  String cannotAccessSong(Object title) {
+    return '无法访问歌曲文件：$title';
   }
 
   @override
@@ -612,6 +811,114 @@ class AppLocalizationsZh extends AppLocalizations {
   String playlistAlreadyExists(Object playlistName) {
     return '名为 \"$playlistName\" 的歌单已存在';
   }
+
+  @override
+  String get resetAdminPasswordTitle => '重置管理员密码';
+
+  @override
+  String get resetFailed => '重置失败';
+
+  @override
+  String get unknownError => '未知错误';
+
+  @override
+  String get newPasswordGenerated => '新密码已生成';
+
+  @override
+  String get usernameAdmin => '用户名：admin';
+
+  @override
+  String newPassword(Object pwd) {
+    return '新密码：$pwd';
+  }
+
+  @override
+  String get portAndProxy => '端口与代理';
+
+  @override
+  String get invalidPort => '端口无效';
+
+  @override
+  String get proxyHostEmpty => '代理地址不能为空';
+
+  @override
+  String get invalidProxyPort => '代理端口无效';
+
+  @override
+  String get savedRestartRequired => '已保存，需重启后生效';
+
+  @override
+  String get openListService => 'OpenList 服务';
+
+  @override
+  String get statusRunning => '状态: 运行中';
+
+  @override
+  String get statusStopped => '状态: 已停止';
+
+  @override
+  String address(Object address, Object port) {
+    return '地址: http://$address:$port';
+  }
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get start => '启动';
+
+  @override
+  String get managementPage => '管理页面';
+
+  @override
+  String get accessManagementPage => '访问 OpenList 管理页面：';
+
+  @override
+  String get startServiceFirst => '请先启动 OpenList 服务';
+
+  @override
+  String get openInApp => 'APP内打开';
+
+  @override
+  String get openInBrowser => '浏览器打开';
+
+  @override
+  String get adminInfo => '管理员信息';
+
+  @override
+  String saveCredentials(Object password) {
+    return '请保存：\n用户名：admin\n初始密码：$password';
+  }
+
+  @override
+  String get saved => '我已保存';
+
+  @override
+  String get defaultUsernameAdmin => '默认用户名：admin';
+
+  @override
+  String get resetPassword => '重置密码';
+
+  @override
+  String get stopServiceToModify => '停止服务后才可修改';
+
+  @override
+  String get serviceRunningLocked => '服务运行中，已锁定';
+
+  @override
+  String get stopServiceExitHint => '请手动停止 OpenList 后再退出软件，才能停止 OpenList';
+
+  @override
+  String get saveFailed => '保存失败';
+
+  @override
+  String get openListManagement => 'OpenList 管理';
+
+  @override
+  String get autoStartOpenListOnAppLaunch => '自动启动OpenList';
+
+  @override
+  String get autoStartOpenListDescription => '启用后，APP启动时将自动启动OpenList服务';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -631,7 +938,32 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get playlists => '播放清單';
 
   @override
+  String get playlistRecommendations => '播放列表推薦';
+
+  @override
   String get more => '更多';
+
+  @override
+  String get playVideo => '播放影片';
+
+  @override
+  String get restoreOriginalInfo => '還原原始資訊';
+
+  @override
+  String restoreOriginalInfoConfirm(Object count) {
+    return '是否還原 $count 首的原始資訊？';
+  }
+
+  @override
+  String restoreOriginalInfoSuccess(Object count) {
+    return '已還原 $count 首';
+  }
+
+  @override
+  String get restoreOriginalInfoFailed => '沒有可還原的原始資訊';
+
+  @override
+  String get batchRestore => '批量還原';
 
   @override
   String get sync => '同步';
@@ -658,6 +990,54 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get storageEvents => '存儲與緩存';
 
   @override
+  String get coverCache => '封面緩存';
+
+  @override
+  String get clearCoverCacheConfirm => '清除封面緩存？';
+
+  @override
+  String get coverCacheCleared => '封面緩存已清除';
+
+  @override
+  String get artistAvatarCache => '歌手頭像緩存';
+
+  @override
+  String get clearArtistAvatarCacheConfirm => '清除歌手頭像緩存？';
+
+  @override
+  String get artistAvatarCacheCleared => '歌手頭像緩存已清除';
+
+  @override
+  String get embeddedCoverCache => '內嵌封面緩存';
+
+  @override
+  String get clearEmbeddedCoverCacheConfirm => '清除內嵌封面緩存？';
+
+  @override
+  String get embeddedCoverCacheCleared => '內嵌封面緩存已清除';
+
+  @override
+  String get appDataSize => '應用數據佔用';
+
+  @override
+  String get logExport => '匯出日誌';
+
+  @override
+  String get logFileSize => '日誌大小';
+
+  @override
+  String get logExported => '日誌已匯出';
+
+  @override
+  String get clearLogs => '清空日誌';
+
+  @override
+  String get clearLogsConfirm => '清空日誌？';
+
+  @override
+  String get logsCleared => '日誌已清空';
+
+  @override
   String get syncSettings => '同步設定';
 
   @override
@@ -677,6 +1057,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '啟用後，刮削將僅使用主歌手進行查詢；停用時會包含客席/合作歌手。';
 
   @override
+  String get scraperMatchSources => '匹配來源';
+
+  @override
+  String get scraperSourceAtLeastOne => '請至少啟用一個來源';
+
+  @override
+  String get scraperSongSources => '歌曲刮削來源';
+
+  @override
+  String get scraperArtistSources => '歌手刮削來源';
+
+  @override
+  String get scraperLyricsSources => '歌詞刮削來源';
+
+  @override
   String get audioSettings => '音頻與播放';
 
   @override
@@ -690,6 +1085,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get crossfadeDuration => '淡入淡出時長';
+
+  @override
+  String get mute => '靜音';
+
+  @override
+  String get unmute => '取消靜音';
+
+  @override
+  String get loopingOn => '循環：開';
+
+  @override
+  String get loopingOff => '循環：關';
+
+  @override
+  String get scraperSourceLrclib => 'lrclib';
+
+  @override
+  String get scraperSourceRangotec => 'rangotec';
+
+  @override
+  String get scraperLyricsSourcesFixed => '歌詞刮削來源固定為 lrclib + rangotec';
 
   @override
   String get crossfadeEnabledInfo => '已啟用淡入淡出,歌曲將平滑過渡';
@@ -783,6 +1199,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get playAll => '播放全部';
 
   @override
+  String get play => '播放';
+
+  @override
   String deleteConfirm(Object count) {
     return '確認刪除這 $count 首歌曲嗎？';
   }
@@ -873,7 +1292,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get addSyncAccount => '新增同步賬號';
 
   @override
-  String get openListNotSupported => 'OpenAList 暫未支持';
+  String get openListNotSupported => 'OpenList 暫未支持';
 
   @override
   String get noSyncAccount => '暫無同步賬號';
@@ -908,6 +1327,38 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get scraperCenter => '刮削中心';
 
   @override
+  String get scraperCategoryAll => '全部問題';
+
+  @override
+  String get scraperCategoryUnscraped => '未刮削';
+
+  @override
+  String get scraperCategoryScraped => '已刮削';
+
+  @override
+  String get scraperCategoryHasLyrics => '有歌詞';
+
+  @override
+  String get scraperCategoryNoLyrics => '無歌詞';
+
+  @override
+  String get scraperCategoryMissingCover => '缺少封面';
+
+  @override
+  String get scraperCategoryMissingInfo => '缺少作者/專輯';
+
+  @override
+  String get scraperSourceMusicBrainz => 'MusicBrainz';
+
+  @override
+  String get scraperSourceItunes => 'iTunes';
+
+  @override
+  String scraperSourceLabel(Object source) {
+    return '來源：$source';
+  }
+
+  @override
   String get refresh => '刷新';
 
   @override
@@ -927,6 +1378,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lyricsComingSoon => '歌詞功能即將上線...';
+
+  @override
+  String get lyricsModeOff => '歌詞：關閉';
+
+  @override
+  String get lyricsModeCompact => '歌詞：封面下方';
+
+  @override
+  String get lyricsModeFull => '歌詞：全螢幕顯示';
+
+  @override
+  String get noLyricsFound => '未找到歌詞';
 
   @override
   String get syncCenterSubtitle => '手動同步與差異檢查';
@@ -1107,13 +1570,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get webdav => 'WebDAV';
 
   @override
-  String get openalist => 'OpenAList';
+  String get openlist => 'OpenList';
 
   @override
   String get webdavConfigTitle => 'WebDAV 配置';
 
   @override
   String get webdavUrlLabel => 'WebDAV URL (例如 https://dav.example.com)';
+
+  @override
+  String get keepAliveTitle => '保活';
+
+  @override
+  String get keepAliveDescription => '若熄屏時連線中斷，請在系統設定中允許應用自動啟動。';
+
+  @override
+  String get openAutoStart => '開啟自動啟動設定';
 
   @override
   String get username => '用戶名';
@@ -1191,6 +1663,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String cannotAccessSong(Object title) {
+    return '無法訪問歌曲文件：$title';
+  }
+
+  @override
   String get addedToFavorites => '已添加到收藏';
 
   @override
@@ -1206,4 +1683,112 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String playlistAlreadyExists(Object playlistName) {
     return '名為 \"$playlistName\" 的播放清單已存在';
   }
+
+  @override
+  String get resetAdminPasswordTitle => '重置管理員密碼';
+
+  @override
+  String get resetFailed => '重置失敗';
+
+  @override
+  String get unknownError => '未知錯誤';
+
+  @override
+  String get newPasswordGenerated => '新密碼已生成';
+
+  @override
+  String get usernameAdmin => '用戶名：admin';
+
+  @override
+  String newPassword(Object pwd) {
+    return '新密碼：$pwd';
+  }
+
+  @override
+  String get portAndProxy => '通訊埠與代理';
+
+  @override
+  String get invalidPort => '通訊埠無效';
+
+  @override
+  String get proxyHostEmpty => '代理位址不能為空';
+
+  @override
+  String get invalidProxyPort => '代理通訊埠無效';
+
+  @override
+  String get savedRestartRequired => '已儲存，需重啟後生效';
+
+  @override
+  String get openListService => 'OpenList 服務';
+
+  @override
+  String get statusRunning => '狀態: 運行中';
+
+  @override
+  String get statusStopped => '狀態: 已停止';
+
+  @override
+  String address(Object address, Object port) {
+    return '位址: http://$address:$port';
+  }
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get start => '啟動';
+
+  @override
+  String get managementPage => '管理頁面';
+
+  @override
+  String get accessManagementPage => '訪問 OpenList 管理頁面：';
+
+  @override
+  String get startServiceFirst => '請先啟動 OpenList 服務';
+
+  @override
+  String get openInApp => 'APP內打開';
+
+  @override
+  String get openInBrowser => '瀏覽器打開';
+
+  @override
+  String get adminInfo => '管理員資訊';
+
+  @override
+  String saveCredentials(Object password) {
+    return '請儲存：\n用戶名：admin\n初始密碼：$password';
+  }
+
+  @override
+  String get saved => '我已儲存';
+
+  @override
+  String get defaultUsernameAdmin => '預設用戶名：admin';
+
+  @override
+  String get resetPassword => '重置密碼';
+
+  @override
+  String get stopServiceToModify => '停止服務後才可修改';
+
+  @override
+  String get serviceRunningLocked => '服務運行中，已鎖定';
+
+  @override
+  String get stopServiceExitHint => '請手動停止 OpenList 後再退出軟體，才能停止 OpenList';
+
+  @override
+  String get saveFailed => '儲存失敗';
+
+  @override
+  String get openListManagement => 'OpenList 管理';
+
+  @override
+  String get autoStartOpenListOnAppLaunch => '自動啟動OpenList';
+
+  @override
+  String get autoStartOpenListDescription => '啟用後，APP啟動時將自動啟動OpenList服務';
 }

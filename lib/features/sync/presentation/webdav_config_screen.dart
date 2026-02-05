@@ -8,7 +8,17 @@ import 'package:jmusic/l10n/app_localizations.dart';
 class WebDavConfigScreen extends ConsumerStatefulWidget {
   final SyncConfig? config;
   final SyncType initialType;
-  const WebDavConfigScreen({super.key, this.config, this.initialType = SyncType.webdav});
+  final String? initialUrl;
+  final String? initialUsername;
+  final String? initialPassword;
+  const WebDavConfigScreen({
+    super.key,
+    this.config,
+    this.initialType = SyncType.webdav,
+    this.initialUrl,
+    this.initialUsername,
+    this.initialPassword,
+  });
 
   @override
   ConsumerState<WebDavConfigScreen> createState() => _WebDavConfigScreenState();
@@ -20,6 +30,7 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
   late TextEditingController _userController;
   late TextEditingController _passwordController;
   late TextEditingController _pathController;
+  late TextEditingController _tokenController;
 
   bool _isObscure = true;
   bool _saving = false;
@@ -27,11 +38,20 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.config?.name ?? 'My WebDAV');
-    _urlController = TextEditingController(text: widget.config?.url ?? '');
-    _userController = TextEditingController(text: widget.config?.username ?? '');
-    _passwordController = TextEditingController(text: widget.config?.password ?? '');
+    final isOpenList = (widget.config?.type ?? widget.initialType) == SyncType.openlist;
+    _nameController = TextEditingController(text: widget.config?.name ?? (isOpenList ? 'My OpenList' : 'My WebDAV'));
+    _urlController = TextEditingController(text: widget.config?.url ?? (widget.initialUrl ?? ''));
+    _userController = TextEditingController(text: widget.config?.username ?? (widget.initialUsername ?? ''));
+    _passwordController = TextEditingController(text: widget.config?.password ?? (widget.initialPassword ?? ''));
     _pathController = TextEditingController(text: widget.config?.path ?? '/');
+    _tokenController = TextEditingController(text: widget.config?.token ?? '');
+  }
+
+  String _normalizeUrl(String input) {
+    final value = input.trim();
+    if (value.isEmpty) return value;
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    return 'http://$value';
   }
 
   @override
@@ -41,11 +61,13 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
     _userController.dispose();
     _passwordController.dispose();
     _pathController.dispose();
+    _tokenController.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     if (_urlController.text.isEmpty) return;
+    final isOpenList = (widget.config?.type ?? widget.initialType) == SyncType.openlist;
 
     setState(() => _saving = true);
     try {
@@ -54,11 +76,12 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
       final config = widget.config ?? SyncConfig();
       config.name = _nameController.text.trim();
       config.type = widget.config?.type ?? widget.initialType;
-      config.url = _urlController.text.trim();
+      config.url = _normalizeUrl(_urlController.text);
       config.username = _userController.text.trim();
       config.password = _passwordController.text;
       config.path = _pathController.text.trim();
       if (config.path!.isEmpty) config.path = '/';
+      config.token = isOpenList ? _tokenController.text.trim() : null;
       config.isEnabled = true;
 
       await repo.saveConfig(config);
@@ -79,6 +102,7 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isOpenList = (widget.config?.type ?? widget.initialType) == SyncType.openlist;
 
     return Scaffold(
       appBar: AppBar(
@@ -152,7 +176,7 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
             TextField(
               controller: _urlController,
               decoration: InputDecoration(
-                hintText: 'https://example.com/webdav',
+                hintText: isOpenList ? 'http://127.0.0.1:5244/dav' : 'http://example.com:80/webdav',
                 prefixIcon: Icon(
                   Icons.link,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -331,6 +355,37 @@ class _WebDavConfigScreenState extends ConsumerState<WebDavConfigScreen> {
               ),
             ),
             const SizedBox(height: 32),
+            if (isOpenList) ...[
+              Text(
+                'Token',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _tokenController,
+                decoration: InputDecoration(
+                  hintText: 'Token (optional)',
+                  prefixIcon: Icon(
+                    Icons.vpn_key,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
           ],
         ),
       ),

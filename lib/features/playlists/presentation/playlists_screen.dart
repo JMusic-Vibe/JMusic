@@ -144,6 +144,7 @@ class _PlaylistCard extends ConsumerWidget {
                       ? CoverArt(
                           path: playlist.coverPath!,
                           fit: BoxFit.cover,
+                          isVideo: false,
                         )
                       : _buildPlaceholder(context),
                   Positioned(

@@ -21,7 +21,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlists => 'Playlists';
 
   @override
+  String get playlistRecommendations => 'Playlist Picks';
+
+  @override
   String get more => 'More';
+
+  @override
+  String get playVideo => 'Play Video';
+
+  @override
+  String get restoreOriginalInfo => 'Restore Original Info';
+
+  @override
+  String restoreOriginalInfoConfirm(Object count) {
+    return 'Restore original info for $count item(s)?';
+  }
+
+  @override
+  String restoreOriginalInfoSuccess(Object count) {
+    return 'Restored $count item(s)';
+  }
+
+  @override
+  String get restoreOriginalInfoFailed => 'No original info to restore';
+
+  @override
+  String get batchRestore => 'Batch Restore';
 
   @override
   String get sync => 'Sync';
@@ -48,6 +73,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageEvents => 'Storage & Cache';
 
   @override
+  String get coverCache => 'Cover Cache';
+
+  @override
+  String get clearCoverCacheConfirm => 'Clear cover cache?';
+
+  @override
+  String get coverCacheCleared => 'Cover cache cleared';
+
+  @override
+  String get artistAvatarCache => 'Artist Avatar Cache';
+
+  @override
+  String get clearArtistAvatarCacheConfirm => 'Clear artist avatar cache?';
+
+  @override
+  String get artistAvatarCacheCleared => 'Artist avatar cache cleared';
+
+  @override
+  String get embeddedCoverCache => 'Embedded Cover Cache';
+
+  @override
+  String get clearEmbeddedCoverCacheConfirm => 'Clear embedded cover cache?';
+
+  @override
+  String get embeddedCoverCacheCleared => 'Embedded cover cache cleared';
+
+  @override
+  String get appDataSize => 'App Data Size';
+
+  @override
+  String get logExport => 'Export Logs';
+
+  @override
+  String get logFileSize => 'Log Size';
+
+  @override
+  String get logExported => 'Logs exported';
+
+  @override
+  String get clearLogs => 'Clear Logs';
+
+  @override
+  String get clearLogsConfirm => 'Clear logs?';
+
+  @override
+  String get logsCleared => 'Logs cleared';
+
+  @override
+  String get scrapeCompleteWithLyrics =>
+      'Scrape complete: album info updated, lyrics found';
+
+  @override
+  String get scrapeCompleteNoLyrics =>
+      'Scrape complete: album info updated, lyrics not found';
+
+  @override
+  String get artistNameLabel => 'Artist Name';
+
+  @override
   String get syncSettings => 'Sync Settings';
 
   @override
@@ -67,10 +151,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'When enabled, the scraper will query using the primary artist only; otherwise it will include featured and collaborating artists.';
 
   @override
+  String get scraperMatchSources => 'Match Sources';
+
+  @override
+  String get scraperSourceAtLeastOne => 'Please enable at least one source';
+
+  @override
+  String get scraperSongSources => 'Song scraping sources';
+
+  @override
+  String get scraperArtistSources => 'Artist scraping sources';
+
+  @override
+  String get scraperLyricsSources => 'Lyrics scraping sources';
+
+  @override
   String get audioSettings => 'Audio & Playback';
 
   @override
   String get playbackSettings => 'Playback Settings';
+
+  @override
+  String get desktopVolume => 'Desktop Volume';
 
   @override
   String get crossfadeEnabled => 'Enable Crossfade';
@@ -85,6 +187,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get crossfadeDurationDesc =>
       'Set the duration of the crossfade effect between songs';
+
+  @override
+  String get mute => 'Mute';
+
+  @override
+  String get unmute => 'Unmute';
+
+  @override
+  String get loopingOn => 'Looping: On';
+
+  @override
+  String get loopingOff => 'Looping: Off';
+
+  @override
+  String get scraperSourceLrclib => 'lrclib';
+
+  @override
+  String get scraperSourceRangotec => 'rangotec';
+
+  @override
+  String get scraperLyricsSourcesFixed =>
+      'Lyrics sources are fixed to lrclib + rangotec';
 
   @override
   String seconds(Object count) {
@@ -183,6 +307,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playAll => 'Play All';
+
+  @override
+  String get play => 'Play';
 
   @override
   String deleteConfirm(Object count) {
@@ -285,7 +412,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSyncAccount => 'Add Sync Account';
 
   @override
-  String get openListNotSupported => 'OpenAList not supported yet';
+  String get openListNotSupported => 'OpenList not supported yet';
 
   @override
   String get noSyncAccount => 'No Sync Accounts';
@@ -322,6 +449,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scraperCenter => 'Scraper Center';
 
   @override
+  String get scraperCategoryAll => 'All Issues';
+
+  @override
+  String get scraperCategoryUnscraped => 'Not Scraped';
+
+  @override
+  String get scraperCategoryScraped => 'Scraped';
+
+  @override
+  String get scraperCategoryHasLyrics => 'Has Lyrics';
+
+  @override
+  String get scraperCategoryNoLyrics => 'No Lyrics';
+
+  @override
+  String get scraperCategoryMissingCover => 'Missing Cover';
+
+  @override
+  String get scraperCategoryMissingInfo => 'Missing Artist/Album';
+
+  @override
+  String get scraperCategoryArtists => 'Artists';
+
+  @override
+  String get scraperSourceMusicBrainz => 'MusicBrainz';
+
+  @override
+  String get scraperSourceItunes => 'iTunes';
+
+  @override
+  String scraperSourceLabel(Object source) {
+    return 'Source: $source';
+  }
+
+  @override
   String get refresh => 'Refresh';
 
   @override
@@ -341,6 +503,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsComingSoon => 'Lyrics coming soon...';
+
+  @override
+  String get lyricsModeOff => 'Lyrics: Off';
+
+  @override
+  String get lyricsModeCompact => 'Lyrics: Under cover';
+
+  @override
+  String get lyricsModeFull => 'Lyrics: Full screen';
+
+  @override
+  String get noLyricsFound => 'No lyrics found';
 
   @override
   String get syncCenterSubtitle => 'Manual sync & Diff check';
@@ -521,13 +695,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webdav => 'WebDAV';
 
   @override
-  String get openalist => 'OpenAList';
+  String get openlist => 'OpenList';
 
   @override
   String get webdavConfigTitle => 'WebDAV Configuration';
 
   @override
   String get webdavUrlLabel => 'WebDAV URL (e.g. https://dav.example.com)';
+
+  @override
+  String get keepAliveTitle => 'Keepalive';
+
+  @override
+  String get keepAliveDescription =>
+      'If connection drops when the screen sleeps, allow auto-start in system settings.';
+
+  @override
+  String get openAutoStart => 'Open auto-start settings';
 
   @override
   String get username => 'Username';
@@ -595,6 +779,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scrapeAgain => 'Scrape Again';
 
   @override
+  String get scrapeArtistAvatars => 'Scrape Artist Avatars';
+
+  @override
+  String get manualMatchArtist => 'Manual Match Artist';
+
+  @override
+  String get batchScrapeArtists => 'Batch Scrape Artists';
+
+  @override
+  String scrapeArtistAvatarsResult(Object count) {
+    return 'Updated $count artist avatars';
+  }
+
+  @override
   String songDeletedWithTitle(Object title) {
     return 'Deleted \"$title\"';
   }
@@ -602,6 +800,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cacheClearedWithTitle(Object title) {
     return 'Cleared cache for \"$title\"';
+  }
+
+  @override
+  String cannotAccessSong(Object title) {
+    return 'Cannot access song file: $title';
   }
 
   @override
@@ -620,4 +823,114 @@ class AppLocalizationsEn extends AppLocalizations {
   String playlistAlreadyExists(Object playlistName) {
     return 'A playlist named \"$playlistName\" already exists';
   }
+
+  @override
+  String get resetAdminPasswordTitle => 'Reset Admin Password';
+
+  @override
+  String get resetFailed => 'Reset Failed';
+
+  @override
+  String get unknownError => 'Unknown Error';
+
+  @override
+  String get newPasswordGenerated => 'New Password Generated';
+
+  @override
+  String get usernameAdmin => 'Username: admin';
+
+  @override
+  String newPassword(Object pwd) {
+    return 'New Password: $pwd';
+  }
+
+  @override
+  String get portAndProxy => 'Port & Proxy';
+
+  @override
+  String get invalidPort => 'Invalid Port';
+
+  @override
+  String get proxyHostEmpty => 'Proxy Host Cannot Be Empty';
+
+  @override
+  String get invalidProxyPort => 'Invalid Proxy Port';
+
+  @override
+  String get savedRestartRequired => 'Saved, restart required to take effect';
+
+  @override
+  String get openListService => 'OpenList Service';
+
+  @override
+  String get statusRunning => 'Status: Running';
+
+  @override
+  String get statusStopped => 'Status: Stopped';
+
+  @override
+  String address(Object address, Object port) {
+    return 'Address: http://$address:$port';
+  }
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get start => 'Start';
+
+  @override
+  String get managementPage => 'Management Page';
+
+  @override
+  String get accessManagementPage => 'Access OpenList Management Page:';
+
+  @override
+  String get startServiceFirst => 'Please start the OpenList service first';
+
+  @override
+  String get openInApp => 'Open in App';
+
+  @override
+  String get openInBrowser => 'Open in Browser';
+
+  @override
+  String get adminInfo => 'Admin Information';
+
+  @override
+  String saveCredentials(Object password) {
+    return 'Please save:\nUsername: admin\nInitial Password: $password';
+  }
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get defaultUsernameAdmin => 'Default Username: admin';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get stopServiceToModify => 'Stop the service to modify';
+
+  @override
+  String get serviceRunningLocked => 'Service is running, locked';
+
+  @override
+  String get stopServiceExitHint =>
+      'Stop OpenList manually before exiting the app so the service can be stopped';
+
+  @override
+  String get saveFailed => 'Save Failed';
+
+  @override
+  String get openListManagement => 'OpenList Management';
+
+  @override
+  String get autoStartOpenListOnAppLaunch => 'Auto-start OpenList';
+
+  @override
+  String get autoStartOpenListDescription =>
+      'When enabled, the app will automatically start the OpenList service on launch';
 }

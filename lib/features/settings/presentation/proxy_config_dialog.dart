@@ -45,78 +45,84 @@ class _ProxyConfigDialogState extends ConsumerState<ProxyConfigDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(l10n.proxySettings,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RadioListTile<String>(
-            title: Text(l10n.systemProxy),
-            value: 'system',
-            groupValue: _mode,
-            onChanged: (v) => setState(() => _mode = v!),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.proxySettings),
+        actions: [
+          TextButton(
+            onPressed: _save,
+            child: Text(l10n.save),
           ),
-          RadioListTile<String>(
-            title: Text(l10n.noProxy),
-            value: 'none',
-            groupValue: _mode,
-            onChanged: (v) => setState(() => _mode = v!),
-          ),
-          RadioListTile<String>(
-            title: Text(l10n.customProxy),
-            value: 'custom',
-            groupValue: _mode,
-            onChanged: (v) => setState(() => _mode = v!),
-          ),
-          if (_mode == 'custom') ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: _hostCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.ipAddress,
-                      hintText: '127.0.0.1',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 1,
-                  child: TextField(
-                    controller: _portCtrl,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      labelText: l10n.port,
-                      hintText: '7890',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: Text(l10n.save),
-        ),
-      ],
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  title: Text(l10n.systemProxy),
+                  value: 'system',
+                  groupValue: _mode,
+                  onChanged: (v) => setState(() => _mode = v!),
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.noProxy),
+                  value: 'none',
+                  groupValue: _mode,
+                  onChanged: (v) => setState(() => _mode = v!),
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.customProxy),
+                  value: 'custom',
+                  groupValue: _mode,
+                  onChanged: (v) => setState(() => _mode = v!),
+                ),
+                if (_mode == 'custom') ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: TextField(
+                            controller: _hostCtrl,
+                            decoration: InputDecoration(
+                              labelText: l10n.ipAddress,
+                              hintText: '127.0.0.1',
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: _portCtrl,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            decoration: InputDecoration(
+                              labelText: l10n.port,
+                              hintText: '7890',
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

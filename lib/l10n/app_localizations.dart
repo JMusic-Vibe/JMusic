@@ -123,11 +123,53 @@ abstract class AppLocalizations {
   /// **'歌单'**
   String get playlists;
 
+  /// No description provided for @playlistRecommendations.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放列表推荐'**
+  String get playlistRecommendations;
+
   /// No description provided for @more.
   ///
   /// In zh, this message translates to:
   /// **'更多'**
   String get more;
+
+  /// No description provided for @playVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放视频'**
+  String get playVideo;
+
+  /// No description provided for @restoreOriginalInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复原始信息'**
+  String get restoreOriginalInfo;
+
+  /// No description provided for @restoreOriginalInfoConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否恢复 {count} 首的原始信息？'**
+  String restoreOriginalInfoConfirm(Object count);
+
+  /// No description provided for @restoreOriginalInfoSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复 {count} 首'**
+  String restoreOriginalInfoSuccess(Object count);
+
+  /// No description provided for @restoreOriginalInfoFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有可恢复的原始信息'**
+  String get restoreOriginalInfoFailed;
+
+  /// No description provided for @batchRestore.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量恢复'**
+  String get batchRestore;
 
   /// No description provided for @sync.
   ///
@@ -177,6 +219,120 @@ abstract class AppLocalizations {
   /// **'存储与缓存'**
   String get storageEvents;
 
+  /// No description provided for @coverCache.
+  ///
+  /// In zh, this message translates to:
+  /// **'封面缓存'**
+  String get coverCache;
+
+  /// No description provided for @clearCoverCacheConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除封面缓存？'**
+  String get clearCoverCacheConfirm;
+
+  /// No description provided for @coverCacheCleared.
+  ///
+  /// In zh, this message translates to:
+  /// **'封面缓存已清除'**
+  String get coverCacheCleared;
+
+  /// No description provided for @artistAvatarCache.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌手头像缓存'**
+  String get artistAvatarCache;
+
+  /// No description provided for @clearArtistAvatarCacheConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除歌手头像缓存？'**
+  String get clearArtistAvatarCacheConfirm;
+
+  /// No description provided for @artistAvatarCacheCleared.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌手头像缓存已清除'**
+  String get artistAvatarCacheCleared;
+
+  /// No description provided for @embeddedCoverCache.
+  ///
+  /// In zh, this message translates to:
+  /// **'内嵌封面缓存'**
+  String get embeddedCoverCache;
+
+  /// No description provided for @clearEmbeddedCoverCacheConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除内嵌封面缓存？'**
+  String get clearEmbeddedCoverCacheConfirm;
+
+  /// No description provided for @embeddedCoverCacheCleared.
+  ///
+  /// In zh, this message translates to:
+  /// **'内嵌封面缓存已清除'**
+  String get embeddedCoverCacheCleared;
+
+  /// No description provided for @appDataSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用数据占用'**
+  String get appDataSize;
+
+  /// No description provided for @logExport.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出日志'**
+  String get logExport;
+
+  /// No description provided for @logFileSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'日志大小'**
+  String get logFileSize;
+
+  /// No description provided for @logExported.
+  ///
+  /// In zh, this message translates to:
+  /// **'日志已导出'**
+  String get logExported;
+
+  /// No description provided for @clearLogs.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空日志'**
+  String get clearLogs;
+
+  /// No description provided for @clearLogsConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空日志？'**
+  String get clearLogsConfirm;
+
+  /// No description provided for @logsCleared.
+  ///
+  /// In zh, this message translates to:
+  /// **'日志已清空'**
+  String get logsCleared;
+
+  /// No description provided for @scrapeCompleteWithLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'刮削完成：专辑信息已更新，歌词已找到'**
+  String get scrapeCompleteWithLyrics;
+
+  /// No description provided for @scrapeCompleteNoLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'刮削完成：专辑信息已更新，未找到歌词'**
+  String get scrapeCompleteNoLyrics;
+
+  /// No description provided for @artistNameLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌手名称'**
+  String get artistNameLabel;
+
   /// No description provided for @syncSettings.
   ///
   /// In zh, this message translates to:
@@ -213,6 +369,36 @@ abstract class AppLocalizations {
   /// **'启用后，刮削将仅使用主歌手进行查询；禁用时会包含客座/合作歌手。'**
   String get usePrimaryArtistForScraperDesc;
 
+  /// No description provided for @scraperMatchSources.
+  ///
+  /// In zh, this message translates to:
+  /// **'匹配来源'**
+  String get scraperMatchSources;
+
+  /// No description provided for @scraperSourceAtLeastOne.
+  ///
+  /// In zh, this message translates to:
+  /// **'请至少启用一个来源'**
+  String get scraperSourceAtLeastOne;
+
+  /// No description provided for @scraperSongSources.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌曲刮削源'**
+  String get scraperSongSources;
+
+  /// No description provided for @scraperArtistSources.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌手刮削源'**
+  String get scraperArtistSources;
+
+  /// No description provided for @scraperLyricsSources.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌词刮削源'**
+  String get scraperLyricsSources;
+
   /// No description provided for @audioSettings.
   ///
   /// In zh, this message translates to:
@@ -224,6 +410,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'播放设置'**
   String get playbackSettings;
+
+  /// No description provided for @desktopVolume.
+  ///
+  /// In zh, this message translates to:
+  /// **'桌面端音量'**
+  String get desktopVolume;
 
   /// No description provided for @crossfadeEnabled.
   ///
@@ -248,6 +440,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'设置歌曲间淡入淡出效果的持续时间'**
   String get crossfadeDurationDesc;
+
+  /// No description provided for @mute.
+  ///
+  /// In zh, this message translates to:
+  /// **'静音'**
+  String get mute;
+
+  /// No description provided for @unmute.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消静音'**
+  String get unmute;
+
+  /// No description provided for @loopingOn.
+  ///
+  /// In zh, this message translates to:
+  /// **'循环：开'**
+  String get loopingOn;
+
+  /// No description provided for @loopingOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'循环：关'**
+  String get loopingOff;
+
+  /// No description provided for @scraperSourceLrclib.
+  ///
+  /// In zh, this message translates to:
+  /// **'lrclib'**
+  String get scraperSourceLrclib;
+
+  /// No description provided for @scraperSourceRangotec.
+  ///
+  /// In zh, this message translates to:
+  /// **'rangotec'**
+  String get scraperSourceRangotec;
+
+  /// No description provided for @scraperLyricsSourcesFixed.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌词刮削源固定为 lrclib + rangotec'**
+  String get scraperLyricsSourcesFixed;
 
   /// No description provided for @seconds.
   ///
@@ -429,6 +663,12 @@ abstract class AppLocalizations {
   /// **'播放全部'**
   String get playAll;
 
+  /// No description provided for @play.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放'**
+  String get play;
+
   /// No description provided for @deleteConfirm.
   ///
   /// In zh, this message translates to:
@@ -600,7 +840,7 @@ abstract class AppLocalizations {
   /// No description provided for @openListNotSupported.
   ///
   /// In zh, this message translates to:
-  /// **'OpenAList 暂未支持'**
+  /// **'OpenList 暂未支持'**
   String get openListNotSupported;
 
   /// No description provided for @noSyncAccount.
@@ -663,6 +903,72 @@ abstract class AppLocalizations {
   /// **'刮削中心'**
   String get scraperCenter;
 
+  /// No description provided for @scraperCategoryAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部问题'**
+  String get scraperCategoryAll;
+
+  /// No description provided for @scraperCategoryUnscraped.
+  ///
+  /// In zh, this message translates to:
+  /// **'未刮削'**
+  String get scraperCategoryUnscraped;
+
+  /// No description provided for @scraperCategoryScraped.
+  ///
+  /// In zh, this message translates to:
+  /// **'已刮削'**
+  String get scraperCategoryScraped;
+
+  /// No description provided for @scraperCategoryHasLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'有歌词'**
+  String get scraperCategoryHasLyrics;
+
+  /// No description provided for @scraperCategoryNoLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'无歌词'**
+  String get scraperCategoryNoLyrics;
+
+  /// No description provided for @scraperCategoryMissingCover.
+  ///
+  /// In zh, this message translates to:
+  /// **'缺少封面'**
+  String get scraperCategoryMissingCover;
+
+  /// No description provided for @scraperCategoryMissingInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'缺少作者/专辑'**
+  String get scraperCategoryMissingInfo;
+
+  /// No description provided for @scraperCategoryArtists.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌手'**
+  String get scraperCategoryArtists;
+
+  /// No description provided for @scraperSourceMusicBrainz.
+  ///
+  /// In zh, this message translates to:
+  /// **'MusicBrainz'**
+  String get scraperSourceMusicBrainz;
+
+  /// No description provided for @scraperSourceItunes.
+  ///
+  /// In zh, this message translates to:
+  /// **'iTunes'**
+  String get scraperSourceItunes;
+
+  /// No description provided for @scraperSourceLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'来源：{source}'**
+  String scraperSourceLabel(Object source);
+
   /// No description provided for @refresh.
   ///
   /// In zh, this message translates to:
@@ -704,6 +1010,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'歌词功能即将上线...'**
   String get lyricsComingSoon;
+
+  /// No description provided for @lyricsModeOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌词：关闭'**
+  String get lyricsModeOff;
+
+  /// No description provided for @lyricsModeCompact.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌词：封面下方'**
+  String get lyricsModeCompact;
+
+  /// No description provided for @lyricsModeFull.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌词：全屏显示'**
+  String get lyricsModeFull;
+
+  /// No description provided for @noLyricsFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到歌词'**
+  String get noLyricsFound;
 
   /// No description provided for @syncCenterSubtitle.
   ///
@@ -1017,11 +1347,11 @@ abstract class AppLocalizations {
   /// **'WebDAV'**
   String get webdav;
 
-  /// No description provided for @openalist.
+  /// No description provided for @openlist.
   ///
   /// In zh, this message translates to:
-  /// **'OpenAList'**
-  String get openalist;
+  /// **'OpenList'**
+  String get openlist;
 
   /// No description provided for @webdavConfigTitle.
   ///
@@ -1034,6 +1364,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'WebDAV URL (例如 https://dav.example.com)'**
   String get webdavUrlLabel;
+
+  /// No description provided for @keepAliveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'保活'**
+  String get keepAliveTitle;
+
+  /// No description provided for @keepAliveDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'如熄屏时连接断开，请在系统设置中允许应用自启动。'**
+  String get keepAliveDescription;
+
+  /// No description provided for @openAutoStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开自启动设置'**
+  String get openAutoStart;
 
   /// No description provided for @username.
   ///
@@ -1149,6 +1497,30 @@ abstract class AppLocalizations {
   /// **'重新刮削'**
   String get scrapeAgain;
 
+  /// No description provided for @scrapeArtistAvatars.
+  ///
+  /// In zh, this message translates to:
+  /// **'刮削歌手头像'**
+  String get scrapeArtistAvatars;
+
+  /// No description provided for @manualMatchArtist.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动匹配歌手'**
+  String get manualMatchArtist;
+
+  /// No description provided for @batchScrapeArtists.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量刮削歌手'**
+  String get batchScrapeArtists;
+
+  /// No description provided for @scrapeArtistAvatarsResult.
+  ///
+  /// In zh, this message translates to:
+  /// **'已更新 {count} 个歌手头像'**
+  String scrapeArtistAvatarsResult(Object count);
+
   /// No description provided for @songDeletedWithTitle.
   ///
   /// In zh, this message translates to:
@@ -1160,6 +1532,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已清除 \"{title}\" 的缓存'**
   String cacheClearedWithTitle(Object title);
+
+  /// No description provided for @cannotAccessSong.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法访问歌曲文件：{title}'**
+  String cannotAccessSong(Object title);
 
   /// No description provided for @addedToFavorites.
   ///
@@ -1190,6 +1568,210 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'名为 \"{playlistName}\" 的歌单已存在'**
   String playlistAlreadyExists(Object playlistName);
+
+  /// No description provided for @resetAdminPasswordTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置管理员密码'**
+  String get resetAdminPasswordTitle;
+
+  /// No description provided for @resetFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置失败'**
+  String get resetFailed;
+
+  /// No description provided for @unknownError.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知错误'**
+  String get unknownError;
+
+  /// No description provided for @newPasswordGenerated.
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码已生成'**
+  String get newPasswordGenerated;
+
+  /// No description provided for @usernameAdmin.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名：admin'**
+  String get usernameAdmin;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码：{pwd}'**
+  String newPassword(Object pwd);
+
+  /// No description provided for @portAndProxy.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口与代理'**
+  String get portAndProxy;
+
+  /// No description provided for @invalidPort.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口无效'**
+  String get invalidPort;
+
+  /// No description provided for @proxyHostEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理地址不能为空'**
+  String get proxyHostEmpty;
+
+  /// No description provided for @invalidProxyPort.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理端口无效'**
+  String get invalidProxyPort;
+
+  /// No description provided for @savedRestartRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存，需重启后生效'**
+  String get savedRestartRequired;
+
+  /// No description provided for @openListService.
+  ///
+  /// In zh, this message translates to:
+  /// **'OpenList 服务'**
+  String get openListService;
+
+  /// No description provided for @statusRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'状态: 运行中'**
+  String get statusRunning;
+
+  /// No description provided for @statusStopped.
+  ///
+  /// In zh, this message translates to:
+  /// **'状态: 已停止'**
+  String get statusStopped;
+
+  /// No description provided for @address.
+  ///
+  /// In zh, this message translates to:
+  /// **'地址: http://{address}:{port}'**
+  String address(Object address, Object port);
+
+  /// No description provided for @stop.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止'**
+  String get stop;
+
+  /// No description provided for @start.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动'**
+  String get start;
+
+  /// No description provided for @managementPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理页面'**
+  String get managementPage;
+
+  /// No description provided for @accessManagementPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'访问 OpenList 管理页面：'**
+  String get accessManagementPage;
+
+  /// No description provided for @startServiceFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先启动 OpenList 服务'**
+  String get startServiceFirst;
+
+  /// No description provided for @openInApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'APP内打开'**
+  String get openInApp;
+
+  /// No description provided for @openInBrowser.
+  ///
+  /// In zh, this message translates to:
+  /// **'浏览器打开'**
+  String get openInBrowser;
+
+  /// No description provided for @adminInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理员信息'**
+  String get adminInfo;
+
+  /// No description provided for @saveCredentials.
+  ///
+  /// In zh, this message translates to:
+  /// **'请保存：\n用户名：admin\n初始密码：{password}'**
+  String saveCredentials(Object password);
+
+  /// No description provided for @saved.
+  ///
+  /// In zh, this message translates to:
+  /// **'我已保存'**
+  String get saved;
+
+  /// No description provided for @defaultUsernameAdmin.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认用户名：admin'**
+  String get defaultUsernameAdmin;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码'**
+  String get resetPassword;
+
+  /// No description provided for @stopServiceToModify.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止服务后才可修改'**
+  String get stopServiceToModify;
+
+  /// No description provided for @serviceRunningLocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务运行中，已锁定'**
+  String get serviceRunningLocked;
+
+  /// No description provided for @stopServiceExitHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请手动停止 OpenList 后再退出软件，才能停止 OpenList'**
+  String get stopServiceExitHint;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败'**
+  String get saveFailed;
+
+  /// No description provided for @openListManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'OpenList 管理'**
+  String get openListManagement;
+
+  /// No description provided for @autoStartOpenListOnAppLaunch.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动启动OpenList'**
+  String get autoStartOpenListOnAppLaunch;
+
+  /// No description provided for @autoStartOpenListDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用后，APP启动时将自动启动OpenList服务'**
+  String get autoStartOpenListDescription;
 }
 
 class _AppLocalizationsDelegate

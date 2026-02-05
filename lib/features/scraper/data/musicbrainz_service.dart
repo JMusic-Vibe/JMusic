@@ -6,6 +6,7 @@ import 'package:jmusic/core/network/system_proxy_helper.dart';
 import 'package:jmusic/features/scraper/domain/musicbrainz_result.dart';
 
 import 'package:jmusic/features/settings/presentation/settings_providers.dart';
+import 'package:jmusic/core/utils/scraper_utils.dart';
 
 final musicBrainzServiceProvider = Provider((ref) {
   final proxySettings = ref.watch(proxySettingsProvider);
@@ -61,9 +62,14 @@ class MusicBrainzService {
     // 移除：不要在每次请求时都刷新系统代理，使用启动时或全局缓存的配置即可
     // if (proxySettings.mode == 'system') { ... }
 
+    // sanitize inputs to improve search matching
+    final cleanTitle = sanitizeTitleForSearch(title);
+    final cleanArtist = artist == null ? null : sanitizeArtistForSearch(artist);
+    final cleanAlbum = album == null ? null : sanitizeAlbumForSearch(album);
+
     final queryBuffer = StringBuffer();
     // 基础查询: 歌名
-    queryBuffer.write('recording:"$title"');
+    queryBuffer.write('recording:"$cleanTitle"');
     // 排除视频（MV等）
     queryBuffer.write(' AND video:false'); 
     
@@ -77,12 +83,12 @@ class MusicBrainzService {
       return true;
     }
 
-    if (_isMeaningful(artist)) {
-      queryBuffer.write(' AND artist:"$artist"');
+    if (_isMeaningful(cleanArtist)) {
+      queryBuffer.write(' AND artist:"$cleanArtist"');
     }
-    if (_isMeaningful(album)) {
+    if (_isMeaningful(cleanAlbum)) {
       // MusicBrainz uses 'release' to match album/release titles
-      queryBuffer.write(' AND release:"$album"');
+      queryBuffer.write(' AND release:"$cleanAlbum"');
     }
 
     try {

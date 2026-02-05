@@ -34,7 +34,7 @@ class ScrapeProgressDialog extends ConsumerWidget {
             const SizedBox(height: 12),
             Text('${done} / ${total}'),
             const SizedBox(height: 8),
-            Text(progress.currentTitle ?? '正在准备...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+            Text(progress.currentTitle ?? 'Processing...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
           ],
         ),
       ),

@@ -104,17 +104,13 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.music_note,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
+                    // Show a minimal textual title for desktop title bar
                     Text(
-                      'J Music',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      'JMusic',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onSurface,
+                        letterSpacing: 0.4,
                       ),
                     ),
                   ],

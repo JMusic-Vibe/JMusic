@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/core/services/database_service.dart';
 import 'package:jmusic/core/services/webdav_service.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
+import 'package:jmusic/features/sync/data/sync_config_repository.dart';
 
 // Provider related to download progress (0.0 to 1.0). Null if not downloading.
 final downloadProgressProvider = StateProvider.family<double?, int>((ref, songId) => null);
@@ -34,7 +35,7 @@ final songCacheStatusProvider = FutureProvider.family<bool, int>((ref, songId) a
   final db = await dbService.db;
   final song = await db.songs.get(songId);
 
-  if (song == null || song.sourceType != SourceType.webdav) {
+  if (song == null || (song.sourceType != SourceType.webdav && song.sourceType != SourceType.openlist)) {
     return false;
   }
 
@@ -75,7 +76,7 @@ class DownloadManager {
       throw Exception('Song not found in database');
     }
 
-    if (song.sourceType != SourceType.webdav) {
+    if (song.sourceType != SourceType.webdav && song.sourceType != SourceType.openlist) {
       return; // Not a WebDAV song
     }
 
@@ -83,18 +84,45 @@ class DownloadManager {
      _ref.read(downloadProgressProvider(songId).notifier).state = 0.0;
 
     final webDavService = _ref.read(webDavServiceProvider);
+    final syncRepo = _ref.read(syncConfigRepositoryProvider);
     
     try {
       final subDir = song.syncConfigId?.toString();
-      await webDavService.downloadSong(
-        song.path, 
-        subDir: subDir,
-        onProgress: (received, total) {
-          if (total > 0) {
-            _ref.read(downloadProgressProvider(songId).notifier).state = received / total;
-          }
-        },
-      );
+      if (song.syncConfigId != null) {
+        final config = await syncRepo.getConfigById(song.syncConfigId!);
+        if (config != null) {
+          await webDavService.downloadSongWithConfig(
+            config,
+            song.path,
+            subDir: subDir,
+            onProgress: (received, total) {
+              if (total > 0) {
+                _ref.read(downloadProgressProvider(songId).notifier).state = received / total;
+              }
+            },
+          );
+        } else {
+          await webDavService.downloadSong(
+            song.path,
+            subDir: subDir,
+            onProgress: (received, total) {
+              if (total > 0) {
+                _ref.read(downloadProgressProvider(songId).notifier).state = received / total;
+              }
+            },
+          );
+        }
+      } else {
+        await webDavService.downloadSong(
+          song.path,
+          subDir: subDir,
+          onProgress: (received, total) {
+            if (total > 0) {
+              _ref.read(downloadProgressProvider(songId).notifier).state = received / total;
+            }
+          },
+        );
+      }
       
       // Success: Clear progress
       _ref.read(downloadProgressProvider(songId).notifier).state = null;

@@ -1,7 +1,12 @@
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/core/services/database_service.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
 import 'package:jmusic/features/scraper/data/musicbrainz_service.dart';
+import 'package:jmusic/features/scraper/data/itunes_service.dart';
+import 'package:jmusic/features/scraper/data/lyrics_service.dart';
+import 'package:jmusic/features/scraper/domain/musicbrainz_result.dart';
+import 'package:jmusic/features/scraper/domain/scrape_result.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
 import 'package:jmusic/features/player/presentation/player_providers.dart';
 import 'package:jmusic/features/home/presentation/home_controller.dart';
@@ -108,9 +113,27 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
 
   Future<void> _runScrapeLoop(List<int> songIds) async {
     final mbService = _ref.read(musicBrainzServiceProvider);
+    final itunesService = _ref.read(itunesServiceProvider);
+    final lyricsService = _ref.read(lyricsServiceProvider);
+    final prefs = _ref.read(preferencesServiceProvider);
+    final useMb = prefs.scraperSourceMusicBrainz;
+    final useItunes = prefs.scraperSourceItunes;
+    final lyricsEnabled = prefs.scraperLyricsEnabled;
     final scraperController = _ref.read(scraperControllerProvider);
     final dbService = _ref.read(databaseServiceProvider);
     final db = await dbService.db;
+
+    if (!useMb && !useItunes) {
+      state = state.copyWith(
+        isRunning: false,
+        done: state.total,
+        successCount: 0,
+        failCount: state.total,
+        scrapingSongIds: {},
+        showResult: true,
+      );
+      return;
+    }
     
     int success = 0;
     int fail = 0;
@@ -135,29 +158,73 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
           // Decide which artist string to use based on user preference
           final usePrimary = _ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
           final artistForQuery = usePrimary ? song.artist : (song.artists.isNotEmpty ? song.artists.join(' / ') : song.artist);
-          final results = await mbService.searchRecording(song.title, artistForQuery, song.album);
-          if (results.isNotEmpty) {
-             final best = results.first;
-             String? coverUrl;
-             if (best.releaseId != null) {
-               coverUrl = await mbService.getCoverArtUrl(best.releaseId!);
-             }
-             
-             int? year;
-             if (best.date != null) {
-                year = int.tryParse(best.date!.split('-').first);
-             }
+          final normalizedArtist = _normalizeQueryParam(artistForQuery);
+          final normalizedAlbum = _normalizeQueryParam(song.album);
+          ScrapeResult? bestResult;
+          String? coverUrl;
+          String? mbId;
+          int? year;
 
-             await scraperController.updateSongMetadata(
-               songId,
-               title: best.title,
-               artist: best.artist,
-               album: best.album,
-               mbId: best.id,
-               coverUrl: coverUrl,
-               year: year
-             );
-             scraped = true;
+            final mbResults = useMb
+              ? await mbService.searchRecording(song.title, normalizedArtist, normalizedAlbum)
+              : <MusicBrainzResult>[];
+          if (mbResults.isNotEmpty) {
+            final best = _pickMusicBrainzResult(mbResults, song.duration);
+            if (best != null) {
+              bestResult = ScrapeResult(
+                source: ScrapeSource.musicBrainz,
+                id: best.id,
+                title: best.title,
+                artist: best.artist,
+                album: best.album,
+                date: best.date,
+                releaseId: best.releaseId,
+                durationMs: best.durationMs,
+              );
+              if (best.releaseId != null) {
+                coverUrl = await mbService.getCoverArtUrl(best.releaseId!);
+              }
+              mbId = best.id;
+            }
+          }
+
+          if (bestResult == null && useItunes) {
+            final itResults = await itunesService.searchTrack(
+              song.title,
+              artist: normalizedArtist,
+              album: normalizedAlbum,
+            );
+            if (itResults.isNotEmpty) {
+              bestResult = _pickItunesResult(itResults, song.duration);
+              if (bestResult != null) {
+                coverUrl = bestResult.coverUrl;
+              }
+            }
+          }
+
+          if (bestResult != null) {
+            if (bestResult.date != null) {
+              year = int.tryParse(bestResult.date!.split('-').first);
+            }
+            final lyrics = lyricsEnabled
+                ? await lyricsService.fetchLyrics(
+                    title: bestResult.title,
+                    artist: bestResult.artist,
+                    album: bestResult.album,
+                  )
+                : null;
+
+            await scraperController.updateSongMetadata(
+              songId,
+              title: bestResult.title,
+              artist: bestResult.artist,
+              album: bestResult.album,
+              mbId: mbId,
+              coverUrl: coverUrl,
+              year: year,
+              lyrics: lyrics,
+            );
+            scraped = true;
           }
         } catch (e) {
           print('Error scraping song $songId: $e');
@@ -191,6 +258,46 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
     } catch (e) {
       print('Failed to refresh home to be scraped: $e');
     }
+  }
+
+  String? _normalizeQueryParam(String? input) {
+    if (input == null) return null;
+    final v = input.trim();
+    if (v.isEmpty) return null;
+    final lower = v.toLowerCase();
+    if (lower.contains('unknown') || lower.contains('unknow')) return null;
+    if (v.contains('未知')) return null;
+    return v;
+  }
+
+  MusicBrainzResult? _pickMusicBrainzResult(List<MusicBrainzResult> results, double? localDurationSeconds) {
+    if (results.isEmpty) return null;
+    if (!_hasValidDuration(localDurationSeconds)) return results.first;
+
+    final close = results.where((r) => _isDurationClose(localDurationSeconds!, r.durationMs)).toList();
+    if (close.isNotEmpty) return close.first;
+    return null;
+  }
+
+  ScrapeResult? _pickItunesResult(List<ScrapeResult> results, double? localDurationSeconds) {
+    if (results.isEmpty) return null;
+    if (!_hasValidDuration(localDurationSeconds)) return results.first;
+
+    final close = results.where((r) => _isDurationClose(localDurationSeconds!, r.durationMs)).toList();
+    if (close.isNotEmpty) return close.first;
+    return null;
+  }
+
+  bool _hasValidDuration(double? seconds) => seconds != null && seconds > 0;
+
+  bool _isDurationClose(double localSeconds, int? externalMs) {
+    if (externalMs == null || externalMs <= 0) return true;
+    if (localSeconds <= 0) return true;
+
+    final externalSeconds = externalMs / 1000.0;
+    final diff = (localSeconds - externalSeconds).abs();
+    final tolerance = math.max(8.0, localSeconds * 0.15);
+    return diff <= tolerance;
   }
 }
 

@@ -11,52 +11,51 @@ class ThemeSettingsDialog extends ConsumerWidget {
     final currentThemeMode = ref.watch(themeModeProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    return AlertDialog(
-      title: Text(
-        l10n.theme,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.theme),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          RadioListTile<ThemeMode>(
-            title: Text(l10n.themeLight),
-            value: ThemeMode.light,
-            groupValue: currentThemeMode,
-            onChanged: (value) {
-              if (value != null) {
-                ref.read(themeModeProvider.notifier).setThemeMode(value);
-              }
-            },
-          ),
-          RadioListTile<ThemeMode>(
-            title: Text(l10n.themeDark),
-            value: ThemeMode.dark,
-            groupValue: currentThemeMode,
-            onChanged: (value) {
-              if (value != null) {
-                ref.read(themeModeProvider.notifier).setThemeMode(value);
-              }
-            },
-          ),
-          RadioListTile<ThemeMode>(
-            title: Text(l10n.themeSystem),
-            value: ThemeMode.system,
-            groupValue: currentThemeMode,
-            onChanged: (value) {
-              if (value != null) {
-                ref.read(themeModeProvider.notifier).setThemeMode(value);
-              }
-            },
+          Card(
+            child: Column(
+              children: [
+                RadioListTile<ThemeMode>(
+                  title: Text(l10n.themeLight),
+                  value: ThemeMode.light,
+                  groupValue: currentThemeMode,
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref.read(themeModeProvider.notifier).setThemeMode(value);
+                    }
+                  },
+                ),
+                RadioListTile<ThemeMode>(
+                  title: Text(l10n.themeDark),
+                  value: ThemeMode.dark,
+                  groupValue: currentThemeMode,
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref.read(themeModeProvider.notifier).setThemeMode(value);
+                    }
+                  },
+                ),
+                RadioListTile<ThemeMode>(
+                  title: Text(l10n.themeSystem),
+                  value: ThemeMode.system,
+                  groupValue: currentThemeMode,
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref.read(themeModeProvider.notifier).setThemeMode(value);
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.confirm),
-        ),
-      ],
     );
   }
 }

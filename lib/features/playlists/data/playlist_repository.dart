@@ -175,5 +175,22 @@ class PlaylistRepository {
       }
     });
   }
+
+  /// Remove the given song IDs from all playlists (used when songs are deleted)
+  Future<void> removeSongIdsFromPlaylists(List<int> songIds) async {
+    if (songIds.isEmpty) return;
+    final isar = await _dbService.db;
+    await isar.writeTxn(() async {
+      final all = await isar.playlists.where().findAll();
+      for (final pl in all) {
+        final newIds = pl.songIds.where((id) => !songIds.contains(id)).toList();
+        if (newIds.length != pl.songIds.length) {
+          pl.songIds = newIds;
+          pl.updatedAt = DateTime.now();
+          await isar.playlists.put(pl);
+        }
+      }
+    });
+  }
 }
 

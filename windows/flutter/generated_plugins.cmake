@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  file_selector_windows
   irondash_engine_context
   isar_flutter_libs
   just_audio_windows
@@ -11,6 +12,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   share_plus
   super_native_extensions
   url_launcher_windows
+  video_player_win
   window_manager
 )
 

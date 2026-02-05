@@ -4,7 +4,7 @@ part 'sync_config.g.dart';
 
 enum SyncType {
   webdav,
-  openalist
+  openlist
 }
 
 @collection
@@ -24,7 +24,7 @@ class SyncConfig {
   String? username;
   String? password;
   
-  // OpenAList 特有
+  // OpenList 特有
   String? token;
 
   bool isEnabled = true;

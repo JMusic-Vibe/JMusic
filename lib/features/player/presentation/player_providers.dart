@@ -2,7 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:jmusic/core/services/audio_player_service.dart';
+import 'package:jmusic/core/services/preferences_service.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
+
+enum LyricsDisplayMode { off, compact, full }
 
 // ==================== 播放状态====================
 
@@ -103,6 +106,57 @@ final queueSongsProvider = Provider<List<Song>>((ref) {
     error: (_, __) => [],
   );
 });
+
+// ==================== 歌词显示模式 ====================
+
+final lyricsDisplayModeProvider = StateNotifierProvider<LyricsDisplayModeNotifier, LyricsDisplayMode>((ref) {
+  final prefs = ref.watch(preferencesServiceProvider);
+  return LyricsDisplayModeNotifier(prefs);
+});
+
+class LyricsDisplayModeNotifier extends StateNotifier<LyricsDisplayMode> {
+  final PreferencesService _prefs;
+
+  LyricsDisplayModeNotifier(this._prefs) : super(_fromPrefs(_prefs.lyricsDisplayMode));
+
+  static LyricsDisplayMode _fromPrefs(String value) {
+    switch (value) {
+      case 'compact':
+        return LyricsDisplayMode.compact;
+      case 'full':
+        return LyricsDisplayMode.full;
+      case 'off':
+      default:
+        return LyricsDisplayMode.off;
+    }
+  }
+
+  static String _toPrefs(LyricsDisplayMode mode) {
+    switch (mode) {
+      case LyricsDisplayMode.compact:
+        return 'compact';
+      case LyricsDisplayMode.full:
+        return 'full';
+      case LyricsDisplayMode.off:
+      default:
+        return 'off';
+    }
+  }
+
+  Future<void> setMode(LyricsDisplayMode mode) async {
+    state = mode;
+    await _prefs.setLyricsDisplayMode(_toPrefs(mode));
+  }
+
+  Future<void> cycle() async {
+    final next = switch (state) {
+      LyricsDisplayMode.off => LyricsDisplayMode.compact,
+      LyricsDisplayMode.compact => LyricsDisplayMode.full,
+      LyricsDisplayMode.full => LyricsDisplayMode.off,
+    };
+    await setMode(next);
+  }
+}
 
 // ==================== 播放器控制器 ====================
 
@@ -226,13 +280,20 @@ class PlayerController {
 
   // 插入到下一首并立即播放
   Future<void> playNext(Song song) async {
-    final currentIndex = _service.player.currentIndex ?? -1;
-    final queue = _ref.read(queueProvider).value ?? [];
+    final prefs = _ref.read(preferencesServiceProvider);
+    var queue = _service.audioHandler.queue.value;
+    var currentIndex = _service.player.currentIndex ?? -1;
 
-    // 如果当前队列为空，则直接替换队列并播放，避免 currentIndex 值误判导致插入但不切换的问题
+    // 若重启后队列尚未恢复但偏好中有历史队列，先尝试恢复
+    if ((queue.isEmpty || currentIndex < 0) && prefs.lastQueueSongIds.isNotEmpty) {
+      await _service.restoreLastQueue();
+      queue = _service.audioHandler.queue.value;
+      currentIndex = _service.player.currentIndex ?? -1;
+    }
+
+    // 如果当前队列仍为空，则直接替换队列并播放
     if (queue.isEmpty || currentIndex < 0) {
       await playSong(song);
-      // Ensure playback starts
       if (!_service.player.playing) {
         await play();
       }

@@ -37,6 +37,7 @@ class PlaylistDetailScreen extends ConsumerStatefulWidget {
 class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
   late String playlistName;
   String? coverPath;
+  List<Song>? _displaySongs;
 
   @override
   void initState() {
@@ -53,7 +54,12 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
 
     return Scaffold(
       body: songsAsync.when(
-        data: (songs) => CustomScrollView(
+        data: (songs) {
+          if (_displaySongs == null || !_sameOrderById(_displaySongs!, songs)) {
+            _displaySongs = List<Song>.from(songs);
+          }
+          final displaySongs = _displaySongs ?? songs;
+          return CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverAppBar(
@@ -74,7 +80,7 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    CoverArt(path: coverPath, fit: BoxFit.cover),
+                    CoverArt(path: coverPath, fit: BoxFit.cover, isVideo: false),
                     BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
                       child: Container(
@@ -111,9 +117,9 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                                   ),
                                 ],
                               ),
-                              child: ClipRRect(
+                                child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
-                                child: CoverArt(path: coverPath, fit: BoxFit.cover),
+                                child: CoverArt(path: coverPath, fit: BoxFit.cover, isVideo: false),
                               ),
                             ),
                           ),
@@ -130,7 +136,7 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                 ),
               ],
             ),
-            if (songs.isEmpty)
+            if (displaySongs.isEmpty)
               SliverFillRemaining(
                 child: Center(
                   child: Text(
@@ -141,27 +147,38 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
               )
             else
               SliverReorderableList(
-                itemCount: songs.length,
+                itemCount: displaySongs.length,
                 onReorder: (oldIndex, newIndex) async {
                   int adjustedNewIndex = newIndex;
                   if (adjustedNewIndex > oldIndex) adjustedNewIndex -= 1;
-                  await ref.read(playlistRepositoryProvider).reorderSongsInPlaylist(widget.playlist.id, oldIndex, adjustedNewIndex);
-                  ref.invalidate(playlistSongsProvider(widget.playlist.id));
+
+                  setState(() {
+                    final moved = displaySongs.removeAt(oldIndex);
+                    displaySongs.insert(adjustedNewIndex, moved);
+                    _displaySongs = List<Song>.from(displaySongs);
+                  });
+
+                  await ref.read(playlistRepositoryProvider).reorderSongsInPlaylist(
+                        widget.playlist.id,
+                        oldIndex,
+                        adjustedNewIndex,
+                      );
                 },
                 itemBuilder: (context, index) {
-                  final song = songs[index];
+                  final song = displaySongs[index];
                   return ReorderableDelayedDragStartListener(
                     key: ValueKey(song.id),
                     index: index,
                     child: Material(
                       color: Colors.transparent,
                       child: ListTile(
-                        leading: ClipRRect(
+                        key: ValueKey(song.id),
+                            leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: SizedBox(
                             width: 48,
                             height: 48,
-                            child: CoverArt(path: song.coverPath),
+                            child: CoverArt(path: song.coverPath, isVideo: song.mediaType == MediaType.video),
                           ),
                         ),
                         title: Text(
@@ -226,7 +243,7 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
                           ],
                         ),
                         onTap: () {
-                          ref.read(playerControllerProvider).setQueue(songs, initialIndex: index);
+                          ref.read(playerControllerProvider).setQueue(displaySongs, initialIndex: index);
                         },
                       ),
                     ),
@@ -235,11 +252,20 @@ class _PlaylistDetailScreenState extends ConsumerState<PlaylistDetailScreen> {
               ),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
-        ),
+        );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Center(child: Text(e.toString())),
       ),
     );
+  }
+
+  bool _sameOrderById(List<Song> a, List<Song> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id) return false;
+    }
+    return true;
   }
 
   void _showActions(BuildContext context, AppLocalizations l10n) {

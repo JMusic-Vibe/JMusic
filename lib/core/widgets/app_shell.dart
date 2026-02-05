@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/features/music_lib/presentation/library_screen.dart';
@@ -8,8 +12,12 @@ import 'package:jmusic/features/sync/presentation/sync_center_screen.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_center_screen.dart';
 import 'package:jmusic/features/settings/presentation/settings_screen.dart';
 import 'package:jmusic/features/player/presentation/widgets/mini_player.dart';
+import 'package:jmusic/core/widgets/capsule_toast.dart';
+import 'package:jmusic/core/services/toast_service.dart';
 import 'package:jmusic/core/services/preferences_service.dart';
 import 'package:jmusic/l10n/app_localizations.dart';
+import 'package:jmusic/features/sync/openlist/openlist_service_manager.dart';
+import 'package:window_manager/window_manager.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
@@ -18,7 +26,7 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver, WindowListener {
   late int _selectedIndex;
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -28,14 +36,65 @@ class _AppShellState extends ConsumerState<AppShell> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
   ];
+  // Separate navigator keys for bottom (compact) layout to avoid reusing
+  // the wide-layout navigators which may have different screen stacks
+  // (e.g. index 3 is Sync in wide layout but More in bottom layout).
+  final List<GlobalKey<NavigatorState>> _bottomNavigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    if (_isDesktop) {
+      windowManager.addListener(this);
+    }
     // Initialize selected index from preferences
     _selectedIndex = ref.read(preferencesServiceProvider).defaultPageIndex;
+    // Subscribe to global toast events from services
+    try {
+      // ignore: cancel_subscriptions
+      final sub = toastService.stream.listen((event) {
+        final l10n = AppLocalizations.of(context)!;
+        if (event.key == 'cannotAccessSong') {
+          final title = event.args?['title'] ?? '';
+          final msg = l10n.cannotAccessSong(title);
+          if (mounted) CapsuleToast.show(context, msg);
+        } else {
+          // Fallback: display raw key or title
+          final msg = event.args?['message'] ?? event.key;
+          if (mounted) CapsuleToast.show(context, msg);
+        }
+      });
+      // store subscription so we can cancel later
+      _toastSubscription = sub;
+    } catch (_) {}
+  }
+  StreamSubscription? _toastSubscription;
+
+  bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+
+  Future<void> _stopOpenListOnExit() async {
+    final controller = ref.read(openListServiceControllerProvider.notifier);
+    await controller.stop();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      _stopOpenListOnExit();
+    }
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    await _stopOpenListOnExit();
+    await windowManager.destroy();
+  }
   List<Widget> _buildScreens() {
     return [
       const HomeScreen(),
@@ -49,6 +108,11 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    if (_isDesktop) {
+      windowManager.removeListener(this);
+    }
+    _toastSubscription?.cancel();
     // 在应用关闭时保存播放队列
     // 注意：这里无法直接访问ref，因为dispose时context可能不可用
     // 我们在其他地方处理保存逻辑
@@ -80,7 +144,19 @@ class _AppShellState extends ConsumerState<AppShell> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final navigator = _navigatorKeys[_selectedIndex.clamp(0, _navigatorKeys.length - 1)].currentState;
+        // First try to close any root-level modal (e.g., full-screen player)
+        final rootNavigator = Navigator.of(context, rootNavigator: true);
+        if (rootNavigator.canPop()) {
+          rootNavigator.pop();
+          return;
+        }
+        // Choose navigator keys based on current width so we pop the correct
+        // nested navigator depending on layout mode.
+        final width = MediaQuery.of(context).size.width;
+        final useWide = width >= 700; // same breakpoint as below
+        final navigatorList = useWide ? _navigatorKeys : _bottomNavigatorKeys;
+        final idx = _selectedIndex.clamp(0, navigatorList.length - 1);
+        final navigator = navigatorList[idx].currentState;
         if (navigator != null && navigator.canPop()) {
           navigator.pop();
         } else if (_selectedIndex != 0) {
@@ -163,7 +239,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                     final index = entry.key;
                     final screen = entry.value;
                     return Navigator(
-                      key: _navigatorKeys[index],
+                      key: _bottomNavigatorKeys[index],
                       onGenerateRoute: (settings) => MaterialPageRoute(
                         settings: settings,
                         builder: (context) => screen,
@@ -177,21 +253,25 @@ class _AppShellState extends ConsumerState<AppShell> {
           ),
           bottomNavigationBar: SizedBox(
             height: 65,
-            child: NavigationBar(
-              selectedIndex: _selectedIndex.clamp(0, bottomDestinations.length - 1),
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-              destinations: bottomDestinations
-                  .map((d) => NavigationDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
-                        label: d.label,
-                      ))
-                  .toList(),
+            child: Material(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+              child: NavigationBar(
+                backgroundColor: Colors.transparent,
+                selectedIndex: _selectedIndex.clamp(0, bottomDestinations.length - 1),
+                onDestinationSelected: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                destinations: bottomDestinations
+                    .map((d) => NavigationDestination(
+                          icon: Icon(d.icon),
+                          selectedIcon: Icon(d.selectedIcon),
+                          label: d.label,
+                        ))
+                    .toList(),
+              ),
             ),
           ),
         );

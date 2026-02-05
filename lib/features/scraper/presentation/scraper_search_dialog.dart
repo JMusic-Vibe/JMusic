@@ -1,14 +1,17 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/core/widgets/cover_art.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
 import 'package:jmusic/features/scraper/data/musicbrainz_service.dart';
 import 'package:jmusic/features/scraper/domain/musicbrainz_result.dart';
+import 'package:jmusic/features/scraper/data/itunes_service.dart';
+import 'package:jmusic/features/scraper/data/lyrics_service.dart';
+import 'package:jmusic/features/scraper/domain/scrape_result.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
 import 'package:jmusic/features/player/presentation/player_providers.dart';
 import 'package:jmusic/l10n/app_localizations.dart';
 import 'package:jmusic/core/services/preferences_service.dart';
+import 'package:jmusic/core/widgets/capsule_toast.dart';
 
 class ScraperSearchDialog extends ConsumerStatefulWidget {
   final Song song;
@@ -23,9 +26,11 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
   final _titleCtrl = TextEditingController();
   final _artistCtrl = TextEditingController();
   final _albumCtrl = TextEditingController();
-  List<MusicBrainzResult>? _results;
+  List<ScrapeResult>? _results;
   bool _isLoading = false;
   bool _isProcessingSelection = false;
+
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -40,53 +45,95 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
 
   Future<void> _doSearch() async {
     final title = _titleCtrl.text.trim();
-    final artist = _artistCtrl.text.trim();
-    final album = _albumCtrl.text.trim();
+    final artist = _normalizeQueryParam(_artistCtrl.text);
+    final album = _normalizeQueryParam(_albumCtrl.text);
     if (title.isEmpty) return;
+
+    final prefs = ref.read(preferencesServiceProvider);
+    final useMb = prefs.scraperSourceMusicBrainz;
+    final useItunes = prefs.scraperSourceItunes;
+    if (!useMb && !useItunes) {
+      if (mounted) {
+        CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
+      }
+      return;
+    }
 
     setState(() => _isLoading = true);
 
-    // 分别传入 title 和 artist，正确地使用 MusicBrainz API 的搜索参数
-    final results = await ref.read(musicBrainzServiceProvider).searchRecording(
-      title,
-      artist.isNotEmpty ? artist : null,
-      album.isNotEmpty ? album : null,
-    );
-    
-    // 并行获取封面 fetch covers concurrently 
-    // 注意：MusicBrainz API limit is strict (1 req/sec typically), so be careful.
-    // 我们仅在用户点击详情或者展示时获取，或者这里不做批量获取。
-    
+    final mbService = ref.read(musicBrainzServiceProvider);
+    final itunesService = ref.read(itunesServiceProvider);
+
+    final mbFuture = useMb
+        ? mbService.searchRecording(
+            title,
+            artist,
+            album,
+          )
+        : Future.value(<MusicBrainzResult>[]);
+
+    final itFuture = useItunes
+        ? itunesService.searchTrack(
+            title,
+            artist: artist,
+            album: album,
+          )
+        : Future.value(<ScrapeResult>[]);
+
+    final results = await Future.wait([mbFuture, itFuture]);
+
+    final mbResults = results[0] as List<MusicBrainzResult>;
+    final itResults = results[1] as List<ScrapeResult>;
+
+    final combined = <ScrapeResult>[
+      ...mbResults.map((r) => ScrapeResult(
+            source: ScrapeSource.musicBrainz,
+            id: r.id,
+            title: r.title,
+            artist: r.artist,
+            album: r.album,
+            date: r.date,
+            releaseId: r.releaseId,
+          )),
+      ...itResults,
+    ];
+
     setState(() {
-      _results = results;
+      _results = combined;
       _isLoading = false;
     });
   }
 
-  Future<void> _onResultSelected(MusicBrainzResult result) async {
+  String? _normalizeQueryParam(String? input) {
+    if (input == null) return null;
+    final v = input.trim();
+    if (v.isEmpty) return null;
+    final lower = v.toLowerCase();
+    if (lower.contains('unknown') || lower.contains('unknow')) return null;
+    if (v.contains('未知')) return null;
+    return v;
+  }
+
+  Future<void> _onResultSelected(ScrapeResult result) async {
       if (_isProcessingSelection) return;
       setState(() => _isProcessingSelection = true);
 
       try {
         // 获取封面 URL (Cover Art Archive)
-        String? coverUrl;
-        if (result.releaseId != null) {
-            print('[SearchDialog] Selected result has releaseId: ${result.releaseId}');
-            // Show loading for cover?
-            try {
-               coverUrl = await ref.read(musicBrainzServiceProvider).getCoverArtUrl(result.releaseId!);
-               print('[SearchDialog] Got coverUrl: $coverUrl');
-            } catch (e) {
-               print('[SearchDialog] Error fetching cover: $e');
-            }
-        } else {
-            print('[SearchDialog] Result has NO releaseId');
+        String? coverUrl = result.coverUrl;
+        if (coverUrl == null && result.source == ScrapeSource.musicBrainz && result.releaseId != null) {
+          print('[SearchDialog] Selected result has releaseId: ${result.releaseId}');
+          try {
+            coverUrl = await ref.read(musicBrainzServiceProvider).getCoverArtUrl(result.releaseId!);
+            print('[SearchDialog] Got coverUrl: $coverUrl');
+          } catch (e) {
+            print('[SearchDialog] Error fetching cover: $e');
+          }
         }
 
         if (!mounted) return;
 
         // 弹窗确认
-        final l10n = AppLocalizations.of(context)!;
         final confirm = await showDialog<bool>(
           context: context, 
           builder: (context) => AlertDialog(
@@ -99,13 +146,22 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
                             height: 100, 
                             width: 100, 
                             child: CoverArt(
-                              path: coverUrl,
-                              fit: BoxFit.cover,
-                            ),
+                                path: coverUrl,
+                                fit: BoxFit.cover,
+                                isVideo: false,
+                              ),
                           ),
-                      Text('Title: ${result.title}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-                      Text('Artist: ${result.artist}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-                      Text('Album: ${result.album}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+                        Text('Title: ${result.title}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+                        Text('Artist: ${result.artist}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+                        Text('Album: ${result.album}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+                        Text(
+                          l10n.scraperSourceLabel(
+                            result.source == ScrapeSource.musicBrainz
+                                ? l10n.scraperSourceMusicBrainz
+                                : l10n.scraperSourceItunes,
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
                   ],
               ),
               actions: [
@@ -116,15 +172,26 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
         );
 
         if (confirm == true && mounted) {
+           final prefs = ref.read(preferencesServiceProvider);
+           final lyrics = prefs.scraperLyricsEnabled
+               ? await ref.read(lyricsServiceProvider).fetchLyrics(
+                   title: result.title,
+                   artist: result.artist,
+                   album: result.album,
+                 )
+               : null;
            await ref.read(scraperControllerProvider).updateSongMetadata(
                widget.song.id, 
                title: result.title, 
                artist: result.artist, 
                album: result.album,
-               mbId: result.id,
+               mbId: result.source == ScrapeSource.musicBrainz ? result.id : null,
                coverUrl: coverUrl,
                year: int.tryParse(result.date?.split('-').first ?? ''),
+               lyrics: lyrics,
            );
+             final lyricsFound = lyrics != null && lyrics.trim().isNotEmpty;
+             CapsuleToast.show(context, lyricsFound ? l10n.scrapeCompleteWithLyrics : l10n.scrapeCompleteNoLyrics);
            // 强制刷新播放相关的 Provider，以同步更新队列和当前歌曲信息
            ref.refresh(queueProvider);
            ref.refresh(currentMediaItemProvider);
@@ -214,7 +281,17 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
                           return ListTile(
                             title: Text(item.title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
                             subtitle: Text('${item.artist} - ${item.album} (${item.date ?? '?'})'),
-                            trailing: const Icon(Icons.check_circle_outlined),
+                            leading: SizedBox(
+                              height: 40,
+                              width: 40,
+                              child: CoverArt(path: item.coverUrl, fit: BoxFit.cover, isVideo: false),
+                            ),
+                            trailing: Text(
+                              item.source == ScrapeSource.musicBrainz
+                                  ? l10n.scraperSourceMusicBrainz
+                                  : l10n.scraperSourceItunes,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+                            ),
                             // Disable interaction while processing selection
                             enabled: !_isProcessingSelection, 
                             onTap: () => _onResultSelected(item),

@@ -4,7 +4,24 @@
     "home": "首頁",
     "library": "音樂庫",
     "playlists": "播放清單",
+    "playlistRecommendations": "播放列表推薦",
     "more": "更多",
+    "playVideo": "播放影片",
+    "restoreOriginalInfo": "還原原始資訊",
+    "restoreOriginalInfoConfirm": "是否還原 {count} 首的原始資訊？",
+    "@restoreOriginalInfoConfirm": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreOriginalInfoSuccess": "已還原 {count} 首",
+    "@restoreOriginalInfoSuccess": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreOriginalInfoFailed": "沒有可還原的原始資訊",
+    "batchRestore": "批量還原",
     "sync": "同步",
     "scraper": "刮削器",
     "settings": "設定",
@@ -15,16 +32,44 @@
     "language": "語言",
     "theme": "主題",
     "storageEvents": "存儲與緩存",
+    "coverCache": "封面緩存",
+    "clearCoverCacheConfirm": "清除封面緩存？",
+    "coverCacheCleared": "封面緩存已清除",
+    "artistAvatarCache": "歌手頭像緩存",
+    "clearArtistAvatarCacheConfirm": "清除歌手頭像緩存？",
+    "artistAvatarCacheCleared": "歌手頭像緩存已清除",
+    "embeddedCoverCache": "內嵌封面緩存",
+    "clearEmbeddedCoverCacheConfirm": "清除內嵌封面緩存？",
+    "embeddedCoverCacheCleared": "內嵌封面緩存已清除",
+    "appDataSize": "應用數據佔用",
+    "logExport": "匯出日誌",
+    "logFileSize": "日誌大小",
+    "logExported": "日誌已匯出",
+    "clearLogs": "清空日誌",
+    "clearLogsConfirm": "清空日誌？",
+    "logsCleared": "日誌已清空",
     "syncSettings": "同步設定",
     "serverSettings": "服務器設定",
     "defaultPage": "默認啟動頁",
     "scraperSettings": "刮削設定",
     "usePrimaryArtistForScraper": "刮削僅使用主歌手",
     "usePrimaryArtistForScraperDesc": "啟用後，刮削將僅使用主歌手進行查詢；停用時會包含客席/合作歌手。",
+    "scraperMatchSources": "匹配來源",
+    "scraperSourceAtLeastOne": "請至少啟用一個來源",
+    "scraperSongSources": "歌曲刮削來源",
+    "scraperArtistSources": "歌手刮削來源",
+    "scraperLyricsSources": "歌詞刮削來源",
+    "scraperSourceLrclib": "lrclib",
+    "scraperSourceRangotec": "rangotec",
+    "scraperLyricsSourcesFixed": "歌詞刮削來源固定為 lrclib + rangotec",
     "audioSettings": "音頻與播放",    "playbackSettings": "播放設置",
     "crossfadeEnabled": "啟用淡入淡出",
     "crossfadeEnabledDesc": "歌曲切換時啟用淡入淡出效果，提供更流暢的聽覺體驗",
     "crossfadeDuration": "淡入淡出時長",
+    "mute": "靜音",
+    "unmute": "取消靜音",
+    "loopingOn": "循環：開",
+    "loopingOff": "循環：關",
     "crossfadeEnabledInfo": "已啟用淡入淡出,歌曲將平滑過渡",
     "crossfadeDisabledInfo": "淡入淡出已禁用,歌曲將直接切換",
     "proxySettings": "網絡代理",
@@ -59,6 +104,7 @@
     "editTags": "編輯標籤", 
     "addToPlaylist": "添加到播放清單",
     "playAll": "播放全部",
+    "play": "播放",
 
     "deleteConfirm": "確認刪除這 {count} 首歌曲嗎？",
     "deleteSingleConfirm": "確認刪除 \"{title}\" 嗎？",
@@ -99,7 +145,7 @@
     },
     "syncCenter": "同步中心",
     "addSyncAccount": "新增同步賬號",
-    "openListNotSupported": "OpenAList 暫未支持",
+    "openListNotSupported": "OpenList 暫未支持",
     "noSyncAccount": "暫無同步賬號",
     "addSyncAccountHint": "點擊右上角 + 號添加 WebDAV 或 Alist 賬號",
     "connected": "已連接",
@@ -111,6 +157,19 @@
     "searchUnarchived": "搜索未歸檔歌曲...",
     "selectedCount": "{count} 已選擇",
     "scraperCenter": "刮削中心",
+    "scraperCategoryAll": "全部問題",
+    "scraperCategoryUnscraped": "未刮削",
+    "scraperCategoryScraped": "已刮削",
+    "scraperCategoryHasLyrics": "有歌詞",
+    "scraperCategoryNoLyrics": "無歌詞",
+    "scraperCategoryMissingCover": "缺少封面",
+    "scraperCategoryMissingInfo": "缺少作者/專輯",
+    "scraperSourceMusicBrainz": "MusicBrainz",
+    "scraperSourceItunes": "iTunes",
+    "scraperSourceLabel": "來源：{source}",
+    "@scraperSourceLabel": {
+        "placeholders": { "source": {} }
+    },
     "refresh": "刷新",
     "taskRunningBackground": "任務已後台運行",
     
@@ -119,6 +178,10 @@
     "nowPlaying": "正在播放",
     "manualMatchMetadata": "手動匹配元數據",
     "lyricsComingSoon": "歌詞功能即將上線...",
+    "lyricsModeOff": "歌詞：關閉",
+    "lyricsModeCompact": "歌詞：封面下方",
+    "lyricsModeFull": "歌詞：全螢幕顯示",
+    "noLyricsFound": "未找到歌詞",
     
     "syncCenterSubtitle": "手動同步與差異檢查",
     "scraperCenterSubtitle": "手動刮削與候選確認",
@@ -224,9 +287,12 @@
     "copyToClipboard": "複製到剪貼簿",
     "fullPath": "完整路徑",
     "webdav": "WebDAV",
-    "openalist": "OpenAList",
+    "openlist": "OpenList",
     "webdavConfigTitle": "WebDAV 配置",
     "webdavUrlLabel": "WebDAV URL (例如 https://dav.example.com)",
+    "keepAliveTitle": "保活",
+    "keepAliveDescription": "若熄屏時連線中斷，請在系統設定中允許應用自動啟動。",
+    "openAutoStart": "開啟自動啟動設定",
     "username": "用戶名",
     "password": "密碼",
     "musicFolderPath": "音樂文件夾路徑 (例如 /Music)",
@@ -278,6 +344,12 @@
             "title": {}
         }
     },
+    "cannotAccessSong": "無法訪問歌曲文件：{title}",
+    "@cannotAccessSong": {
+        "placeholders": {
+            "title": {}
+        }
+    },
     "addedToFavorites": "已添加到收藏",
     "removedFromFavorites": "已從收藏中移除",
     "favoritesPlaylistName": "收藏",
@@ -288,5 +360,60 @@
         "placeholders": {
             "playlistName": {}
         }
-    }
+    },
+    "resetAdminPasswordTitle": "重置管理員密碼",
+    "resetFailed": "重置失敗",
+    "unknownError": "未知錯誤",
+    "newPasswordGenerated": "新密碼已生成",
+    "usernameAdmin": "用戶名：admin",
+    "newPassword": "新密碼：{pwd}",
+    "@newPassword": {
+        "placeholders": {
+            "pwd": {}
+        }
+    },
+    "portAndProxy": "通訊埠與代理",
+    "invalidPort": "通訊埠無效",
+    "proxyHostEmpty": "代理位址不能為空",
+    "invalidProxyPort": "代理通訊埠無效",
+    "savedRestartRequired": "已儲存，需重啟後生效",
+    "openListService": "OpenList 服務",
+    "statusRunning": "狀態: 運行中",
+    "statusStopped": "狀態: 已停止",
+    "address": "位址: http://{address}:{port}",
+    "@address": {
+        "placeholders": {
+            "address": {},
+            "port": {}
+        }
+    },
+    "stop": "停止",
+    "start": "啟動",
+    "managementPage": "管理頁面",
+    "accessManagementPage": "訪問 OpenList 管理頁面：",
+    "startServiceFirst": "請先啟動 OpenList 服務",
+    "openInApp": "APP內打開",
+    "openInBrowser": "瀏覽器打開",
+    "adminInfo": "管理員資訊",
+    "saveCredentials": "請儲存：\n用戶名：admin\n初始密碼：{password}",
+    "@saveCredentials": {
+        "placeholders": {
+            "password": {}
+        }
+    },
+    "saved": "我已儲存",
+    "defaultUsernameAdmin": "預設用戶名：admin",
+    "resetPassword": "重置密碼",
+    "stopServiceToModify": "停止服務後才可修改",
+    "serviceRunningLocked": "服務運行中，已鎖定",
+    "stopServiceExitHint": "請手動停止 OpenList 後再退出軟體，才能停止 OpenList",
+    "saveFailed": "儲存失敗",
+    "openListManagement": "OpenList 管理",
+    "openInApp": "APP內打開",
+    "openInBrowser": "瀏覽器打開",
+    "noProxy": "無代理",
+    "systemProxy": "系統代理",
+    "customProxy": "自訂代理",
+    "autoStartOpenListOnAppLaunch": "自動啟動OpenList",
+    "autoStartOpenListDescription": "啟用後，APP啟動時將自動啟動OpenList服務"
 }

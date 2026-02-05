@@ -28,22 +28,19 @@ class _PlaybackSettingsDialogState extends ConsumerState<PlaybackSettingsDialog>
     final theme = Theme.of(context);
     final audioService = ref.watch(audioPlayerServiceProvider);
 
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.tune_outlined, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Text(
-            l10n.playbackSettings,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary),
-          )
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.playbackSettings),
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             // 淡入淡出开关
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -162,15 +159,12 @@ class _PlaybackSettingsDialogState extends ConsumerState<PlaybackSettingsDialog>
                 ],
               ),
             ),
-          ],
-        ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.confirm),
-        ),
-      ],
     );
   }
 }

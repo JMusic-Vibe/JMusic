@@ -199,11 +199,11 @@ P _syncConfigDeserializeProp<P>(
 
 const _SyncConfigtypeEnumValueMap = {
   'webdav': 0,
-  'openalist': 1,
+  'openlist': 1,
 };
 const _SyncConfigtypeValueEnumMap = {
   0: SyncType.webdav,
-  1: SyncType.openalist,
+  1: SyncType.openlist,
 };
 
 Id _syncConfigGetId(SyncConfig object) {

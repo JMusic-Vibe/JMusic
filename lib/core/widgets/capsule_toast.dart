@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class CapsuleToast {
   static void show(BuildContext context, String message) {
-    final overlay = Overlay.of(context);
+    final overlay = Overlay.of(context, rootOverlay: true);
     final overlayEntry = OverlayEntry(
       builder: (context) => _CapsuleToastWidget(message: message),
     );

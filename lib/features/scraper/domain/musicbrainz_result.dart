@@ -5,6 +5,7 @@ class MusicBrainzResult {
   final String album;
   final String? date;
   final String? releaseId; // For cover art
+  final int? durationMs; // Recording length in milliseconds
 
   MusicBrainzResult({
     required this.id,
@@ -13,6 +14,7 @@ class MusicBrainzResult {
     required this.album,
     this.date,
     this.releaseId,
+    this.durationMs,
   });
 
   factory MusicBrainzResult.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,9 @@ class MusicBrainzResult {
       date = bestRelease['date'];
     }
 
+    final length = json['length'];
+    final durationMs = length is int ? length : int.tryParse(length?.toString() ?? '');
+
     return MusicBrainzResult(
       id: json['id'],
       title: json['title'],
@@ -63,6 +68,7 @@ class MusicBrainzResult {
       album: album,
       date: date,
       releaseId: releaseId,
+      durationMs: durationMs,
     );
   }
 }

@@ -5,7 +5,7 @@ part 'song.g.dart';
 enum SourceType {
   local,
   webdav,
-  openalist
+  openlist
 }
 
 enum MediaType {
@@ -23,7 +23,7 @@ class Song {
   @enumerated
   SourceType sourceType = SourceType.local;
   
-  // Link to SyncConfig if sourceType is webdav/openalist
+  // Link to SyncConfig if sourceType is webdav/openlist
   int? syncConfigId;
 
   @enumerated
@@ -60,7 +60,7 @@ class Song {
   String? coverPath;
 
   // 云端/远程相关
-  String? remoteId; // OpenAList file ID or WebDAV unique identifier
+  String? remoteId; // OpenList file ID or WebDAV unique identifier
   String? remoteUrl; // 用于播放的直链?(有失效时间需刷新)
 
   // 刮削信息
