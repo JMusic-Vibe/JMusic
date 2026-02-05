@@ -13,6 +13,7 @@ Commands:
   android              Build Android AAR via gomobile
   ios                  Build iOS xcframework via gomobile (macOS only)
   desktop <args...>    Build desktop/server binaries (pass-through to build.sh)
+  package-windows      Copy OpenList EXE + frontend into Flutter Windows build output
   all                  Run init + frontend + android + ios + desktop release
   help                 Show this help
 
@@ -44,6 +45,9 @@ case "$cmd" in
     ;;
   desktop)
     "$ROOT_DIR/scripts/build_desktop.sh" "$@"
+    ;;
+  package-windows)
+    "$ROOT_DIR/scripts/package_windows.sh" "$@"
     ;;
   all)
     "$ROOT_DIR/scripts/init_openlist_source.sh"

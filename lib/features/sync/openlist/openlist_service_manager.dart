@@ -142,6 +142,39 @@ class OpenListServiceManager {
     return dataDir;
   }
 
+  Future<Directory?> _getWindowsInstallDir() async {
+    if (!Platform.isWindows) return null;
+    final exePath = Platform.resolvedExecutable;
+    return Directory(p.dirname(exePath));
+  }
+
+  Directory _getWindowsOpenListInstallDir(Directory installDir) {
+    return Directory(p.join(installDir.path, 'openlist'));
+  }
+
+  Future<void> _ensureFrontendAssets(Directory installOpenListDir, Directory dataDir) async {
+    final src = Directory(p.join(installOpenListDir.path, 'public', 'dist'));
+    final dest = Directory(p.join(dataDir.path, 'public', 'dist'));
+    if (await dest.exists() || !await src.exists()) {
+      return;
+    }
+    await _copyDirectory(src, dest);
+  }
+
+  Future<void> _copyDirectory(Directory source, Directory dest) async {
+    if (!await dest.exists()) {
+      await dest.create(recursive: true);
+    }
+    await for (final entity in source.list(followLinks: false)) {
+      final newPath = p.join(dest.path, p.basename(entity.path));
+      if (entity is Directory) {
+        await _copyDirectory(entity, Directory(newPath));
+      } else if (entity is File) {
+        await entity.copy(newPath);
+      }
+    }
+  }
+
   Future<void> _writePidFile(int pid) async {
     try {
       final dataDir = await _getDataDir();
@@ -342,11 +375,30 @@ class OpenListServiceManager {
   Future<bool> _startWindows() async {
     try {
       final dataDir = await _getDataDir();
-      final exePath = p.join(dataDir.path, 'openlist.exe');
-      final exeFile = File(exePath);
-      if (!await exeFile.exists()) {
-        lastError = 'openlist.exe not found in ${dataDir.path}';
+      final installDir = await _getWindowsInstallDir();
+      final installOpenListDir = installDir == null ? null : _getWindowsOpenListInstallDir(installDir);
+
+      final candidates = <String>[
+        if (installOpenListDir != null) p.join(installOpenListDir.path, 'openlist.exe'),
+        p.join(dataDir.path, 'openlist.exe'),
+      ];
+
+      String? exePath;
+      for (final candidate in candidates) {
+        if (await File(candidate).exists()) {
+          exePath = candidate;
+          break;
+        }
+      }
+      if (exePath == null) {
+        lastError = installOpenListDir == null
+            ? 'openlist.exe not found in ${dataDir.path}'
+            : 'openlist.exe not found in ${installOpenListDir.path} or ${dataDir.path}';
         return false;
+      }
+
+      if (installOpenListDir != null) {
+        await _ensureFrontendAssets(installOpenListDir, dataDir);
       }
 
       _process = await Process.start(

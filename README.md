@@ -1,49 +1,49 @@
 # JMusic
 
-English | [中文](README_zh.md)
+[English](README_en.md) | 中文
 
-A cross-platform local music player with WebDAV sync and a built-in OpenList server for advanced file access.
+一个跨平台的本地音乐播放器，支持 WebDAV 同步，并内置 OpenList 本地服务用于高级文件访问。
 
-## Features
+## 项目特色
 
-- Local music library scan and management
-- Playback queue, mini player, and video playback
-- Playlists and basic library organization
-- WebDAV sync and configuration
-- Built-in OpenList server management (local service)
-- Metadata scraping and ID3 tag parsing
-- Proxy support for OpenList access
-- Tested on Windows and Android (iOS/macOS/Linux work-in-progress)
+- 本地音乐库扫描与管理
+- 播放队列、迷你播放器、视频播放
+- 播放列表与基本库管理
+- WebDAV 同步与配置
+- 内置 OpenList 服务管理（本地服务）
+- 元数据刮削与 ID3 标签解析
+- OpenList 代理支持
+- 已测试平台：Windows、Android（iOS/macOS/Linux 仍在完善中）
 
-## OpenList Integration
+## OpenList 集成说明
 
-This project embeds OpenList as a local service:
+本项目将 OpenList 作为本地服务嵌入：
 
-- Backend source: `openlist-backend/`
-- Frontend assets: cached by `openlist-jmusic-lib/frontends/dist`
-- Android bundles OpenList as an AAR and assets under `android/app/src/main/assets/openlist/`
-- Desktop runtime path (Windows/macOS/Linux): `~/Documents/j_music/openlist/`
+- 后端源码：`openlist-backend/`
+- 前端资源：由 `openlist-jmusic-lib/frontends/dist` 缓存
+- Android 以 AAR + 本地资源方式打包，资源位于 `android/app/src/main/assets/openlist/`
+- 桌面端运行时路径（Windows/macOS/Linux）：`~/Documents/j_music/openlist/`
 
-In-app WebView is enabled on Android and iOS only; desktop platforms open the management page in an external browser.
+内嵌 WebView 仅在 Android 与 iOS 启用，桌面端将使用外部浏览器打开管理页面。
 
-## Repository Layout
+## 目录结构
 
-- `lib/core`: shared services, theme, utils, widgets
-- `lib/features`: feature modules (library, player, sync, scraper, settings)
-- `openlist-backend`: OpenList backend source (third-party)
-- `openlist-jmusic-lib`: unified build scripts for OpenList across platforms
+- `lib/core`：公共服务、主题、工具、组件
+- `lib/features`：功能模块（库、播放器、同步、刮削、设置）
+- `openlist-backend`：OpenList 后端源码（第三方）
+- `openlist-jmusic-lib`：OpenList 多平台统一编译脚本
 
-## Development Setup
+## 开发环境
 
-### Prerequisites
+### 依赖
 
-- Flutter SDK (3.2+)
-- Dart SDK (bundled with Flutter)
-- Android SDK + NDK (NDK 27.0.12077973 is used in `android/app/build.gradle.kts`)
-- Go toolchain (for OpenList builds)
-- bash environment (Git Bash, WSL, or macOS/Linux)
+- Flutter SDK（3.2+）
+- Dart SDK（Flutter 自带）
+- Android SDK + NDK（`android/app/build.gradle.kts` 使用 NDK 27.0.12077973）
+- Go 工具链（用于 OpenList）
+- bash 环境（Git Bash / WSL / macOS / Linux）
 
-### Quick Start
+### 快速开始
 
 ```bash
 flutter pub get
@@ -51,49 +51,49 @@ dart run build_runner build
 flutter run
 ```
 
-## OpenList Build Scripts
+## OpenList 编译脚本
 
-All OpenList build steps are centralized in `openlist-jmusic-lib/`.
+所有 OpenList 编译步骤集中在 `openlist-jmusic-lib/`：
 
 ```bash
-# initialize OpenList source (in openlist-backend)
+# 初始化 OpenList 源码（写入 openlist-backend）
 ./openlist-jmusic-lib/build.sh init
 
-# fetch frontend assets
+# 下载前端资源
 ./openlist-jmusic-lib/build.sh frontend
 
-# build Android AAR
+# 构建 Android AAR
 ./openlist-jmusic-lib/build.sh android
 
-# build iOS xcframework (macOS only)
+# 构建 iOS xcframework（仅 macOS）
 ./openlist-jmusic-lib/build.sh ios
 
-# build desktop/server binaries
+# 构建桌面/服务端二进制
 ./openlist-jmusic-lib/build.sh desktop release
 ```
 
-Output locations:
+产物位置：
 
-- Android AAR: `android/app/libs`
-- Android OpenList assets: `android/app/src/main/assets/openlist/dist`
-- iOS xcframework: `ios/Frameworks`
-- Desktop runtime:
-  - Windows: `C:\Users\<user>\Documents\j_music\openlist\openlist.exe`
-  - macOS/Linux: `~/Documents/j_music/openlist/openlist`
+- Android AAR：`android/app/libs`
+- Android OpenList 资源：`android/app/src/main/assets/openlist/dist`
+- iOS xcframework：`ios/Frameworks`
+- 桌面端运行时：
+  - Windows：`C:\Users\<user>\Documents\j_music\openlist\openlist.exe`
+  - macOS/Linux：`~/Documents/j_music/openlist/openlist`
 
-See `openlist-jmusic-lib/README.md` for platform-specific prerequisites (MSYS2 UCRT64, gomobile, etc.).
+更多平台依赖请查看 `openlist-jmusic-lib/README.md`（MSYS2 UCRT64、gomobile 等）。
 
-## Notes for Contributors
+## 贡献说明
 
-- Code generation: `dart run build_runner build`
-- OpenList assets and binaries are not committed; build them locally using the scripts above.
-- Android uses a bundled AAR and local assets; desktop runs OpenList from the user Documents folder.
+- 代码生成：`dart run build_runner build`
+- OpenList 资源与二进制不提交仓库，使用脚本本地构建
+- Android 使用 AAR + 本地资源；桌面端使用用户 Documents 下的 OpenList 运行目录
 
-## Third-Party Projects
+## 第三方项目引用
 
-This project integrates the following upstream projects:
+本项目集成了以下上游项目：
 
-- OpenList backend: https://github.com/OpenListTeam/OpenList (AGPL-3.0)
-- OpenList frontend: https://github.com/OpenListTeam/OpenList-Frontend
+- OpenList 后端：https://github.com/OpenListTeam/OpenList（AGPL-3.0）
+- OpenList 前端：https://github.com/OpenListTeam/OpenList-Frontend
 
-Please follow their licenses and attribution requirements when redistributing.
+发布或分发时请遵循其许可证与引用要求。

@@ -21,6 +21,13 @@ ios/Flutter/Flutter.podspec
 # macOS, Windows, Linux
 .DS_Store
 Thumbs.db
+*.pfx
+*.cer
+*.pvk
+*.p12
+*.p7b
+*.msix
+*.msixbundle
 
 # Generated files
 /.gradle/
