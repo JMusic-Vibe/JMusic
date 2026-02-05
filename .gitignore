@@ -52,6 +52,13 @@ OpenList-Mobile-main/
 android/app/src/main/assets/openlist/dist/
 android/app/src/main/assets/openlist/dist/**
 
+# If frontend assets are placed under project assets, ignore dist
+assets/openlist/dist/
+assets/openlist/dist/**
+
+# Android AAR outputs
+android/app/libs/*.aar
+
 # Generic binary artifacts (caught just in case)
 **/openlist.exe
 **/openlist
