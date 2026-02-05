@@ -31,6 +31,32 @@ Thumbs.db
 OpenList-Mobile-main/
 **/OpenList-Mobile-main/
 *OpenList-Mobile-main*/
+# OpenList build artifacts and frontend cache (do NOT commit generated binaries or dist)
+# OpenList backend build outputs
+/openlist-backend/build/
+/openlist-backend/bin/
+/openlist-backend/*.exe
+/openlist-backend/**/openlist
+/openlist-backend/**/openlist.exe
+
+# OpenList public/frontend dist (cached frontend bundles)
+/openlist-backend/public/dist/
+/openlist-backend/public/dist/**
+
+# Unified frontend cache used by build scripts
+/openlist-jmusic-lib/frontends/
+/openlist-jmusic-lib/frontends/**
+/openlist-jmusic-lib/frontends/dist.tar.gz
+
+# If Android build copies frontend assets into repo for packaging, ignore generated dist
+android/app/src/main/assets/openlist/dist/
+android/app/src/main/assets/openlist/dist/**
+
+# Generic binary artifacts (caught just in case)
+**/openlist.exe
+**/openlist
+**/*.xcframework
+
 # Miscellaneous
 *.class
 *.log
