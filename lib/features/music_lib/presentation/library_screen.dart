@@ -39,6 +39,7 @@ import 'package:jmusic/features/music_lib/domain/song_filter.dart';
 import 'package:path/path.dart' as p;
 import 'package:jmusic/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:jmusic/features/home/presentation/home_controller.dart';
 import 'package:jmusic/features/player/presentation/widgets/mini_player.dart';
 
@@ -706,21 +707,49 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Future<void> _pickAndScan() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // Request storage permission on mobile
+    // Request storage/media permission on mobile.
     if (Platform.isAndroid || Platform.isIOS) {
-      Permission permission;
       if (Platform.isAndroid) {
-        // For Android 13+, use audio permission
-        permission = Permission.audio;
-      } else {
-        permission = Permission.storage;
-      }
-      final status = await permission.request();
-      if (!status.isGranted) {
-        if (context.mounted) {
-          CapsuleToast.show(context, l10n.permissionDenied);
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        final sdkInt = androidInfo.version.sdkInt;
+        final permissions = <Permission>[];
+
+        if (sdkInt >= 33) {
+          permissions.add(Permission.audio);
+        } else {
+          permissions.add(Permission.storage);
         }
-        return;
+
+        if (sdkInt >= 30) {
+          permissions.add(Permission.manageExternalStorage);
+        }
+
+        final statuses = await permissions.request();
+        final manageStatus = statuses[Permission.manageExternalStorage];
+        final mediaStatus = statuses[Permission.audio] ?? statuses[Permission.storage];
+        final manageRequired = sdkInt >= 30;
+        final granted = manageRequired
+            ? (manageStatus?.isGranted == true)
+            : (mediaStatus?.isGranted == true);
+
+        if (!granted) {
+          if (context.mounted) {
+            CapsuleToast.show(context, l10n.permissionDenied);
+          }
+          if ((manageStatus?.isPermanentlyDenied == true) || (mediaStatus?.isPermanentlyDenied == true)) {
+            await openAppSettings();
+          }
+          return;
+        }
+      } else {
+        final status = await Permission.storage.request();
+        if (!status.isGranted) {
+          if (context.mounted) {
+            CapsuleToast.show(context, l10n.permissionDenied);
+          }
+          if (status.isPermanentlyDenied) await openAppSettings();
+          return;
+        }
       }
     }
 

@@ -44,6 +44,7 @@ dependencies:
 
   # Utils
   permission_handler: ^11.2.0
+  device_info_plus: ^11.3.0
   uuid: ^4.3.3
   intl: any
   logger: ^2.0.2
