@@ -456,7 +456,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scraperCategoryMissingCover => '缺少封面';
 
   @override
-  String get scraperCategoryMissingInfo => '缺少作者/专辑';
+  String get scraperCategoryMissingInfo => '缺失基本信息';
 
   @override
   String get scraperCategoryArtists => '歌手';
@@ -471,6 +471,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String scraperSourceLabel(Object source) {
     return '来源：$source';
   }
+
+  @override
+  String get viewOriginalInfo => '查看原始信息';
+
+  @override
+  String get clearLyrics => '清除歌词';
+
+  @override
+  String get clearSongInfo => '清除歌曲信息';
+
+  @override
+  String get restoreArtistAvatar => '恢复歌手头像';
 
   @override
   String get refresh => '刷新';
@@ -489,6 +501,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get manualMatchMetadata => '手动匹配元数据';
+
+  @override
+  String get songTitleLabel => '歌曲名';
+
+  @override
+  String get artistLabel => '艺术家';
+
+  @override
+  String get albumLabel => '专辑';
+
+  @override
+  String get searchToSeeResults => '搜索以查看结果';
+
+  @override
+  String lyricsDuration(Object duration) {
+    return '歌词时长：$duration';
+  }
+
+  @override
+  String get manualMatchLyrics => '手动匹配歌词';
 
   @override
   String get lyricsComingSoon => '歌词功能即将上线...';
@@ -595,6 +627,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get batchScrapeStarted => '已启动后台刮削任务';
+
+  @override
+  String get scrapeLyrics => '刮削歌词';
+
+  @override
+  String get scrapeLyricsStarted => '开始刮削歌词';
 
   @override
   String get scanning => '扫描中...';
@@ -1345,7 +1383,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get scraperCategoryMissingCover => '缺少封面';
 
   @override
-  String get scraperCategoryMissingInfo => '缺少作者/專輯';
+  String get scraperCategoryMissingInfo => '缺失基本資訊';
 
   @override
   String get scraperSourceMusicBrainz => 'MusicBrainz';
@@ -1357,6 +1395,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String scraperSourceLabel(Object source) {
     return '來源：$source';
   }
+
+  @override
+  String get viewOriginalInfo => '查看原始資訊';
+
+  @override
+  String get clearLyrics => '清除歌詞';
+
+  @override
+  String get clearSongInfo => '清除歌曲資訊';
+
+  @override
+  String get restoreArtistAvatar => '恢復歌手頭像';
 
   @override
   String get refresh => '刷新';
@@ -1481,6 +1531,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get batchScrapeStarted => '批量刮削任務已啟動';
+
+  @override
+  String get scrapeLyrics => '刮削歌詞';
+
+  @override
+  String get scrapeLyricsStarted => '開始刮削歌詞';
 
   @override
   String get scanning => '掃描中...';

@@ -467,7 +467,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scraperCategoryMissingCover => 'Missing Cover';
 
   @override
-  String get scraperCategoryMissingInfo => 'Missing Artist/Album';
+  String get scraperCategoryMissingInfo => 'Missing Basic Info';
 
   @override
   String get scraperCategoryArtists => 'Artists';
@@ -482,6 +482,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String scraperSourceLabel(Object source) {
     return 'Source: $source';
   }
+
+  @override
+  String get viewOriginalInfo => 'View Original Info';
+
+  @override
+  String get clearLyrics => 'Clear Lyrics';
+
+  @override
+  String get clearSongInfo => 'Clear Song Info';
+
+  @override
+  String get restoreArtistAvatar => 'Restore Artist Avatar';
 
   @override
   String get refresh => 'Refresh';
@@ -500,6 +512,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manualMatchMetadata => 'Manual Match Metadata';
+
+  @override
+  String get songTitleLabel => 'Song Title';
+
+  @override
+  String get artistLabel => 'Artist';
+
+  @override
+  String get albumLabel => 'Album';
+
+  @override
+  String get searchToSeeResults => 'Search to view results';
+
+  @override
+  String lyricsDuration(Object duration) {
+    return 'Lyrics duration: $duration';
+  }
+
+  @override
+  String get manualMatchLyrics => 'Manual Match Lyrics';
 
   @override
   String get lyricsComingSoon => 'Lyrics coming soon...';
@@ -606,6 +638,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batchScrapeStarted => 'Batch scrape task started';
+
+  @override
+  String get scrapeLyrics => 'Scrape Lyrics';
+
+  @override
+  String get scrapeLyricsStarted => 'Lyrics scrape started';
 
   @override
   String get scanning => 'Scanning...';

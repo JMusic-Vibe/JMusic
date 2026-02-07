@@ -95,6 +95,122 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
       await startBatchScrape([songId]);
   }
 
+  /// Start a single-song lyrics-only scrape. This ignores the global
+  /// `scraperLyricsEnabled` flag (user initiated), but respects per-source
+  /// source toggles (lrclib/rangotec/itunes).
+  Future<void> startSingleLyricsScrape(int songId) async {
+    if (state.isRunning) return;
+
+    state = BatchScraperState(
+      isRunning: true,
+      isMinimized: false,
+      total: 1,
+      done: 0,
+      successCount: 0,
+      failCount: 0,
+      scrapingSongIds: {songId},
+    );
+
+    await _runLyricsScrape(songId);
+
+    state = state.copyWith(
+      isRunning: false,
+      scrapingSongIds: {},
+      done: 1,
+      showResult: true,
+    );
+
+    _ref.invalidate(unscrapedSongsProvider);
+    _ref.refresh(queueProvider);
+    _ref.refresh(currentMediaItemProvider);
+  }
+
+  Future<void> startBatchLyricsScrape(List<int> songIds) async {
+    if (state.isRunning) return;
+
+    state = BatchScraperState(
+      isRunning: true,
+      isMinimized: false,
+      total: songIds.length,
+      done: 0,
+      successCount: 0,
+      failCount: 0,
+      scrapingSongIds: songIds.toSet(),
+    );
+
+    int success = 0;
+    int fail = 0;
+    for (int i = 0; i < songIds.length; i++) {
+      if (state.cancelled) break;
+      final id = songIds[i];
+      state = state.copyWith(done: i, currentTitle: '');
+      try {
+        await _runLyricsScrape(id);
+        // _runLyricsScrape updates success/fail inside; but we also track here
+        // Note: _runLyricsScrape increments counters via state updates.
+        success = state.successCount;
+        fail = state.failCount;
+      } catch (e) {
+        print('Batch lyrics scrape error for $id: $e');
+        fail++;
+        state = state.copyWith(failCount: fail);
+      }
+    }
+
+    state = state.copyWith(
+      isRunning: false,
+      scrapingSongIds: {},
+      done: songIds.length,
+      successCount: success,
+      failCount: fail,
+      showResult: true,
+    );
+
+    _ref.invalidate(unscrapedSongsProvider);
+    _ref.refresh(queueProvider);
+    _ref.refresh(currentMediaItemProvider);
+  }
+
+  Future<void> _runLyricsScrape(int songId) async {
+    final lyricsService = _ref.read(lyricsServiceProvider);
+    final prefs = _ref.read(preferencesServiceProvider);
+    final scraperController = _ref.read(scraperControllerProvider);
+    final dbService = _ref.read(databaseServiceProvider);
+    final db = await dbService.db;
+
+    try {
+      final song = await db.songs.get(songId);
+      if (song == null) return;
+
+      // Choose artist string according to preference
+      final usePrimary = _ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
+      final artistForQuery = usePrimary ? song.artist : (song.artists.isNotEmpty ? song.artists.join(' / ') : song.artist);
+
+      final lyricsRes = await lyricsService.fetchLyrics(
+        title: song.title,
+        artist: artistForQuery,
+        album: song.album,
+      );
+
+      if (lyricsRes?.text != null && lyricsRes!.text!.trim().isNotEmpty) {
+        await scraperController.updateSongMetadata(
+          songId,
+          title: song.title,
+          artist: artistForQuery,
+          album: song.album,
+          lyrics: lyricsRes.text,
+          lyricsDurationMs: lyricsRes.durationMs,
+        );
+        state = state.copyWith(successCount: state.successCount + 1);
+      } else {
+        state = state.copyWith(failCount: state.failCount + 1);
+      }
+    } catch (e) {
+      print('Error scraping lyrics for $songId: $e');
+      state = state.copyWith(failCount: state.failCount + 1);
+    }
+  }
+
   void cancel() {
     state = state.copyWith(cancelled: true);
   }
@@ -206,7 +322,7 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
             if (bestResult.date != null) {
               year = int.tryParse(bestResult.date!.split('-').first);
             }
-            final lyrics = lyricsEnabled
+            final lyricsRes = lyricsEnabled
                 ? await lyricsService.fetchLyrics(
                     title: bestResult.title,
                     artist: bestResult.artist,
@@ -222,7 +338,8 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
               mbId: mbId,
               coverUrl: coverUrl,
               year: year,
-              lyrics: lyrics,
+              lyrics: lyricsRes?.text,
+              lyricsDurationMs: lyricsRes?.durationMs,
             );
             scraped = true;
           }

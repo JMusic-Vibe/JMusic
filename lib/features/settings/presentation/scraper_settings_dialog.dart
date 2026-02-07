@@ -18,6 +18,9 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
   late bool _useArtistMusicBrainz;
   late bool _useArtistItunes;
   late bool _lyricsEnabled;
+  late bool _lyricsLrclib;
+  late bool _lyricsRangotec;
+  late bool _lyricsItunes;
 
   @override
   void initState() {
@@ -28,6 +31,9 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
     _useArtistMusicBrainz = ref.read(preferencesServiceProvider).scraperArtistSourceMusicBrainz;
     _useArtistItunes = ref.read(preferencesServiceProvider).scraperArtistSourceItunes;
     _lyricsEnabled = ref.read(preferencesServiceProvider).scraperLyricsEnabled;
+    _lyricsLrclib = ref.read(preferencesServiceProvider).scraperLyricsSourceLrclib;
+    _lyricsRangotec = ref.read(preferencesServiceProvider).scraperLyricsSourceRangotec;
+    _lyricsItunes = ref.read(preferencesServiceProvider).scraperLyricsSourceItunes;
   }
 
   @override
@@ -143,23 +149,28 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
             child: Column(
               children: [
                 SwitchListTile(
-                  title: Text(l10n.scraperLyricsSources),
-                  subtitle: Text(l10n.scraperLyricsSourcesFixed),
-                  value: _lyricsEnabled,
+                  title: Text(l10n.scraperSourceLrclib),
+                  value: _lyricsLrclib,
                   onChanged: (v) async {
-                    setState(() => _lyricsEnabled = v);
-                    await ref.read(preferencesServiceProvider).setScraperLyricsEnabled(v);
+                    if (!v && !_lyricsRangotec) {
+                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
+                      return;
+                    }
+                    setState(() => _lyricsLrclib = v);
+                    await ref.read(preferencesServiceProvider).setScraperLyricsSourceLrclib(v);
                   },
                 ),
                 SwitchListTile(
-                  title: Text(l10n.scraperSourceLrclib),
-                  value: _lyricsEnabled,
-                  onChanged: null,
-                ),
-                SwitchListTile(
                   title: Text(l10n.scraperSourceRangotec),
-                  value: _lyricsEnabled,
-                  onChanged: null,
+                  value: _lyricsRangotec,
+                  onChanged: (v) async {
+                    if (!v && !_lyricsLrclib) {
+                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
+                      return;
+                    }
+                    setState(() => _lyricsRangotec = v);
+                    await ref.read(preferencesServiceProvider).setScraperLyricsSourceRangotec(v);
+                  },
                 ),
               ],
             ),

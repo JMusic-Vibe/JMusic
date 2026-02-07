@@ -9,8 +9,13 @@ import 'package:jmusic/core/services/preferences_service.dart';
 
 class ArtistSearchDialog extends ConsumerStatefulWidget {
   final String artistName;
+  final bool asPage;
 
-  const ArtistSearchDialog({super.key, required this.artistName});
+  const ArtistSearchDialog({
+    super.key,
+    required this.artistName,
+    this.asPage = false,
+  });
 
   @override
   ConsumerState<ArtistSearchDialog> createState() => _ArtistSearchDialogState();
@@ -83,7 +88,11 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(l10n.confirm, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+          title: Text(l10n.confirm,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -91,25 +100,39 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
                 SizedBox(
                   height: 100,
                   width: 100,
-                  child: CoverArt(path: imageUrl, fit: BoxFit.cover, isVideo: false),
+                  child: CoverArt(
+                      path: imageUrl, fit: BoxFit.cover, isVideo: false),
                 ),
-              Text(result.name, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+              Text(result.name,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface)),
               if (sourceLabel != null)
                 Text(
                   l10n.scraperSourceLabel(sourceLabel),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
-              if (result.disambiguation != null && result.disambiguation!.isNotEmpty)
-                Text(result.disambiguation!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              if (result.disambiguation != null &&
+                  result.disambiguation!.isNotEmpty)
+                Text(result.disambiguation!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
               Text(
-                [result.type, result.country].where((e) => e != null && e!.isNotEmpty).join(' · '),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                [result.type, result.country]
+                    .where((e) => e != null && e!.isNotEmpty)
+                    .join(' · '),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.confirm)),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel)),
+            FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(l10n.confirm)),
           ],
         ),
       );
@@ -134,63 +157,85 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        width: 560,
-        height: 560,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nameCtrl,
-              decoration: InputDecoration(
-                labelText: l10n.artistNameLabel,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => _doSearch(),
+    final content = Container(
+      width: 560,
+      height: 560,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          TextField(
+            controller: _nameCtrl,
+            decoration: InputDecoration(
+              labelText: l10n.artistNameLabel,
+              border: const OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _doSearch,
-                    icon: const Icon(Icons.search),
-                    label: Text(l10n.search),
-                  ),
+            onSubmitted: (_) => _doSearch(),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _doSearch,
+                  icon: const Icon(Icons.search),
+                  label: Text(l10n.search),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _results == null
-                      ? Center(child: Text(l10n.searchUnarchived))
-                      : ListView.separated(
-                          separatorBuilder: (_, __) => const Divider(),
-                          itemCount: _results!.length,
-                          itemBuilder: (context, index) {
-                            final item = _results![index];
-                            final sourceLabel = _sourceLabel(item.source);
-                            final subtitleParts = <String>[];
-                            if (sourceLabel != null) subtitleParts.add(l10n.scraperSourceLabel(sourceLabel));
-                            if (item.type != null && item.type!.isNotEmpty) subtitleParts.add(item.type!);
-                            if (item.country != null && item.country!.isNotEmpty) subtitleParts.add(item.country!);
-                            if (item.disambiguation != null && item.disambiguation!.isNotEmpty) subtitleParts.add(item.disambiguation!);
-                            return ListTile(
-                              title: Text(item.name, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
-                              subtitle: Text(subtitleParts.join(' · ')),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => _onResultSelected(item),
-                            );
-                          },
-                        ),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _results == null
+                    ? Center(child: Text(l10n.searchUnarchived))
+                    : ListView.separated(
+                        separatorBuilder: (_, __) => const Divider(),
+                        itemCount: _results!.length,
+                        itemBuilder: (context, index) {
+                          final item = _results![index];
+                          final sourceLabel = _sourceLabel(item.source);
+                          final subtitleParts = <String>[];
+                          if (sourceLabel != null) {
+                            subtitleParts
+                                .add(l10n.scraperSourceLabel(sourceLabel));
+                          }
+                          if (item.type != null && item.type!.isNotEmpty) {
+                            subtitleParts.add(item.type!);
+                          }
+                          if (item.country != null &&
+                              item.country!.isNotEmpty) {
+                            subtitleParts.add(item.country!);
+                          }
+                          if (item.disambiguation != null &&
+                              item.disambiguation!.isNotEmpty) {
+                            subtitleParts.add(item.disambiguation!);
+                          }
+                          return ListTile(
+                            title: Text(item.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            subtitle: Text(subtitleParts.join(' · ')),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => _onResultSelected(item),
+                          );
+                        },
+                      ),
+          ),
+        ],
       ),
     );
+
+    if (widget.asPage) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.manualMatchArtist)),
+        body: Center(child: content),
+      );
+    }
+
+    return Dialog(child: content);
   }
 
   String? _sourceLabel(ArtistSource source) {

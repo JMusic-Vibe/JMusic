@@ -77,60 +77,65 @@ const SongSchema = CollectionSchema(
       name: r'lyrics',
       type: IsarType.string,
     ),
-    r'mediaType': PropertySchema(
+    r'lyricsDurationMs': PropertySchema(
       id: 12,
+      name: r'lyricsDurationMs',
+      type: IsarType.long,
+    ),
+    r'mediaType': PropertySchema(
+      id: 13,
       name: r'mediaType',
       type: IsarType.byte,
       enumMap: _SongmediaTypeEnumValueMap,
     ),
     r'musicBrainzId': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'musicBrainzId',
       type: IsarType.string,
     ),
     r'path': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'path',
       type: IsarType.string,
     ),
     r'remoteId': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'remoteId',
       type: IsarType.string,
     ),
     r'remoteUrl': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'remoteUrl',
       type: IsarType.string,
     ),
     r'size': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'size',
       type: IsarType.long,
     ),
     r'sourceType': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'sourceType',
       type: IsarType.byte,
       enumMap: _SongsourceTypeEnumValueMap,
     ),
     r'syncConfigId': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'syncConfigId',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'title',
       type: IsarType.string,
     ),
     r'trackNumber': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'trackNumber',
       type: IsarType.long,
     ),
     r'year': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'year',
       type: IsarType.long,
     )
@@ -263,17 +268,18 @@ void _songSerialize(
   writer.writeString(offsets[9], object.genre);
   writer.writeDateTime(offsets[10], object.lastPlayed);
   writer.writeString(offsets[11], object.lyrics);
-  writer.writeByte(offsets[12], object.mediaType.index);
-  writer.writeString(offsets[13], object.musicBrainzId);
-  writer.writeString(offsets[14], object.path);
-  writer.writeString(offsets[15], object.remoteId);
-  writer.writeString(offsets[16], object.remoteUrl);
-  writer.writeLong(offsets[17], object.size);
-  writer.writeByte(offsets[18], object.sourceType.index);
-  writer.writeLong(offsets[19], object.syncConfigId);
-  writer.writeString(offsets[20], object.title);
-  writer.writeLong(offsets[21], object.trackNumber);
-  writer.writeLong(offsets[22], object.year);
+  writer.writeLong(offsets[12], object.lyricsDurationMs);
+  writer.writeByte(offsets[13], object.mediaType.index);
+  writer.writeString(offsets[14], object.musicBrainzId);
+  writer.writeString(offsets[15], object.path);
+  writer.writeString(offsets[16], object.remoteId);
+  writer.writeString(offsets[17], object.remoteUrl);
+  writer.writeLong(offsets[18], object.size);
+  writer.writeByte(offsets[19], object.sourceType.index);
+  writer.writeLong(offsets[20], object.syncConfigId);
+  writer.writeString(offsets[21], object.title);
+  writer.writeLong(offsets[22], object.trackNumber);
+  writer.writeLong(offsets[23], object.year);
 }
 
 Song _songDeserialize(
@@ -296,21 +302,22 @@ Song _songDeserialize(
   object.id = id;
   object.lastPlayed = reader.readDateTimeOrNull(offsets[10]);
   object.lyrics = reader.readStringOrNull(offsets[11]);
+  object.lyricsDurationMs = reader.readLongOrNull(offsets[12]);
   object.mediaType =
-      _SongmediaTypeValueEnumMap[reader.readByteOrNull(offsets[12])] ??
+      _SongmediaTypeValueEnumMap[reader.readByteOrNull(offsets[13])] ??
           MediaType.audio;
-  object.musicBrainzId = reader.readStringOrNull(offsets[13]);
-  object.path = reader.readString(offsets[14]);
-  object.remoteId = reader.readStringOrNull(offsets[15]);
-  object.remoteUrl = reader.readStringOrNull(offsets[16]);
-  object.size = reader.readLongOrNull(offsets[17]);
+  object.musicBrainzId = reader.readStringOrNull(offsets[14]);
+  object.path = reader.readString(offsets[15]);
+  object.remoteId = reader.readStringOrNull(offsets[16]);
+  object.remoteUrl = reader.readStringOrNull(offsets[17]);
+  object.size = reader.readLongOrNull(offsets[18]);
   object.sourceType =
-      _SongsourceTypeValueEnumMap[reader.readByteOrNull(offsets[18])] ??
+      _SongsourceTypeValueEnumMap[reader.readByteOrNull(offsets[19])] ??
           SourceType.local;
-  object.syncConfigId = reader.readLongOrNull(offsets[19]);
-  object.title = reader.readString(offsets[20]);
-  object.trackNumber = reader.readLongOrNull(offsets[21]);
-  object.year = reader.readLongOrNull(offsets[22]);
+  object.syncConfigId = reader.readLongOrNull(offsets[20]);
+  object.title = reader.readString(offsets[21]);
+  object.trackNumber = reader.readLongOrNull(offsets[22]);
+  object.year = reader.readLongOrNull(offsets[23]);
   return object;
 }
 
@@ -346,28 +353,30 @@ P _songDeserializeProp<P>(
     case 11:
       return (reader.readStringOrNull(offset)) as P;
     case 12:
+      return (reader.readLongOrNull(offset)) as P;
+    case 13:
       return (_SongmediaTypeValueEnumMap[reader.readByteOrNull(offset)] ??
           MediaType.audio) as P;
-    case 13:
-      return (reader.readStringOrNull(offset)) as P;
     case 14:
-      return (reader.readString(offset)) as P;
-    case 15:
       return (reader.readStringOrNull(offset)) as P;
+    case 15:
+      return (reader.readString(offset)) as P;
     case 16:
       return (reader.readStringOrNull(offset)) as P;
     case 17:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 18:
+      return (reader.readLongOrNull(offset)) as P;
+    case 19:
       return (_SongsourceTypeValueEnumMap[reader.readByteOrNull(offset)] ??
           SourceType.local) as P;
-    case 19:
-      return (reader.readLongOrNull(offset)) as P;
     case 20:
-      return (reader.readString(offset)) as P;
-    case 21:
       return (reader.readLongOrNull(offset)) as P;
+    case 21:
+      return (reader.readString(offset)) as P;
     case 22:
+      return (reader.readLongOrNull(offset)) as P;
+    case 23:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2103,6 +2112,75 @@ extension SongQueryFilter on QueryBuilder<Song, Song, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterFilterCondition> lyricsDurationMsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lyricsDurationMs',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> lyricsDurationMsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lyricsDurationMs',
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> lyricsDurationMsEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lyricsDurationMs',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> lyricsDurationMsGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lyricsDurationMs',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> lyricsDurationMsLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lyricsDurationMs',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterFilterCondition> lyricsDurationMsBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lyricsDurationMs',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterFilterCondition> mediaTypeEqualTo(
       MediaType value) {
     return QueryBuilder.apply(this, (query) {
@@ -3315,6 +3393,18 @@ extension SongQuerySortBy on QueryBuilder<Song, Song, QSortBy> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterSortBy> sortByLyricsDurationMs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lyricsDurationMs', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> sortByLyricsDurationMsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lyricsDurationMs', Sort.desc);
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterSortBy> sortByMediaType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mediaType', Sort.asc);
@@ -3594,6 +3684,18 @@ extension SongQuerySortThenBy on QueryBuilder<Song, Song, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Song, Song, QAfterSortBy> thenByLyricsDurationMs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lyricsDurationMs', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Song, Song, QAfterSortBy> thenByLyricsDurationMsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lyricsDurationMs', Sort.desc);
+    });
+  }
+
   QueryBuilder<Song, Song, QAfterSortBy> thenByMediaType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mediaType', Sort.asc);
@@ -3806,6 +3908,12 @@ extension SongQueryWhereDistinct on QueryBuilder<Song, Song, QDistinct> {
     });
   }
 
+  QueryBuilder<Song, Song, QDistinct> distinctByLyricsDurationMs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lyricsDurationMs');
+    });
+  }
+
   QueryBuilder<Song, Song, QDistinct> distinctByMediaType() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'mediaType');
@@ -3956,6 +4064,12 @@ extension SongQueryProperty on QueryBuilder<Song, Song, QQueryProperty> {
   QueryBuilder<Song, String?, QQueryOperations> lyricsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lyrics');
+    });
+  }
+
+  QueryBuilder<Song, int?, QQueryOperations> lyricsDurationMsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lyricsDurationMs');
     });
   }
 

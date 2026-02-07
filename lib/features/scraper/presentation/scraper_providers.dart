@@ -12,10 +12,11 @@ import 'package:jmusic/features/scraper/data/artist_scraper_service.dart';
 final unscrapedSongsProvider = FutureProvider<List<Song>>((ref) async {
   final dbService = ref.watch(databaseServiceProvider);
   final isar = await dbService.db;
-  
+
   // 查找 musicBrainzId 为 null 或空的歌曲
   // 也可以加一个 isScraped 字段，目前先用 musicBrainzId 判断
-  return isar.songs.filter()
+  return isar.songs
+      .filter()
       .musicBrainzIdIsNull()
       .or()
       .musicBrainzIdIsEmpty()
@@ -30,14 +31,34 @@ final scraperCandidatesProvider = StreamProvider<List<Song>>((ref) async* {
 });
 
 final scraperControllerProvider = Provider((ref) => ScraperController(ref));
-final artistScraperControllerProvider = Provider((ref) => ArtistScraperController(ref));
+final artistScraperControllerProvider =
+    Provider((ref) => ArtistScraperController(ref));
 
 class ScraperController {
   final Ref _ref;
 
   ScraperController(this._ref);
 
-  Future<void> updateSongMetadata(int songId, {
+  Future<void> _ensureScrapeBackup(
+      Isar isar, PreferencesService prefs, int songId) async {
+    final existingBackup = prefs.getScrapeBackup(songId);
+    if (existingBackup != null) return;
+    final song = await isar.songs.get(songId);
+    if (song == null) return;
+    await prefs.saveScrapeBackup(songId, {
+      'title': song.title,
+      'artist': song.artist,
+      'artists': song.artists,
+      'album': song.album,
+      'year': song.year,
+      'coverPath': song.coverPath,
+      'lyrics': song.lyrics,
+      'musicBrainzId': song.musicBrainzId,
+    });
+  }
+
+  Future<void> updateSongMetadata(
+    int songId, {
     required String title,
     required String artist,
     required String album,
@@ -45,6 +66,7 @@ class ScraperController {
     String? coverUrl,
     int? year,
     String? lyrics,
+    int? lyricsDurationMs,
   }) async {
     final dbService = _ref.read(databaseServiceProvider);
     final prefs = _ref.read(preferencesServiceProvider);
@@ -58,19 +80,7 @@ class ScraperController {
     await isar.writeTxn(() async {
       final song = await isar.songs.get(songId);
       if (song != null) {
-        final existingBackup = prefs.getScrapeBackup(songId);
-        if (existingBackup == null) {
-          await prefs.saveScrapeBackup(songId, {
-            'title': song.title,
-            'artist': song.artist,
-            'artists': song.artists,
-            'album': song.album,
-            'year': song.year,
-            'coverPath': song.coverPath,
-            'lyrics': song.lyrics,
-            'musicBrainzId': song.musicBrainzId,
-          });
-        }
+        await _ensureScrapeBackup(isar, prefs, songId);
         song.title = title;
         // parse artists and set primary for backward compatibility
         final parsed = parseArtists(artist);
@@ -82,23 +92,66 @@ class ScraperController {
         if (lyrics != null && lyrics.trim().isNotEmpty) {
           song.lyrics = lyrics;
         }
-        
+        if (lyricsDurationMs != null) {
+          song.lyricsDurationMs = lyricsDurationMs;
+        }
+
         // 优先保留封面URL，便于缓存清理后可重新拉取
         if (coverUrl != null && coverUrl.trim().isNotEmpty) {
           print('[ScraperController] Updating DB with coverUrl: $coverUrl');
           song.coverPath = coverUrl;
         } else {
-          print('[ScraperController] No coverUrl provided. Existing path: ${song.coverPath}');
+          print(
+              '[ScraperController] No coverUrl provided. Existing path: ${song.coverPath}');
         }
-        
+
         await isar.songs.put(song);
-        
+
         // Notify AudioPlayerService
         final playerService = _ref.read(audioPlayerServiceProvider);
         await playerService.updateMetadata(song);
       }
     });
 
+    _ref.invalidate(unscrapedSongsProvider);
+  }
+
+  Future<void> clearLyrics(int songId) async {
+    final dbService = _ref.read(databaseServiceProvider);
+    final prefs = _ref.read(preferencesServiceProvider);
+    final isar = await dbService.db;
+
+    await isar.writeTxn(() async {
+      await _ensureScrapeBackup(isar, prefs, songId);
+      final song = await isar.songs.get(songId);
+      if (song == null) return;
+      song.lyrics = null;
+      song.lyricsDurationMs = null;
+      await isar.songs.put(song);
+      final playerService = _ref.read(audioPlayerServiceProvider);
+      await playerService.updateMetadata(song);
+    });
+  }
+
+  Future<void> clearBasicInfo(int songId) async {
+    final dbService = _ref.read(databaseServiceProvider);
+    final prefs = _ref.read(preferencesServiceProvider);
+    final isar = await dbService.db;
+
+    await isar.writeTxn(() async {
+      await _ensureScrapeBackup(isar, prefs, songId);
+      final song = await isar.songs.get(songId);
+      if (song == null) return;
+      song.artist = '';
+      song.artists = [];
+      song.album = '';
+      song.year = null;
+      song.coverPath = null;
+      song.musicBrainzId = null;
+      await isar.songs.put(song);
+      final playerService = _ref.read(audioPlayerServiceProvider);
+      await playerService.updateMetadata(song);
+    });
     _ref.invalidate(unscrapedSongsProvider);
   }
 
@@ -175,7 +228,8 @@ class ArtistScraperController {
 
     final existing = await db.artists.filter().nameEqualTo(name).findFirst();
     if (!force && existing != null) {
-      if ((existing.localImagePath != null && existing.localImagePath!.isNotEmpty) ||
+      if ((existing.localImagePath != null &&
+              existing.localImagePath!.isNotEmpty) ||
           (existing.imageUrl != null && existing.imageUrl!.isNotEmpty)) {
         return true;
       }
@@ -190,10 +244,12 @@ class ArtistScraperController {
     }
     if (imageUrl == null || imageUrl.isEmpty) return false;
 
-    final cachedPath = await CoverCacheService().getOrDownload(imageUrl, subDir: CoverCacheService.artistAvatarSubDir);
+    final cachedPath = await CoverCacheService()
+        .getOrDownload(imageUrl, subDir: CoverCacheService.artistAvatarSubDir);
 
     await db.writeTxn(() async {
-      final artist = existing ?? Artist()..name = name;
+      final artist = existing ?? Artist()
+        ..name = name;
       artist.imageUrl = imageUrl;
       artist.localImagePath = cachedPath;
       artist.isScraped = true;
@@ -209,10 +265,12 @@ class ArtistScraperController {
   }) async {
     if (name.trim().isEmpty || imageUrl.trim().isEmpty) return;
     final db = await _ref.read(databaseServiceProvider).db;
-    final cachedPath = await CoverCacheService().getOrDownload(imageUrl, subDir: CoverCacheService.artistAvatarSubDir);
+    final cachedPath = await CoverCacheService()
+        .getOrDownload(imageUrl, subDir: CoverCacheService.artistAvatarSubDir);
     await db.writeTxn(() async {
       final existing = await db.artists.filter().nameEqualTo(name).findFirst();
-      final artist = existing ?? Artist()..name = name;
+      final artist = existing ?? Artist()
+        ..name = name;
       artist.musicBrainzId = mbId;
       artist.imageUrl = imageUrl;
       artist.localImagePath = cachedPath;
@@ -221,7 +279,8 @@ class ArtistScraperController {
     });
   }
 
-  Future<int> scrapeArtistsForSongs(List<Song> songs, {bool force = false}) async {
+  Future<int> scrapeArtistsForSongs(List<Song> songs,
+      {bool force = false}) async {
     final names = <String>{};
     for (final song in songs) {
       if (song.artists.isNotEmpty) {
@@ -233,7 +292,8 @@ class ArtistScraperController {
     return scrapeArtistsByNames(names.toList(), force: force);
   }
 
-  Future<int> scrapeArtistsByNames(List<String> names, {bool force = false}) async {
+  Future<int> scrapeArtistsByNames(List<String> names,
+      {bool force = false}) async {
     int ok = 0;
     for (final name in names) {
       final success = await scrapeArtist(name, force: force);
@@ -251,9 +311,19 @@ class ScrapeProgress {
   final bool isRunning;
   final bool cancelled;
 
-  ScrapeProgress({this.total = 0, this.done = 0, this.currentTitle, this.isRunning = false, this.cancelled = false});
+  ScrapeProgress(
+      {this.total = 0,
+      this.done = 0,
+      this.currentTitle,
+      this.isRunning = false,
+      this.cancelled = false});
 
-  ScrapeProgress copyWith({int? total, int? done, String? currentTitle, bool? isRunning, bool? cancelled}) {
+  ScrapeProgress copyWith(
+      {int? total,
+      int? done,
+      String? currentTitle,
+      bool? isRunning,
+      bool? cancelled}) {
     return ScrapeProgress(
       total: total ?? this.total,
       done: done ?? this.done,
@@ -265,10 +335,11 @@ class ScrapeProgress {
 }
 
 class ScrapeProgressNotifier extends StateNotifier<ScrapeProgress> {
-  ScrapeProgressNotifier(): super(ScrapeProgress());
+  ScrapeProgressNotifier() : super(ScrapeProgress());
 
   void start(int total) {
-    state = ScrapeProgress(total: total, done: 0, isRunning: true, cancelled: false);
+    state = ScrapeProgress(
+        total: total, done: 0, isRunning: true, cancelled: false);
   }
 
   void updateCurrent(String? title) {
@@ -288,7 +359,7 @@ class ScrapeProgressNotifier extends StateNotifier<ScrapeProgress> {
   }
 }
 
-final scrapeProgressProvider = StateNotifierProvider<ScrapeProgressNotifier, ScrapeProgress>((ref) {
+final scrapeProgressProvider =
+    StateNotifierProvider<ScrapeProgressNotifier, ScrapeProgress>((ref) {
   return ScrapeProgressNotifier();
 });
-

@@ -942,7 +942,7 @@ abstract class AppLocalizations {
   /// No description provided for @scraperCategoryMissingInfo.
   ///
   /// In zh, this message translates to:
-  /// **'缺少作者/专辑'**
+  /// **'缺失基本信息'**
   String get scraperCategoryMissingInfo;
 
   /// No description provided for @scraperCategoryArtists.
@@ -968,6 +968,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'来源：{source}'**
   String scraperSourceLabel(Object source);
+
+  /// No description provided for @viewOriginalInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看原始信息'**
+  String get viewOriginalInfo;
+
+  /// No description provided for @clearLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除歌词'**
+  String get clearLyrics;
+
+  /// No description provided for @clearSongInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除歌曲信息'**
+  String get clearSongInfo;
+
+  /// No description provided for @restoreArtistAvatar.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复歌手头像'**
+  String get restoreArtistAvatar;
 
   /// No description provided for @refresh.
   ///
@@ -1004,6 +1028,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'手动匹配元数据'**
   String get manualMatchMetadata;
+
+  /// No description provided for @songTitleLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌曲名'**
+  String get songTitleLabel;
+
+  /// No description provided for @artistLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'艺术家'**
+  String get artistLabel;
+
+  /// No description provided for @albumLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'专辑'**
+  String get albumLabel;
+
+  /// No description provided for @searchToSeeResults.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索以查看结果'**
+  String get searchToSeeResults;
+
+  /// No description provided for @lyricsDuration.
+  ///
+  /// In zh, this message translates to:
+  /// **'歌词时长：{duration}'**
+  String lyricsDuration(Object duration);
+
+  /// No description provided for @manualMatchLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动匹配歌词'**
+  String get manualMatchLyrics;
 
   /// No description provided for @lyricsComingSoon.
   ///
@@ -1184,6 +1244,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已启动后台刮削任务'**
   String get batchScrapeStarted;
+
+  /// No description provided for @scrapeLyrics.
+  ///
+  /// In zh, this message translates to:
+  /// **'刮削歌词'**
+  String get scrapeLyrics;
+
+  /// No description provided for @scrapeLyricsStarted.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始刮削歌词'**
+  String get scrapeLyricsStarted;
 
   /// No description provided for @scanning.
   ///

@@ -163,13 +163,17 @@
     "scraperCategoryHasLyrics": "有歌詞",
     "scraperCategoryNoLyrics": "無歌詞",
     "scraperCategoryMissingCover": "缺少封面",
-    "scraperCategoryMissingInfo": "缺少作者/專輯",
+    "scraperCategoryMissingInfo": "缺失基本資訊",
     "scraperSourceMusicBrainz": "MusicBrainz",
     "scraperSourceItunes": "iTunes",
     "scraperSourceLabel": "來源：{source}",
     "@scraperSourceLabel": {
         "placeholders": { "source": {} }
     },
+    "viewOriginalInfo": "查看原始資訊",
+    "clearLyrics": "清除歌詞",
+    "clearSongInfo": "清除歌曲資訊",
+    "restoreArtistAvatar": "恢復歌手頭像",
     "refresh": "刷新",
     "taskRunningBackground": "任務已後台運行",
     
@@ -245,6 +249,8 @@
     },
     "pleaseSelectDetailed": "請先選擇要刮削的歌曲",
     "batchScrapeStarted": "批量刮削任務已啟動",
+    "scrapeLyrics": "刮削歌詞",
+    "scrapeLyricsStarted": "開始刮削歌詞",
     "scanning": "掃描中...",
     "addedCompSongs": "已添加 {count} 首歌曲",
     "@addedCompSongs": {

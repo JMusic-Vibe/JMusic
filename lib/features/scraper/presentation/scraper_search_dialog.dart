@@ -15,11 +15,19 @@ import 'package:jmusic/core/widgets/capsule_toast.dart';
 
 class ScraperSearchDialog extends ConsumerStatefulWidget {
   final Song song;
+  final bool asPage;
+  final bool includeLyrics;
 
-  const ScraperSearchDialog({super.key, required this.song});
+  const ScraperSearchDialog({
+    super.key,
+    required this.song,
+    this.asPage = false,
+    this.includeLyrics = true,
+  });
 
   @override
-  ConsumerState<ScraperSearchDialog> createState() => _ScraperSearchDialogState();
+  ConsumerState<ScraperSearchDialog> createState() =>
+      _ScraperSearchDialogState();
 }
 
 class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
@@ -37,8 +45,13 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
     super.initState();
     _titleCtrl.text = widget.song.title;
     // 根据偏好决定预填 Artist 字段（默认使用主歌手）
-    final usePrimary = ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
-    _artistCtrl.text = usePrimary ? widget.song.artist : (widget.song.artists.isNotEmpty ? widget.song.artists.join(' / ') : widget.song.artist);
+    final usePrimary =
+        ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
+    _artistCtrl.text = usePrimary
+        ? widget.song.artist
+        : (widget.song.artists.isNotEmpty
+            ? widget.song.artists.join(' / ')
+            : widget.song.artist);
     _albumCtrl.text = widget.song.album;
     _doSearch();
   }
@@ -115,194 +128,262 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
   }
 
   Future<void> _onResultSelected(ScrapeResult result) async {
-      if (_isProcessingSelection) return;
-      setState(() => _isProcessingSelection = true);
+    if (_isProcessingSelection) return;
+    setState(() => _isProcessingSelection = true);
 
-      try {
-        // 获取封面 URL (Cover Art Archive)
-        String? coverUrl = result.coverUrl;
-        if (coverUrl == null && result.source == ScrapeSource.musicBrainz && result.releaseId != null) {
-          print('[SearchDialog] Selected result has releaseId: ${result.releaseId}');
-          try {
-            coverUrl = await ref.read(musicBrainzServiceProvider).getCoverArtUrl(result.releaseId!);
-            print('[SearchDialog] Got coverUrl: $coverUrl');
-          } catch (e) {
-            print('[SearchDialog] Error fetching cover: $e');
-          }
-        }
-
-        if (!mounted) return;
-
-        // 弹窗确认
-        final confirm = await showDialog<bool>(
-          context: context, 
-          builder: (context) => AlertDialog(
-              title: Text(l10n.confirm, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-              content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                      if (coverUrl != null) 
-                          SizedBox(
-                            height: 100, 
-                            width: 100, 
-                            child: CoverArt(
-                                path: coverUrl,
-                                fit: BoxFit.cover,
-                                isVideo: false,
-                              ),
-                          ),
-                        Text('Title: ${result.title}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-                        Text('Artist: ${result.artist}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-                        Text('Album: ${result.album}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
-                        Text(
-                          l10n.scraperSourceLabel(
-                            result.source == ScrapeSource.musicBrainz
-                                ? l10n.scraperSourceMusicBrainz
-                                : l10n.scraperSourceItunes,
-                          ),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        ),
-                  ],
-              ),
-              actions: [
-                  TextButton(onPressed: ()=>Navigator.pop(context, false), child: Text(l10n.cancel)),
-                  FilledButton(onPressed: ()=>Navigator.pop(context, true), child: Text(l10n.confirm)),
-              ],
-          )
-        );
-
-        if (confirm == true && mounted) {
-           final prefs = ref.read(preferencesServiceProvider);
-           final lyrics = prefs.scraperLyricsEnabled
-               ? await ref.read(lyricsServiceProvider).fetchLyrics(
-                   title: result.title,
-                   artist: result.artist,
-                   album: result.album,
-                 )
-               : null;
-           await ref.read(scraperControllerProvider).updateSongMetadata(
-               widget.song.id, 
-               title: result.title, 
-               artist: result.artist, 
-               album: result.album,
-               mbId: result.source == ScrapeSource.musicBrainz ? result.id : null,
-               coverUrl: coverUrl,
-               year: int.tryParse(result.date?.split('-').first ?? ''),
-               lyrics: lyrics,
-           );
-             final lyricsFound = lyrics != null && lyrics.trim().isNotEmpty;
-             CapsuleToast.show(context, lyricsFound ? l10n.scrapeCompleteWithLyrics : l10n.scrapeCompleteNoLyrics);
-           // 强制刷新播放相关的 Provider，以同步更新队列和当前歌曲信息
-           ref.refresh(queueProvider);
-           ref.refresh(currentMediaItemProvider);
-           if (mounted) Navigator.pop(context); // Close search dialog
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isProcessingSelection = false);
+    try {
+      // 获取封面 URL (Cover Art Archive)
+      String? coverUrl = result.coverUrl;
+      if (coverUrl == null &&
+          result.source == ScrapeSource.musicBrainz &&
+          result.releaseId != null) {
+        try {
+          coverUrl = await ref
+              .read(musicBrainzServiceProvider)
+              .getCoverArtUrl(result.releaseId!);
+        } catch (e) {
+          // ignore
         }
       }
+
+      if (!mounted) return;
+
+      // 预先尝试获取歌词，以便在确认窗口显示来源与时长
+      final prefs = ref.read(preferencesServiceProvider);
+      final lyricsRes = widget.includeLyrics && prefs.scraperLyricsEnabled
+          ? await ref.read(lyricsServiceProvider).fetchLyrics(
+                title: result.title,
+                artist: result.artist,
+                album: result.album,
+              )
+          : null;
+
+      String? lyricsSourceLabel;
+      if (lyricsRes?.source != null) {
+        final s = lyricsRes!.source!;
+        if (s == 'lrclib')
+          lyricsSourceLabel = l10n.scraperSourceLrclib;
+        else if (s == 'rangotec')
+          lyricsSourceLabel = l10n.scraperSourceRangotec;
+        else if (s == 'itunes') lyricsSourceLabel = l10n.scraperSourceItunes;
+      }
+
+      String? durationStr;
+      if (lyricsRes?.durationMs != null) {
+        final ms = lyricsRes!.durationMs!;
+        final seconds = (ms / 1000).round();
+        final min = seconds ~/ 60;
+        final sec = seconds % 60;
+        durationStr =
+            '${min.toString().padLeft(1, '0')}:${sec.toString().padLeft(2, '0')}';
+      }
+
+      // 弹窗确认（显示歌词来源与时长）
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.confirm,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (coverUrl != null)
+                SizedBox(
+                  height: 100,
+                  width: 100,
+                  child: CoverArt(
+                      path: coverUrl, fit: BoxFit.cover, isVideo: false),
+                ),
+              const SizedBox(height: 8),
+              Text('${l10n.songTitleLabel}: ${result.title}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface)),
+              Text('${l10n.artistLabel}: ${result.artist}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface)),
+              Text('${l10n.albumLabel}: ${result.album}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface)),
+              const SizedBox(height: 6),
+              if (lyricsSourceLabel != null)
+                Text(l10n.scraperSourceLabel(lyricsSourceLabel),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              if (durationStr != null)
+                Text(l10n.lyricsDuration(durationStr),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel)),
+            FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(l10n.confirm)),
+          ],
+        ),
+      );
+
+      if (confirm == true && mounted) {
+        // 使用已预取的歌词结果
+        await ref.read(scraperControllerProvider).updateSongMetadata(
+              widget.song.id,
+              title: result.title,
+              artist: result.artist,
+              album: result.album,
+              mbId:
+                  result.source == ScrapeSource.musicBrainz ? result.id : null,
+              coverUrl: coverUrl,
+              year: int.tryParse(result.date?.split('-').first ?? ''),
+              lyrics: widget.includeLyrics ? lyricsRes?.text : null,
+              lyricsDurationMs:
+                  widget.includeLyrics ? lyricsRes?.durationMs : null,
+            );
+
+        final lyricsFound = widget.includeLyrics &&
+            lyricsRes?.text != null &&
+            lyricsRes!.text!.trim().isNotEmpty;
+        CapsuleToast.show(
+            context,
+            lyricsFound
+                ? l10n.scrapeCompleteWithLyrics
+                : l10n.scrapeCompleteNoLyrics);
+        ref.refresh(queueProvider);
+        ref.refresh(currentMediaItemProvider);
+        if (mounted) Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingSelection = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        width: 600,
-        height: 600,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // 标题输入框
-            TextField(
-              controller: _titleCtrl,
-              decoration: InputDecoration(
-                labelText: 'Song Title (歌曲名)',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => _doSearch(),
+    final content = Container(
+      width: 600,
+      height: 600,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // 标题输入框
+          TextField(
+            controller: _titleCtrl,
+            decoration: InputDecoration(
+              labelText: l10n.songTitleLabel,
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            // 艺术家输入框和搜索按 - 并排排列
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _artistCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Artist (艺术家)',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) => _doSearch(),
+            onSubmitted: (_) => _doSearch(),
+          ),
+          const SizedBox(height: 12),
+          // 艺术家输入框和搜索按 - 并排排列
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _artistCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.artistLabel,
+                    border: OutlineInputBorder(),
                   ),
+                  onSubmitted: (_) => _doSearch(),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: _albumCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Album (专辑)',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) => _doSearch(),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  height: 56, // 与 TextField 高度一致
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Theme.of(context).dividerColor),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: IconButton(
-                    onPressed: _doSearch,
-                    icon: const Icon(Icons.search),
-                    tooltip: '搜索',
-                  ),
-                )
-              ],
-            ),
-            if (_isProcessingSelection)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: LinearProgressIndicator(),
               ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _isLoading 
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _albumCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.albumLabel,
+                    border: OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) => _doSearch(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                height: 56, // 与 TextField 高度一致
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: IconButton(
+                  onPressed: _doSearch,
+                  icon: const Icon(Icons.search),
+                  tooltip: l10n.search,
+                ),
+              )
+            ],
+          ),
+          if (_isProcessingSelection)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: LinearProgressIndicator(),
+            ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _results == null 
-                    ? const Center(child: Text('搜索以查看结果'))
+                : _results == null
+                    ? Center(child: Text(l10n.searchToSeeResults))
                     : ListView.separated(
                         separatorBuilder: (_, __) => const Divider(),
                         itemCount: _results!.length,
                         itemBuilder: (context, index) {
                           final item = _results![index];
                           return ListTile(
-                            title: Text(item.title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
-                            subtitle: Text('${item.artist} - ${item.album} (${item.date ?? '?'})'),
+                            title: Text(item.title,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            subtitle: Text(
+                                '${item.artist} - ${item.album} (${item.date ?? '?'})'),
                             leading: SizedBox(
                               height: 40,
                               width: 40,
-                              child: CoverArt(path: item.coverUrl, fit: BoxFit.cover, isVideo: false),
+                              child: CoverArt(
+                                  path: item.coverUrl,
+                                  fit: BoxFit.cover,
+                                  isVideo: false),
                             ),
                             trailing: Text(
                               item.source == ScrapeSource.musicBrainz
                                   ? l10n.scraperSourceMusicBrainz
                                   : l10n.scraperSourceItunes,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                             ),
                             // Disable interaction while processing selection
-                            enabled: !_isProcessingSelection, 
+                            enabled: !_isProcessingSelection,
                             onTap: () => _onResultSelected(item),
                           );
                         },
                       ),
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
+
+    if (widget.asPage) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.manualMatchMetadata)),
+        body: Center(child: content),
+      );
+    }
+
+    return Dialog(child: content);
   }
 }
-

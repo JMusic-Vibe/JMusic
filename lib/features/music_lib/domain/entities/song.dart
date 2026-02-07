@@ -49,6 +49,7 @@ class Song {
   int? trackNumber;
   int? discNumber;
   String? lyrics; // 内嵌歌词
+  int? lyricsDurationMs; // 歌词（LRC）时长，毫秒
   
   // 文件信息
   int? size;
@@ -83,6 +84,7 @@ class Song {
     int? trackNumber,
     int? discNumber,
     String? lyrics,
+    int? lyricsDurationMs,
     int? size,
     DateTime? dateAdded,
     DateTime? dateModified,
@@ -109,6 +111,7 @@ class Song {
       ..trackNumber = trackNumber ?? this.trackNumber
       ..discNumber = discNumber ?? this.discNumber
       ..lyrics = lyrics ?? this.lyrics
+      ..lyricsDurationMs = lyricsDurationMs ?? this.lyricsDurationMs
       ..size = size ?? this.size
       ..dateAdded = dateAdded ?? this.dateAdded
       ..dateModified = dateModified ?? this.dateModified

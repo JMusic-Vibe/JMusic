@@ -38,6 +38,9 @@ class PreferencesService {
   static const String keyScraperArtistSourceMusicBrainz = 'scraper_artist_source_musicbrainz';
   static const String keyScraperArtistSourceItunes = 'scraper_artist_source_itunes';
   static const String keyScraperLyricsEnabled = 'scraper_lyrics_enabled';
+  static const String keyScraperLyricsSourceLrclib = 'scraper_lyrics_source_lrclib';
+  static const String keyScraperLyricsSourceRangotec = 'scraper_lyrics_source_rangotec';
+  static const String keyScraperLyricsSourceItunes = 'scraper_lyrics_source_itunes';
   
   // Audio playback
   static const String keyCrossfadeEnabled = 'crossfade_enabled';
@@ -73,6 +76,9 @@ class PreferencesService {
   bool get scraperArtistSourceMusicBrainz => _prefs.getBool(keyScraperArtistSourceMusicBrainz) ?? true;
   bool get scraperArtistSourceItunes => _prefs.getBool(keyScraperArtistSourceItunes) ?? true;
   bool get scraperLyricsEnabled => _prefs.getBool(keyScraperLyricsEnabled) ?? true;
+  bool get scraperLyricsSourceLrclib => _prefs.getBool(keyScraperLyricsSourceLrclib) ?? true;
+  bool get scraperLyricsSourceRangotec => _prefs.getBool(keyScraperLyricsSourceRangotec) ?? true;
+  bool get scraperLyricsSourceItunes => _prefs.getBool(keyScraperLyricsSourceItunes) ?? true;
   
   // Audio playback
   bool getCrossfadeEnabled() => _prefs.getBool(keyCrossfadeEnabled) ?? false;
@@ -120,6 +126,9 @@ class PreferencesService {
   Future<void> setScraperArtistSourceMusicBrainz(bool v) async => await _prefs.setBool(keyScraperArtistSourceMusicBrainz, v);
   Future<void> setScraperArtistSourceItunes(bool v) async => await _prefs.setBool(keyScraperArtistSourceItunes, v);
   Future<void> setScraperLyricsEnabled(bool v) async => await _prefs.setBool(keyScraperLyricsEnabled, v);
+  Future<void> setScraperLyricsSourceLrclib(bool v) async => await _prefs.setBool(keyScraperLyricsSourceLrclib, v);
+  Future<void> setScraperLyricsSourceRangotec(bool v) async => await _prefs.setBool(keyScraperLyricsSourceRangotec, v);
+  Future<void> setScraperLyricsSourceItunes(bool v) async => await _prefs.setBool(keyScraperLyricsSourceItunes, v);
   
   // Audio playback
   Future<void> setCrossfadeEnabled(bool enabled) async => await _prefs.setBool(keyCrossfadeEnabled, enabled);

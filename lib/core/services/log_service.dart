@@ -63,10 +63,47 @@ class LogService {
     i('LogService initialized.');
   }
 
-  void d(String message) => _logger.d(message);
-  void i(String message) => _logger.i(message);
-  void w(String message) => _logger.w(message);
-  void e(String message, [Object? error, StackTrace? stackTrace]) => _logger.e(message, error: error, stackTrace: stackTrace);
+  void d(String message) {
+    if (!_initialized) {
+      // Fallback to stdout during early startup/hot-restart.
+      // Avoid accessing _logger before init().
+      // ignore: avoid_print
+      print('[D] $message');
+      return;
+    }
+    _logger.d(message);
+  }
+
+  void i(String message) {
+    if (!_initialized) {
+      // ignore: avoid_print
+      print('[I] $message');
+      return;
+    }
+    _logger.i(message);
+  }
+
+  void w(String message) {
+    if (!_initialized) {
+      // ignore: avoid_print
+      print('[W] $message');
+      return;
+    }
+    _logger.w(message);
+  }
+
+  void e(String message, [Object? error, StackTrace? stackTrace]) {
+    if (!_initialized) {
+      // ignore: avoid_print
+      print('[E] $message ${error ?? ''}');
+      if (stackTrace != null) {
+        // ignore: avoid_print
+        print(stackTrace);
+      }
+      return;
+    }
+    _logger.e(message, error: error, stackTrace: stackTrace);
+  }
 
   Future<File?> getLogFile() async {
     if (!_initialized) return null;
