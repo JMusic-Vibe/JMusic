@@ -20,6 +20,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Timer? _fadeTimer;
   Timer? _loadingTimeoutTimer;
   
+  // 中断相关
+  bool _wasPlayingBeforeInterruption = false;
+  
   // 用于存储每首歌的原始Song对象
   Song? getSongById(String id) => _songCache[id];
 
@@ -156,10 +159,39 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       });
 
       session.interruptionEventStream.listen((event) {
+        print('[MyAudioHandler] Interruption event: begin=${event.begin}, type=${event.type}, wasPlaying=${_player.playing}');
         if (event.begin) {
+          // 中断开始时，根据类型处理
           if (event.type == AudioInterruptionType.pause || event.type == AudioInterruptionType.duck) {
-            pause();
+            _wasPlayingBeforeInterruption = _player.playing;
+            if (_wasPlayingBeforeInterruption) {
+              print('[MyAudioHandler] Pausing due to interruption');
+              pause();
+            } else {
+              // 即使播放器已经在停止状态，也要确保状态同步
+              print('[MyAudioHandler] Player already stopped, forcing state sync');
+              _broadcastState(PlaybackEvent(
+                processingState: _player.processingState,
+                updatePosition: _player.position,
+                bufferedPosition: _player.bufferedPosition,
+                updateTime: DateTime.now(),
+              ));
+            }
+          } else if (event.type == AudioInterruptionType.unknown) {
+            // Unknown类型通常是永久失去音频焦点，应该停止播放
+            print('[MyAudioHandler] Stopping due to unknown interruption (permanent focus loss)');
+            stop();
+            _wasPlayingBeforeInterruption = false; // 不应该恢复
           }
+        } else {
+          // 中断结束时，只有pause和duck类型可以恢复播放
+          if ((event.type == AudioInterruptionType.pause || event.type == AudioInterruptionType.duck) && 
+              _wasPlayingBeforeInterruption) {
+            print('[MyAudioHandler] Resuming playback after interruption');
+            play();
+            _wasPlayingBeforeInterruption = false;
+          }
+          // Unknown类型中断结束时不恢复播放
         }
       });
     } catch (e) {
@@ -228,6 +260,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   void _broadcastState(PlaybackEvent event) {
     final playing = _player.playing;
     final processingState = _getProcessingState();
+    
+    print('[MyAudioHandler] _broadcastState: playing=$playing, processingState=$processingState');
     
     playbackState.add(playbackState.value.copyWith(
       controls: [

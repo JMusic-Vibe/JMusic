@@ -292,4 +292,3 @@ class _NavDestination {
     required this.selectedIcon,
   });
 }
-

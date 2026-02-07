@@ -127,3 +127,7 @@ ios/Flutter/flutter_assets/
 ios/Podfile.lock
 ios/Pods/
 ios/Runner.xcworkspace/
+
+# test
+test/
+test/*

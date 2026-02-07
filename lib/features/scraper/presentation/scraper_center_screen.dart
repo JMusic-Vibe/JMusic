@@ -14,6 +14,7 @@ import 'package:jmusic/features/scraper/presentation/batch_scraper_service.dart'
 import 'package:jmusic/core/services/preferences_service.dart';
 import 'package:jmusic/features/player/presentation/player_providers.dart';
 import 'package:jmusic/features/music_lib/presentation/tag_editor_dialog.dart';
+import 'package:jmusic/features/music_lib/presentation/widgets/song_details_dialog.dart';
 import 'package:jmusic/core/services/database_service.dart';
 import 'package:jmusic/features/scraper/presentation/artist_search_dialog.dart';
 import 'package:jmusic/l10n/app_localizations.dart';
@@ -646,8 +647,11 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
         ),
         ActionItem(
           icon: Icons.info_outline,
-          title: l10n.viewOriginalInfo,
-          onTap: () => _showOriginalInfoDialog(context, song),
+          title: l10n.viewDetails,
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => SongDetailsDialog(song: song),
+          ),
         ),
       ]);
     } else if (tab == _ScraperTab.missingInfo) {
@@ -671,8 +675,11 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
         ),
         ActionItem(
           icon: Icons.info_outline,
-          title: l10n.viewOriginalInfo,
-          onTap: () => _showOriginalInfoDialog(context, song),
+          title: l10n.viewDetails,
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => SongDetailsDialog(song: song),
+          ),
         ),
       ]);
     } else {
@@ -706,8 +713,11 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
         ),
         ActionItem(
           icon: Icons.info_outline,
-          title: l10n.viewOriginalInfo,
-          onTap: () => _showOriginalInfoDialog(context, song),
+          title: l10n.viewDetails,
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => SongDetailsDialog(song: song),
+          ),
         ),
       ]);
     }
@@ -820,66 +830,7 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
     }
   }
 
-  Future<void> _showOriginalInfoDialog(BuildContext context, Song song) async {
-    final l10n = AppLocalizations.of(context)!;
-    final prefs = ref.read(preferencesServiceProvider);
-    final backup = prefs.getScrapeBackup(song.id);
-    if (backup == null) {
-      CapsuleToast.show(context, l10n.restoreOriginalInfoFailed);
-      return;
-    }
-    final useDialog = MediaQuery.of(context).size.width >= 600;
-    if (useDialog) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.viewOriginalInfo),
-          content: SizedBox(
-              width: 420, child: _buildOriginalInfoContent(backup, l10n)),
-          actions: [
-            FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.confirm)),
-          ],
-        ),
-      );
-    } else {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: Text(l10n.viewOriginalInfo)),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: _buildOriginalInfoContent(backup, l10n),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-  }
 
-  Widget _buildOriginalInfoContent(Map backup, AppLocalizations l10n) {
-    final artists = backup['artists'];
-    final artistsText = artists is List
-        ? artists.whereType<String>().join(' / ')
-        : (backup['artist']?.toString() ?? '');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('${l10n.songTitleLabel}: ${backup['title'] ?? ''}'),
-        const SizedBox(height: 8),
-        Text(
-            '${l10n.artistLabel}: ${artistsText.isEmpty ? (backup['artist'] ?? '') : artistsText}'),
-        const SizedBox(height: 8),
-        Text('${l10n.albumLabel}: ${backup['album'] ?? ''}'),
-        const SizedBox(height: 8),
-        Text('MBID: ${backup['musicBrainzId'] ?? ''}'),
-      ],
-    );
-  }
 
   List<Song> _filterSongs(
       List<Song> songs, _ScraperTab tab, PreferencesService prefs) {

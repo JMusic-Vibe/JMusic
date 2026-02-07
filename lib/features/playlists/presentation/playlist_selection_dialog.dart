@@ -29,12 +29,28 @@ class PlaylistSelectionDialog extends ConsumerWidget {
         child: playlistsAsync.when(
           data: (playlists) {
             if (playlists.isEmpty) {
-              return Center(child: Text(l10n.noPlaylists, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)));
+              return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.queue_music, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                const SizedBox(height: 16),
+                Text(l10n.noPlaylists, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+                TextButton(
+                  onPressed: () => _showCreateAndAddDialog(context, ref),
+                  child: Text(l10n.createPlaylist, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                ),
+              ]));
             }
             return ListView.builder(
-              itemCount: playlists.length,
+              itemCount: playlists.length + 1,
               itemBuilder: (context, index) {
-                final playlist = playlists[index];
+                if (index == 0) {
+                  return ListTile(
+                    leading: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
+                    title: Text(l10n.createPlaylist, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+                    onTap: () => _showCreateAndAddDialog(context, ref),
+                  );
+                }
+
+                final playlist = playlists[index - 1];
                 return ListTile(
                   leading: Icon(Icons.queue_music, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   title: Text(playlist.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
@@ -72,6 +88,59 @@ class PlaylistSelectionDialog extends ConsumerWidget {
           child: Text(l10n.cancel),
         ),
       ],
+    );
+  }
+
+  Future<void> _showCreateAndAddDialog(BuildContext parentContext, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final l10n = AppLocalizations.of(parentContext)!;
+    final repo = ref.read(playlistRepositoryProvider);
+
+    return showDialog(
+      context: parentContext,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.createPlaylist, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: l10n.playlistNameHint,
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final name = controller.text.trim();
+                if (name.isEmpty) return;
+                final existing = await repo.getPlaylists();
+                final exists = existing.any((p) => p.name.toLowerCase() == name.toLowerCase());
+                if (exists) {
+                  if (context.mounted) CapsuleToast.show(context, l10n.playlistAlreadyExists(name));
+                  return;
+                }
+                await repo.createPlaylist(name);
+                final all = await repo.getPlaylists();
+                final created = all.firstWhere((p) => p.name.toLowerCase() == name.toLowerCase());
+                if (songIds.isNotEmpty) {
+                  await repo.addSongsToPlaylist(created.id, songIds);
+                  ref.invalidate(playlistSongsProvider(created.id));
+                }
+                if (parentContext.mounted) {
+                  Navigator.pop(context); // close create dialog
+                  Navigator.pop(parentContext); // close selection dialog
+                  CapsuleToast.show(parentContext, l10n.addedToPlaylist(name));
+                }
+              },
+              child: Text(l10n.create, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onPrimary)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

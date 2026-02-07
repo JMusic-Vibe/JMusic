@@ -313,6 +313,80 @@ class OpenListServiceManager {
     if (Platform.isAndroid) {
       return await _invokeString('resetAdminPassword');
     }
+    if (Platform.isWindows) {
+      try {
+        final dataDir = await _getDataDir();
+        final installDir = await _getWindowsInstallDir();
+        final installOpenListDir = installDir == null ? null : _getWindowsOpenListInstallDir(installDir);
+
+        final candidates = <String>[
+          if (installOpenListDir != null) p.join(installOpenListDir.path, 'openlist.exe'),
+          p.join(dataDir.path, 'openlist.exe'),
+        ];
+
+        String? exePath;
+        for (final candidate in candidates) {
+          if (await File(candidate).exists()) {
+            exePath = candidate;
+            break;
+          }
+        }
+        if (exePath == null) {
+          lastError = installOpenListDir == null
+              ? 'openlist.exe not found in ${dataDir.path}'
+              : 'openlist.exe not found in ${installOpenListDir.path} or ${dataDir.path}';
+          return null;
+        }
+
+        final result = await Process.run(exePath, ['admin', 'random'], workingDirectory: dataDir.path);
+        if (result.exitCode != 0) {
+          lastError = result.stderr.toString();
+          return null;
+        }
+        final out = result.stdout.toString();
+        // Parse password from output, expect a line like 'password: <pwd>' printed by CLI
+        final regex = RegExp(r'password[:\s]+(.+)', caseSensitive: false);
+        final match = regex.firstMatch(out);
+        if (match != null) {
+          return match.group(1)?.trim();
+        }
+        lastError = 'Cannot parse password from openlist output';
+        return null;
+      } catch (e) {
+        lastError = e.toString();
+        return null;
+      }
+    }
+
+    if (Platform.isLinux || Platform.isMacOS) {
+      try {
+        final dataDir = await _getDataDir();
+        final binPath = p.join(dataDir.path, 'openlist');
+        final binFile = File(binPath);
+        if (!await binFile.exists()) {
+          lastError = 'openlist binary not found in ${dataDir.path}';
+          return null;
+        }
+
+        final result = await Process.run(binPath, ['admin', 'random'], workingDirectory: dataDir.path);
+        if (result.exitCode != 0) {
+          lastError = result.stderr.toString();
+          return null;
+        }
+        final out = result.stdout.toString();
+        final regex = RegExp(r'password[:\s]+(.+)', caseSensitive: false);
+        final match = regex.firstMatch(out);
+        if (match != null) {
+          return match.group(1)?.trim();
+        }
+        lastError = 'Cannot parse password from openlist output';
+        return null;
+      } catch (e) {
+        lastError = e.toString();
+        return null;
+      }
+    }
+
     lastError = 'Platform not supported';
     return null;
   }
