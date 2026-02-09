@@ -160,6 +160,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scraperSongSources => 'Song scraping sources';
 
   @override
+  String get scraperSourceQQMusic => 'QQ Music';
+
+  @override
   String get scraperArtistSources => 'Artist scraping sources';
 
   @override
@@ -494,6 +497,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreArtistAvatar => 'Restore Artist Avatar';
+
+  @override
+  String get batchScrapeArtistAvatars => 'Batch Scrape Artist Avatars';
+
+  @override
+  String get restoreArtistAvatars => 'Restore Artist Avatars';
+
+  @override
+  String restoreArtistAvatarsResult(Object count) {
+    return 'Restored $count artist avatars';
+  }
+
+  @override
+  String get restoreArtistAvatarsFailed => 'Failed to restore artist avatars';
 
   @override
   String get refresh => 'Refresh';

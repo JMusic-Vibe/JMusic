@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +21,40 @@ final fileScannerServiceProvider = Provider<FileScannerService>((ref) {
 });
 
 typedef ScanProgressCallback = void Function(int current, int total, String currentFile);
+
+class _AsyncPool {
+  final int _max;
+  int _running = 0;
+  int _pending = 0;
+  final Queue<Completer<void>> _waiters = Queue<Completer<void>>();
+
+  _AsyncPool(this._max);
+
+  Future<T> run<T>(Future<T> Function() task) async {
+    _pending++;
+    if (_running >= _max) {
+      final gate = Completer<void>();
+      _waiters.addLast(gate);
+      await gate.future;
+    }
+    _running++;
+    try {
+      return await task();
+    } finally {
+      _running--;
+      _pending--;
+      if (_waiters.isNotEmpty) {
+        _waiters.removeFirst().complete();
+      }
+    }
+  }
+
+  Future<void> drain() async {
+    while (_pending > 0) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+  }
+}
 
 class FileScannerService {
   final DatabaseService _dbService;
@@ -64,17 +100,31 @@ class FileScannerService {
     }
 
     final List<Song> songsToAdd = [];
+    final parsePool = _AsyncPool(4);
+    final counterPool = _AsyncPool(1);
+    int completed = 0;
 
-    for (int i = 0; i < allFiles.length; i++) {
-      final file = allFiles[i];
-      onProgress?.call(i + 1, allFiles.length, p.basename(file.path));
-      try {
-        final folderName = folderNames[file.path];
-        final song = await _parseFile(file, parentFolderName: folderName);
-        songsToAdd.add(song);
-      } catch (e) {
-        print('Error parsing file ${file.path}: $e');
-      }
+    final tasks = <Future<void>>[];
+    for (final file in allFiles) {
+      tasks.add(parsePool.run(() async {
+        try {
+          final folderName = folderNames[file.path];
+          final song = await _parseFile(file, parentFolderName: folderName);
+          await counterPool.run(() async {
+            songsToAdd.add(song);
+          });
+        } catch (e) {
+          print('Error parsing file ${file.path}: $e');
+        } finally {
+          await counterPool.run(() async {
+            completed++;
+            onProgress?.call(completed, allFiles.length, p.basename(file.path));
+          });
+        }
+      }));
+    }
+    if (tasks.isNotEmpty) {
+      await Future.wait(tasks);
     }
 
     if (songsToAdd.isNotEmpty) {
@@ -168,17 +218,31 @@ class FileScannerService {
     }
 
     final List<Song> songsToAdd = [];
+    final parsePool = _AsyncPool(4);
+    final counterPool = _AsyncPool(1);
+    int completed = 0;
     
-    // 处理每个文件并报告进度
-    for (int i = 0; i < audioFiles.length; i++) {
-      final file = audioFiles[i];
-      onProgress?.call(i + 1, audioFiles.length, p.basename(file.path));
-      try {
-        final song = await _parseFile(file, parentFolderName: folderName);
-        songsToAdd.add(song);
-      } catch (e) {
-        print('Error parsing file ${file.path}: $e');
-      }
+    // 处理每个文件并报告进度 (limited concurrency)
+    final tasks = <Future<void>>[];
+    for (final file in audioFiles) {
+      tasks.add(parsePool.run(() async {
+        try {
+          final song = await _parseFile(file, parentFolderName: folderName);
+          await counterPool.run(() async {
+            songsToAdd.add(song);
+          });
+        } catch (e) {
+          print('Error parsing file ${file.path}: $e');
+        } finally {
+          await counterPool.run(() async {
+            completed++;
+            onProgress?.call(completed, audioFiles.length, p.basename(file.path));
+          });
+        }
+      }));
+    }
+    if (tasks.isNotEmpty) {
+      await Future.wait(tasks);
     }
 
     if (songsToAdd.isNotEmpty) {
@@ -262,21 +326,34 @@ class FileScannerService {
 
     // 根据不同的文件格式读取元数据
     if (ext == '.mp3') {
-      hasMetadata = await _readMP3Metadata(file, (meta) {
-        title = meta['Title']?.toString() ?? title;
-        artist = meta['Artist']?.toString() ?? artist;
-        album = meta['Album']?.toString() ?? album;
-        date = meta['Year']?.toString();
-      });
-      coverPath = await _extractCoverFromMP3(file);
+      final bytes = await file.readAsBytes();
+      final mp3 = MP3Instance(bytes);
+      if (mp3.parseTagsSync()) {
+        final meta = mp3.getMetaTags();
+        if (meta != null) {
+          if (meta['Title'] != null || meta['Artist'] != null) {
+            hasMetadata = true;
+          }
+          title = meta['Title']?.toString() ?? title;
+          artist = meta['Artist']?.toString() ?? artist;
+          album = meta['Album']?.toString() ?? album;
+          date = meta['Year']?.toString();
+
+          final apic = meta['APIC'];
+          if (apic is List<int>) {
+            coverPath = await _saveCoverImage(Uint8List.fromList(apic), file.path);
+          }
+        }
+      }
     } else if (ext == '.flac') {
-      hasMetadata = await _readFlacMetadata(file, (meta) {
+      final bytes = await file.readAsBytes();
+      hasMetadata = await _readFlacMetadata(bytes, (meta) {
         title = meta['Title']?.toString() ?? title;
         artist = meta['Artist']?.toString() ?? artist;
         album = meta['Album']?.toString() ?? album;
         date = meta['Year']?.toString();
       });
-      coverPath = await _extractCoverFromFLAC(file);
+      coverPath = await _extractCoverFromFLAC(bytes, file.path);
     }
 
     // 如果没有元数据，则使用文件夹结构推断艺术家和专辑名称
@@ -336,50 +413,9 @@ class FileScannerService {
     return null;
   }
 
-  /// 读取 MP3 文件的元数据
-  /// 如果成功读取返回 true，通过回调函数返回元数据
-  Future<bool> _readMP3Metadata(File file, void Function(Map<String, dynamic>) onMetadata) async {
-    try {
-      final bytes = await file.readAsBytes();
-      final inst = MP3Instance(bytes);
-      if (inst.parseTagsSync()) {
-        final meta = inst.getMetaTags();
-        if (meta != null && (meta['Title'] != null || meta['Artist'] != null)) {
-          onMetadata(meta);
-          return true;
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-    return false;
-  }
-
-  /// 从 MP3 文件中提取封面图片
-  Future<String?> _extractCoverFromMP3(File file) async {
-    try {
-      final bytes = await file.readAsBytes();
-      final mp3 = MP3Instance(bytes);
-      if (mp3.parseTagsSync()) {
-        final meta = mp3.getMetaTags();
-        if (meta != null && meta['APIC'] != null) {
-          final apic = meta['APIC'];
-          if (apic is List<int>) {
-            return await _saveCoverImage(Uint8List.fromList(apic), file.path);
-          }
-        }
-      }
-    } catch (e) {
-      print('Error extracting cover from MP3: $e');
-    }
-    return null;
-  }
-
   /// 从 FLAC 文件中提取封面图片
-  Future<String?> _extractCoverFromFLAC(File file) async {
+  Future<String?> _extractCoverFromFLAC(Uint8List bytes, String filePath) async {
     try {
-      final bytes = await file.readAsBytes();
-      
       // FLAC 文件从位置 4 开始（跳过 "fLaC" 标识）
       if (bytes.length < 4 || 
           bytes[0] != 0x66 || bytes[1] != 0x4C || // 'f', 'L'
@@ -407,7 +443,7 @@ class FileScannerService {
         if (blockType == 6 && pos + blockSize <= bytes.length) {
           final pictureData = _parseFlacPicture(bytes.sublist(pos, pos + blockSize));
           if (pictureData != null) {
-            return await _saveCoverImage(pictureData, file.path);
+            return await _saveCoverImage(pictureData, filePath);
           }
         }
         
@@ -483,10 +519,8 @@ class FileScannerService {
   /// 读取 FLAC 文件的元数据
   /// FLAC 文件格式：ID3 标签（可选）+ FLAC 帧头 + Vorbis 注释块（可选）
   /// 如果成功读取返回 true，通过回调函数返回元数据
-  Future<bool> _readFlacMetadata(File file, void Function(Map<String, dynamic>) onMetadata) async {
+  Future<bool> _readFlacMetadata(Uint8List bytes, void Function(Map<String, dynamic>) onMetadata) async {
     try {
-      final bytes = await file.readAsBytes();
-      
       // FLAC 文件从位置 4 开始（跳过 "fLaC" 标识）
       if (bytes.length < 4 || 
           bytes[0] != 0x66 || bytes[1] != 0x4C || // 'f', 'L'

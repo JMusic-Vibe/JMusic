@@ -7,7 +7,7 @@ import 'package:jmusic/core/services/cover_cache_service.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
 import 'package:jmusic/core/utils/artist_parser.dart';
 import 'package:jmusic/features/music_lib/domain/entities/artist.dart';
-import 'package:jmusic/features/scraper/data/artist_scraper_service.dart';
+import 'package:jmusic/features/scraper/data/artist_sources/artist_scraper_service.dart';
 
 final unscrapedSongsProvider = FutureProvider<List<Song>>((ref) async {
   final dbService = ref.watch(databaseServiceProvider);
@@ -224,7 +224,8 @@ class ArtistScraperController {
     final prefs = _ref.read(preferencesServiceProvider);
     final useMb = prefs.scraperArtistSourceMusicBrainz;
     final useItunes = prefs.scraperArtistSourceItunes;
-    if (!useMb && !useItunes) return false;
+    final useQQ = prefs.scraperArtistSourceQQMusic;
+    if (!useMb && !useItunes && !useQQ) return false;
 
     final existing = await db.artists.filter().nameEqualTo(name).findFirst();
     if (!force && existing != null) {
@@ -241,6 +242,9 @@ class ArtistScraperController {
     }
     if ((imageUrl == null || imageUrl.isEmpty) && useItunes) {
       imageUrl = await service.fetchArtistImageUrlFromItunes(name);
+    }
+    if ((imageUrl == null || imageUrl.isEmpty) && useQQ) {
+      imageUrl = await service.fetchArtistImageUrlFromQQ(name);
     }
     if (imageUrl == null || imageUrl.isEmpty) return false;
 
@@ -300,6 +304,39 @@ class ArtistScraperController {
       if (success) ok++;
     }
     return ok;
+  }
+
+  Future<int> restoreArtists(List<String> names) async {
+    final db = await _ref.read(databaseServiceProvider).db;
+    int restored = 0;
+    for (final name in names) {
+      final existing = await db.artists.filter().nameEqualTo(name).findFirst();
+      if (existing != null) {
+        await db.writeTxn(() async {
+          existing.imageUrl = null;
+          existing.localImagePath = null;
+          existing.isScraped = false;
+          await db.artists.put(existing);
+        });
+        restored++;
+      }
+    }
+    return restored;
+  }
+
+  Future<bool> restoreArtistAvatar(String name) async {
+    final db = await _ref.read(databaseServiceProvider).db;
+    final existing = await db.artists.filter().nameEqualTo(name).findFirst();
+    if (existing != null) {
+      await db.writeTxn(() async {
+        existing.imageUrl = null;
+        existing.localImagePath = null;
+        existing.isScraped = false;
+        await db.artists.put(existing);
+      });
+      return true;
+    }
+    return false;
   }
 }
 

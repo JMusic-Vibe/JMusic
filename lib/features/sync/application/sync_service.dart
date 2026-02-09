@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -28,6 +29,47 @@ final syncServiceProvider = Provider<SyncService>((ref) {
 
 typedef SyncProgressCallback = void Function(int current, int total, String currentFile);
 
+class SyncResult {
+  final int totalScanned;
+  final int added;
+  final int updated;
+  final int removed;
+  final int failed;
+
+  const SyncResult({
+    required this.totalScanned,
+    required this.added,
+    required this.updated,
+    required this.removed,
+    required this.failed,
+  });
+}
+
+class _AsyncPool {
+  final int _max;
+  int _running = 0;
+  final Queue<Completer<void>> _waiters = Queue<Completer<void>>();
+
+  _AsyncPool(this._max);
+
+  Future<T> run<T>(Future<T> Function() task) async {
+    if (_running >= _max) {
+      final gate = Completer<void>();
+      _waiters.addLast(gate);
+      await gate.future;
+    }
+    _running++;
+    try {
+      return await task();
+    } finally {
+      _running--;
+      if (_waiters.isNotEmpty) {
+        _waiters.removeFirst().complete();
+      }
+    }
+  }
+}
+
 class SyncService {
   final DatabaseService _dbService;
   final SyncConfigRepository _syncRepo;
@@ -37,11 +79,12 @@ class SyncService {
   SyncService(this._dbService, this._syncRepo, this._webDavService, this._metaCache);
 
   /// Synchronize a specific account
-  Future<void> syncAccount(SyncConfig config, {SyncProgressCallback? onProgress}) async {
+  Future<SyncResult> syncAccount(SyncConfig config, {SyncProgressCallback? onProgress}) async {
     if (config.type == SyncType.webdav || config.type == SyncType.openlist) {
       final headers = _buildAuthHeaders(config);
-      await _syncWebDav(config, headers: headers, onProgress: onProgress);
+      return await _syncWebDav(config, headers: headers, onProgress: onProgress);
     }
+    return const SyncResult(totalScanned: 0, added: 0, updated: 0, removed: 0, failed: 0);
   }
 
   Map<String, String>? _buildAuthHeaders(SyncConfig config) {
@@ -51,13 +94,13 @@ class SyncService {
     return null;
   }
 
-  Future<void> _syncWebDav(SyncConfig config, {Map<String, String>? headers, SyncProgressCallback? onProgress}) async {
+  Future<SyncResult> _syncWebDav(SyncConfig config, {Map<String, String>? headers, SyncProgressCallback? onProgress}) async {
     final baseUrl = _normalizeUrl(config.url ?? '');
     final client = webdav.newClient(
       baseUrl,
       user: config.username ?? '',
       password: config.password ?? '',
-      debug: true,
+      debug: false,
     );
 
     if (headers != null && headers.isNotEmpty) {
@@ -80,15 +123,28 @@ class SyncService {
     if (!rootPath.endsWith('/')) rootPath = '$rootPath/';
     
     final supportedExtensions = {'.mp3', '.flac', '.m4a', '.wav', '.ogg', '.mp4', '.mkv', '.avi', '.mov', '.rmvb', '.webm', '.flv', '.m3u8'};
+    const listConcurrency = 4;
+    const processConcurrency = 4;
+
+    final listPool = _AsyncPool(listConcurrency);
+    final processPool = _AsyncPool(processConcurrency);
+    final counterPool = _AsyncPool(1);
+
     final foundPathSet = <String>{};
     final foundPathList = <String>[];
     final foundFiles = <webdav.File>[];
     final lyricPathByBase = <String, String>{};
+    final visitedDirs = <String>{};
     
     Future<void> traverse(String path, int depth) async {
        if (depth > 10) return; // Safety break
+       final normalizedDir = _normalizeDirPath(path);
+       if (visitedDirs.contains(normalizedDir)) return;
+       visitedDirs.add(normalizedDir);
+       onProgress?.call(0, 0, normalizedDir);
        try {
-         final files = await client.readDir(path);
+         final files = await listPool.run(() => client.readDir(normalizedDir));
+         final subDirs = <String>[];
          for (final file in files) {
            final isDir = file.isDir ?? false;
            if (isDir) {
@@ -96,8 +152,8 @@ class SyncService {
              if (subPath == null) continue;
              if (!subPath.endsWith('/')) subPath += '/';
              // Prevent infinite recursion if server returns self
-             if (subPath == path) continue; 
-             await traverse(subPath, depth + 1);
+             if (_normalizeDirPath(subPath) == normalizedDir) continue; 
+             subDirs.add(subPath);
            } else {
              final filename = file.name ?? '';
              final ext = p.extension(filename).toLowerCase();
@@ -116,6 +172,9 @@ class SyncService {
                }
            }
          }
+         if (subDirs.isNotEmpty) {
+           await Future.wait(subDirs.map((dir) => traverse(dir, depth + 1)));
+         }
        } catch (e) {
          print('Error reading dir $path: $e');
        }
@@ -123,42 +182,90 @@ class SyncService {
 
     await traverse(rootPath, 0);
 
-    // Process found files with progress
+    int added = 0;
+    int updated = 0;
+    int failed = 0;
+
+    // Process found files with progress (limited concurrency)
+    int completed = 0;
+    final tasks = <Future<void>>[];
     for (int i = 0; i < foundFiles.length; i++) {
       final file = foundFiles[i];
       final fullPath = foundPathList[i];
-      onProgress?.call(i + 1, foundFiles.length, file.name ?? '');
+      tasks.add(processPool.run(() async {
+        final basePath = p.posix.withoutExtension(fullPath);
+        final lrcPath = lyricPathByBase[basePath];
+        final hasLyricFile = lrcPath != null;
+        final lyrics = hasLyricFile ? await _readWebDavText(client, lrcPath!) : null;
 
-      final basePath = p.posix.withoutExtension(fullPath);
-      final lrcPath = lyricPathByBase[basePath];
-      final hasLyricFile = lrcPath != null;
-      final lyrics = hasLyricFile ? await _readWebDavText(client, lrcPath!) : null;
+        bool isNew = false;
+        bool didFail = false;
+        try {
+          isNew = await _processAndSaveSong(fullPath, file, config, lyrics: lyrics, hasLyricFile: hasLyricFile);
+        } catch (e) {
+          didFail = true;
+          print('Error processing $fullPath: $e');
+        }
 
-      await _processAndSaveSong(fullPath, file, config, lyrics: lyrics, hasLyricFile: hasLyricFile);
+        await counterPool.run(() async {
+          completed++;
+          if (didFail) {
+            failed++;
+          } else if (isNew) {
+            added++;
+          } else {
+            updated++;
+          }
+          onProgress?.call(completed, foundFiles.length, file.name ?? '');
+        });
+      }));
+    }
+    if (tasks.isNotEmpty) {
+      await Future.wait(tasks);
     }
 
     // Cleanup songs that are no longer in the source
     final isar = await _dbService.db;
+    final oldSongs = await isar.songs.filter()
+        .syncConfigIdEqualTo(config.id)
+        .findAll();
+    
+    final toDeleteSongs = oldSongs.where((s) => !foundPathSet.contains(s.path)).toList();
+    final idsToDelete = toDeleteSongs.map((s) => s.id).toList();
+
+    if (idsToDelete.isNotEmpty) {
+      await _metaCache.saveMany(toDeleteSongs);
+    }
+
     await isar.writeTxn(() async {
-      final oldSongs = await isar.songs.filter()
-          .syncConfigIdEqualTo(config.id)
-          .findAll();
-      
-        final toDeleteSongs = oldSongs.where((s) => !foundPathSet.contains(s.path)).toList();
-        final idsToDelete = toDeleteSongs.map((s) => s.id).toList();
-      
       if (idsToDelete.isNotEmpty) {
-        await _metaCache.saveMany(toDeleteSongs);
         await isar.songs.deleteAll(idsToDelete);
-        // Use PlaylistRepository to remove references from playlists
-        final repo = PlaylistRepository(_dbService);
-        await repo.removeSongIdsFromPlaylists(idsToDelete);
       }
-      
-      // Update config lastSyncTime
       config.lastSyncTime = DateTime.now();
       await isar.syncConfigs.put(config);
     });
+
+    if (idsToDelete.isNotEmpty) {
+      final repo = PlaylistRepository(_dbService);
+      await repo.removeSongIdsFromPlaylists(idsToDelete);
+    }
+
+    return SyncResult(
+      totalScanned: foundFiles.length,
+      added: added,
+      updated: updated,
+      removed: idsToDelete.length,
+      failed: failed,
+    );
+  }
+
+  String _normalizeDirPath(String input) {
+    var value = input.trim();
+    if (value.isEmpty) return '/';
+    value = p.posix.normalize(value);
+    if (!value.startsWith('/')) value = '/$value';
+    if (!value.endsWith('/')) value = '$value/';
+    return value;
   }
 
   String _normalizeUrl(String input) {
@@ -168,7 +275,7 @@ class SyncService {
     return 'http://$value';
   }
 
-  Future<void> _processAndSaveSong(String remotePath, webdav.File info, SyncConfig config, {String? lyrics, bool hasLyricFile = false}) async {
+  Future<bool> _processAndSaveSong(String remotePath, webdav.File info, SyncConfig config, {String? lyrics, bool hasLyricFile = false}) async {
      String title = _cleanTitle(remotePath);
      String artist = 'Unknown Artist';
      String album = 'Unknown Album';
@@ -215,6 +322,7 @@ class SyncService {
      await _metaCache.applyIfMissing(song);
 
      final isar = await _dbService.db;
+     bool isNew = false;
      await isar.writeTxn(() async {
        // Check for existing song with same path AND syncConfigId
        final existing = await isar.songs.filter()
@@ -228,9 +336,11 @@ class SyncService {
          existing.lyrics = hasLyricFile ? lyrics : null;
          await isar.songs.put(existing);
        } else {
+         isNew = true;
          await isar.songs.put(song);
        }
      });
+     return isNew;
   }
 
   Future<String?> _readWebDavText(webdav.Client client, String remotePath) async {

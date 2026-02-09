@@ -387,6 +387,12 @@ abstract class AppLocalizations {
   /// **'歌曲刮削源'**
   String get scraperSongSources;
 
+  /// No description provided for @scraperSourceQQMusic.
+  ///
+  /// In zh, this message translates to:
+  /// **'QQ 音乐'**
+  String get scraperSourceQQMusic;
+
   /// No description provided for @scraperArtistSources.
   ///
   /// In zh, this message translates to:
@@ -992,6 +998,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'恢复歌手头像'**
   String get restoreArtistAvatar;
+
+  /// No description provided for @batchScrapeArtistAvatars.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量刮削歌手头像'**
+  String get batchScrapeArtistAvatars;
+
+  /// No description provided for @restoreArtistAvatars.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复歌手头像'**
+  String get restoreArtistAvatars;
+
+  /// No description provided for @restoreArtistAvatarsResult.
+  ///
+  /// In zh, this message translates to:
+  /// **'成功恢复 {count} 个歌手头像'**
+  String restoreArtistAvatarsResult(Object count);
+
+  /// No description provided for @restoreArtistAvatarsFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复歌手头像失败'**
+  String get restoreArtistAvatarsFailed;
 
   /// No description provided for @refresh.
   ///

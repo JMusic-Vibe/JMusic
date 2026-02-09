@@ -338,7 +338,11 @@ class OpenListServiceManager {
           return null;
         }
 
-        final result = await Process.run(exePath, ['admin', 'random'], workingDirectory: dataDir.path);
+        final result = await Process.run(
+          exePath,
+          ['--data', dataDir.path, 'admin', 'random'],
+          workingDirectory: dataDir.path,
+        );
         if (result.exitCode != 0) {
           lastError = result.stderr.toString();
           return null;
@@ -368,7 +372,11 @@ class OpenListServiceManager {
           return null;
         }
 
-        final result = await Process.run(binPath, ['admin', 'random'], workingDirectory: dataDir.path);
+        final result = await Process.run(
+          binPath,
+          ['--data', dataDir.path, 'admin', 'random'],
+          workingDirectory: dataDir.path,
+        );
         if (result.exitCode != 0) {
           lastError = result.stderr.toString();
           return null;

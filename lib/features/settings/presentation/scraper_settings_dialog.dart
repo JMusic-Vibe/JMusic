@@ -8,32 +8,46 @@ class ScraperSettingsDialog extends ConsumerStatefulWidget {
   const ScraperSettingsDialog({super.key});
 
   @override
-  ConsumerState<ScraperSettingsDialog> createState() => _ScraperSettingsDialogState();
+  ConsumerState<ScraperSettingsDialog> createState() =>
+      _ScraperSettingsDialogState();
 }
 
 class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
   late bool _usePrimary;
   late bool _useSongMusicBrainz;
   late bool _useSongItunes;
+  late bool _useSongQQMusic;
   late bool _useArtistMusicBrainz;
   late bool _useArtistItunes;
+  late bool _useArtistQQ;
   late bool _lyricsEnabled;
   late bool _lyricsLrclib;
   late bool _lyricsRangotec;
   late bool _lyricsItunes;
+  late bool _lyricsQQ;
 
   @override
   void initState() {
     super.initState();
     _usePrimary = ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
-    _useSongMusicBrainz = ref.read(preferencesServiceProvider).scraperSourceMusicBrainz;
+    _useSongMusicBrainz =
+        ref.read(preferencesServiceProvider).scraperSourceMusicBrainz;
     _useSongItunes = ref.read(preferencesServiceProvider).scraperSourceItunes;
-    _useArtistMusicBrainz = ref.read(preferencesServiceProvider).scraperArtistSourceMusicBrainz;
-    _useArtistItunes = ref.read(preferencesServiceProvider).scraperArtistSourceItunes;
+    _useSongQQMusic = ref.read(preferencesServiceProvider).scraperSourceQQMusic;
+    _useArtistMusicBrainz =
+        ref.read(preferencesServiceProvider).scraperArtistSourceMusicBrainz;
+    _useArtistItunes =
+        ref.read(preferencesServiceProvider).scraperArtistSourceItunes;
+    _useArtistQQ =
+        ref.read(preferencesServiceProvider).scraperArtistSourceQQMusic;
     _lyricsEnabled = ref.read(preferencesServiceProvider).scraperLyricsEnabled;
-    _lyricsLrclib = ref.read(preferencesServiceProvider).scraperLyricsSourceLrclib;
-    _lyricsRangotec = ref.read(preferencesServiceProvider).scraperLyricsSourceRangotec;
-    _lyricsItunes = ref.read(preferencesServiceProvider).scraperLyricsSourceItunes;
+    _lyricsLrclib =
+        ref.read(preferencesServiceProvider).scraperLyricsSourceLrclib;
+    _lyricsRangotec =
+        ref.read(preferencesServiceProvider).scraperLyricsSourceRangotec;
+    _lyricsItunes =
+        ref.read(preferencesServiceProvider).scraperLyricsSourceItunes;
+    _lyricsQQ = ref.read(preferencesServiceProvider).scraperLyricsSourceQQMusic;
   }
 
   @override
@@ -49,15 +63,17 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
           Card(
             child: Column(
               children: [
-          SwitchListTile(
-            title: Text(l10n.usePrimaryArtistForScraper),
-            // subtitle: Text(l10n.usePrimaryArtistForScraperDesc),
-            value: _usePrimary,
-            onChanged: (v) async {
-              setState(() => _usePrimary = v);
-              await ref.read(preferencesServiceProvider).setScraperUsePrimaryArtist(v);
-            },
-          ),
+                SwitchListTile(
+                  title: Text(l10n.usePrimaryArtistForScraper),
+                  // subtitle: Text(l10n.usePrimaryArtistForScraperDesc),
+                  value: _usePrimary,
+                  onChanged: (v) async {
+                    setState(() => _usePrimary = v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperUsePrimaryArtist(v);
+                  },
+                ),
               ],
             ),
           ),
@@ -66,7 +82,10 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
             alignment: Alignment.centerLeft,
             child: Text(
               l10n.scraperSongSources,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
             ),
           ),
           Card(
@@ -76,24 +95,30 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
                   title: Text(l10n.scraperSourceMusicBrainz),
                   value: _useSongMusicBrainz,
                   onChanged: (v) async {
-                    if (!v && !_useSongItunes) {
-                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-                      return;
-                    }
                     setState(() => _useSongMusicBrainz = v);
-                    await ref.read(preferencesServiceProvider).setScraperSourceMusicBrainz(v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperSourceMusicBrainz(v);
                   },
                 ),
                 SwitchListTile(
                   title: Text(l10n.scraperSourceItunes),
                   value: _useSongItunes,
                   onChanged: (v) async {
-                    if (!v && !_useSongMusicBrainz) {
-                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-                      return;
-                    }
                     setState(() => _useSongItunes = v);
-                    await ref.read(preferencesServiceProvider).setScraperSourceItunes(v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperSourceItunes(v);
+                  },
+                ),
+                SwitchListTile(
+                  title: Text(l10n.scraperSourceQQMusic),
+                  value: _useSongQQMusic,
+                  onChanged: (v) async {
+                    setState(() => _useSongQQMusic = v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperSourceQQMusic(v);
                   },
                 ),
               ],
@@ -104,7 +129,10 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
             alignment: Alignment.centerLeft,
             child: Text(
               l10n.scraperArtistSources,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
             ),
           ),
           Card(
@@ -114,24 +142,30 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
                   title: Text(l10n.scraperSourceMusicBrainz),
                   value: _useArtistMusicBrainz,
                   onChanged: (v) async {
-                    if (!v && !_useArtistItunes) {
-                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-                      return;
-                    }
                     setState(() => _useArtistMusicBrainz = v);
-                    await ref.read(preferencesServiceProvider).setScraperArtistSourceMusicBrainz(v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperArtistSourceMusicBrainz(v);
                   },
                 ),
                 SwitchListTile(
                   title: Text(l10n.scraperSourceItunes),
                   value: _useArtistItunes,
                   onChanged: (v) async {
-                    if (!v && !_useArtistMusicBrainz) {
-                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-                      return;
-                    }
                     setState(() => _useArtistItunes = v);
-                    await ref.read(preferencesServiceProvider).setScraperArtistSourceItunes(v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperArtistSourceItunes(v);
+                  },
+                ),
+                SwitchListTile(
+                  title: Text(l10n.scraperSourceQQMusic),
+                  value: _useArtistQQ,
+                  onChanged: (v) async {
+                    setState(() => _useArtistQQ = v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperArtistSourceQQMusic(v);
                   },
                 ),
               ],
@@ -142,7 +176,10 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
             alignment: Alignment.centerLeft,
             child: Text(
               l10n.scraperLyricsSources,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
             ),
           ),
           Card(
@@ -152,24 +189,30 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
                   title: Text(l10n.scraperSourceLrclib),
                   value: _lyricsLrclib,
                   onChanged: (v) async {
-                    if (!v && !_lyricsRangotec) {
-                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-                      return;
-                    }
                     setState(() => _lyricsLrclib = v);
-                    await ref.read(preferencesServiceProvider).setScraperLyricsSourceLrclib(v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperLyricsSourceLrclib(v);
                   },
                 ),
                 SwitchListTile(
                   title: Text(l10n.scraperSourceRangotec),
                   value: _lyricsRangotec,
                   onChanged: (v) async {
-                    if (!v && !_lyricsLrclib) {
-                      CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-                      return;
-                    }
                     setState(() => _lyricsRangotec = v);
-                    await ref.read(preferencesServiceProvider).setScraperLyricsSourceRangotec(v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperLyricsSourceRangotec(v);
+                  },
+                ),
+                SwitchListTile(
+                  title: Text(l10n.scraperSourceQQMusic),
+                  value: _lyricsQQ,
+                  onChanged: (v) async {
+                    setState(() => _lyricsQQ = v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperLyricsSourceQQMusic(v);
                   },
                 ),
               ],
@@ -180,4 +223,3 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
     );
   }
 }
-

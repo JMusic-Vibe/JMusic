@@ -158,6 +158,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scraperSongSources => '歌曲刮削源';
 
   @override
+  String get scraperSourceQQMusic => 'QQ 音乐';
+
+  @override
   String get scraperArtistSources => '歌手刮削源';
 
   @override
@@ -483,6 +486,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreArtistAvatar => '恢复歌手头像';
+
+  @override
+  String get batchScrapeArtistAvatars => '批量刮削歌手头像';
+
+  @override
+  String get restoreArtistAvatars => '恢复歌手头像';
+
+  @override
+  String restoreArtistAvatarsResult(Object count) {
+    return '成功恢复 $count 个歌手头像';
+  }
+
+  @override
+  String get restoreArtistAvatarsFailed => '恢复歌手头像失败';
 
   @override
   String get refresh => '刷新';
@@ -1102,6 +1119,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get scraperSongSources => '歌曲刮削來源';
+
+  @override
+  String get scraperSourceQQMusic => 'QQ 音樂';
 
   @override
   String get scraperArtistSources => '歌手刮削來源';

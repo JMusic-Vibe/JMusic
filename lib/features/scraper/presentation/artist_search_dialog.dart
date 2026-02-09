@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/core/widgets/cover_art.dart';
-import 'package:jmusic/features/scraper/data/artist_scraper_service.dart';
+import 'package:jmusic/features/scraper/data/artist_sources/artist_scraper_service.dart';
+import 'package:jmusic/features/scraper/data/artist_sources/artist_models.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
 import 'package:jmusic/l10n/app_localizations.dart';
 import 'package:jmusic/core/widgets/capsule_toast.dart';
@@ -49,7 +50,8 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
     final prefs = ref.read(preferencesServiceProvider);
     final useMb = prefs.scraperArtistSourceMusicBrainz;
     final useItunes = prefs.scraperArtistSourceItunes;
-    if (!useMb && !useItunes) {
+    final useQQ = prefs.scraperArtistSourceQQMusic;
+    if (!useMb && !useItunes && !useQQ) {
       setState(() => _isLoading = false);
       if (mounted) {
         CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
@@ -61,12 +63,51 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
       name,
       useMusicBrainz: useMb,
       useItunes: useItunes,
+      useQQ: useQQ,
     );
     if (!mounted) return;
     setState(() {
       _results = results;
       _isLoading = false;
     });
+
+    // Try to fill missing images for first few results asynchronously
+    if (_results != null && _results!.isNotEmpty) {
+      final svc = ref.read(artistScraperServiceProvider);
+      final toCheck = _results!.take(10).toList();
+      for (var i = 0; i < toCheck.length; i++) {
+        final r = toCheck[i];
+        if (r.imageUrl == null || r.imageUrl!.isEmpty) {
+          Future(() async {
+            String? img;
+            if (r.source == ArtistSource.musicBrainz) {
+              img = await svc.fetchArtistImageUrlById(r.id);
+            } else if (r.source == ArtistSource.itunes) {
+              img = await svc.fetchArtistImageUrlFromItunes(r.name);
+            } else if (r.source == ArtistSource.qqMusic) {
+              img = await svc.fetchArtistImageUrlFromQQ(r.name);
+            }
+            if (img != null && img.isNotEmpty) {
+              if (!mounted) return;
+              setState(() {
+                final idx = _results!.indexWhere((e) => e.id == r.id && e.source == r.source);
+                if (idx != -1) {
+                  _results![idx] = ArtistSearchResult(
+                    id: r.id,
+                    name: r.name,
+                    source: r.source,
+                    imageUrl: img,
+                    disambiguation: r.disambiguation,
+                    type: r.type,
+                    country: r.country,
+                  );
+                }
+              });
+            }
+          });
+        }
+      }
+    }
   }
 
   Future<void> _onResultSelected(ArtistSearchResult result) async {
@@ -78,8 +119,10 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
       if (imageUrl == null || imageUrl.isEmpty) {
         if (result.source == ArtistSource.musicBrainz) {
           imageUrl = await service.fetchArtistImageUrlById(result.id);
-        } else {
+        } else if (result.source == ArtistSource.itunes) {
           imageUrl = await service.fetchArtistImageUrlFromItunes(result.name);
+        } else if (result.source == ArtistSource.qqMusic) {
+          imageUrl = await service.fetchArtistImageUrlFromQQ(result.name);
         }
       }
       final sourceLabel = _sourceLabel(result.source);
@@ -211,7 +254,25 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
                               item.disambiguation!.isNotEmpty) {
                             subtitleParts.add(item.disambiguation!);
                           }
+                          Widget leading;
+                          if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
+                            leading = ClipOval(
+                              child: SizedBox(
+                                width: 44,
+                                height: 44,
+                                child: CoverArt(path: item.imageUrl, fit: BoxFit.cover, isVideo: false),
+                              ),
+                            );
+                          } else {
+                            // Fallback: show a circle with initial
+                            leading = CircleAvatar(
+                              radius: 22,
+                              child: Text(item.name.isNotEmpty ? item.name[0].toUpperCase() : '?'),
+                            );
+                          }
+
                           return ListTile(
+                            leading: leading,
                             title: Text(item.name,
                                 style: Theme.of(context)
                                     .textTheme
@@ -231,7 +292,7 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
     if (widget.asPage) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.manualMatchArtist)),
-        body: Center(child: content),
+        body: content,
       );
     }
 
@@ -244,6 +305,8 @@ class _ArtistSearchDialogState extends ConsumerState<ArtistSearchDialog> {
         return l10n.scraperSourceMusicBrainz;
       case ArtistSource.itunes:
         return l10n.scraperSourceItunes;
+      case ArtistSource.qqMusic:
+        return l10n.scraperSourceQQMusic;
     }
   }
 }

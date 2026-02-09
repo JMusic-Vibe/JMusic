@@ -146,8 +146,8 @@ class _ScraperLyricsMatchDialogState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.manualMatchLyrics,
-              style: Theme.of(context).textTheme.titleLarge),
+          // Text(l10n.manualMatchLyrics,
+          //     style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           TextField(
             controller: _titleCtrl,
@@ -319,7 +319,7 @@ class _ScraperLyricsMatchDialogState
     if (widget.asPage) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.manualMatchLyrics)),
-        body: Center(child: content),
+        body: content,
       );
     }
 

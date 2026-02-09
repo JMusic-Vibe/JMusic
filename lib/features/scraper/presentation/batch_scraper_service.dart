@@ -2,9 +2,10 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/core/services/database_service.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
-import 'package:jmusic/features/scraper/data/musicbrainz_service.dart';
-import 'package:jmusic/features/scraper/data/itunes_service.dart';
+import 'package:jmusic/features/scraper/data/track_sources/musicbrainz_service.dart';
+import 'package:jmusic/features/scraper/data/track_sources/itunes_service.dart';
 import 'package:jmusic/features/scraper/data/lyrics_service.dart';
+import 'package:jmusic/features/scraper/data/track_sources/qq_music_service.dart';
 import 'package:jmusic/features/scraper/domain/musicbrainz_result.dart';
 import 'package:jmusic/features/scraper/domain/scrape_result.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
@@ -234,22 +235,14 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
     final prefs = _ref.read(preferencesServiceProvider);
     final useMb = prefs.scraperSourceMusicBrainz;
     final useItunes = prefs.scraperSourceItunes;
+    final useQq = prefs.scraperSourceQQMusic;
     final lyricsEnabled = prefs.scraperLyricsEnabled;
     final scraperController = _ref.read(scraperControllerProvider);
     final dbService = _ref.read(databaseServiceProvider);
     final db = await dbService.db;
 
-    if (!useMb && !useItunes) {
-      state = state.copyWith(
-        isRunning: false,
-        done: state.total,
-        successCount: 0,
-        failCount: state.total,
-        scrapingSongIds: {},
-        showResult: true,
-      );
-      return;
-    }
+    // Removed requirement that at least one scraper source must be enabled.
+    // If no sources enabled, the loop will simply try nothing and mark failures accordingly.
     
     int success = 0;
     int fail = 0;
@@ -314,6 +307,22 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
               bestResult = _pickItunesResult(itResults, song.duration);
               if (bestResult != null) {
                 coverUrl = bestResult.coverUrl;
+              }
+            }
+          }
+          // Try QQ Music if still not found
+          if (bestResult == null && useQq) {
+            final qqService = _ref.read(qqMusicServiceProvider);
+            final qqResults = await qqService.searchTrack(
+              song.title,
+              artist: normalizedArtist,
+              album: normalizedAlbum,
+            );
+            if (qqResults.isNotEmpty) {
+              final pick = _pickItunesResult(qqResults, song.duration);
+              if (pick != null) {
+                bestResult = pick;
+                coverUrl = pick.coverUrl;
               }
             }
           }

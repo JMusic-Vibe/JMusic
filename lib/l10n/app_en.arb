@@ -62,6 +62,7 @@
     "scraperSongSources": "Song scraping sources",
     "scraperArtistSources": "Artist scraping sources",
     "scraperLyricsSources": "Lyrics scraping sources",
+        "scraperSourceQQMusic": "QQ Music",
     "scraperSourceLrclib": "lrclib",
     "scraperSourceRangotec": "rangotec",
     "scraperLyricsSourcesFixed": "Lyrics sources are fixed to lrclib + rangotec",
@@ -192,6 +193,15 @@
     "clearLyrics": "Clear Lyrics",
     "clearSongInfo": "Clear Song Info",
     "restoreArtistAvatar": "Restore Artist Avatar",
+    "batchScrapeArtistAvatars": "Batch Scrape Artist Avatars",
+    "restoreArtistAvatars": "Restore Artist Avatars",
+    "restoreArtistAvatarsResult": "Restored {count} artist avatars",
+    "@restoreArtistAvatarsResult": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreArtistAvatarsFailed": "Failed to restore artist avatars",
     "refresh": "Refresh",
     "taskRunningBackground": "Task running in background",
     

@@ -30,6 +30,7 @@ class ScraperCenterScreen extends ConsumerStatefulWidget {
 
 class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
   final Set<int> _selectedIds = {};
+  final Set<String> _selectedArtistNames = {};
   final TextEditingController _searchCtrl = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   TabController? _tabController;
@@ -79,6 +80,8 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
           sourceMap[artist.name] = 'musicbrainz';
         } else if (imageUrl.contains('mzstatic')) {
           sourceMap[artist.name] = 'itunes';
+        } else if (imageUrl.contains('y.gtimg.cn') || imageUrl.contains('qq')) {
+          sourceMap[artist.name] = 'qq';
         }
       }
       setState(() {
@@ -118,7 +121,7 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
     super.dispose();
   }
 
-  bool get _isSelectionMode => _selectedIds.isNotEmpty;
+  bool get _isSelectionMode => _selectedIds.isNotEmpty || _selectedArtistNames.isNotEmpty;
 
   static const _tabs = [
     _ScraperTab.unscraped,
@@ -142,6 +145,7 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
   void _clearSelection() {
     setState(() {
       _selectedIds.clear();
+      _selectedArtistNames.clear();
     });
   }
 
@@ -154,6 +158,29 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
         _selectedIds.removeAll(ids);
       } else {
         _selectedIds.addAll(ids);
+      }
+    });
+  }
+
+  void _selectAllArtists(List<_ArtistItem> artists) {
+    final names = artists.map((e) => e.name).toSet();
+    final selectedInList = _selectedArtistNames.intersection(names).length;
+    setState(() {
+      if (names.isEmpty) return;
+      if (selectedInList == names.length) {
+        _selectedArtistNames.removeAll(names);
+      } else {
+        _selectedArtistNames.addAll(names);
+      }
+    });
+  }
+
+  void _toggleArtistSelection(String name) {
+    setState(() {
+      if (_selectedArtistNames.contains(name)) {
+        _selectedArtistNames.remove(name);
+      } else {
+        _selectedArtistNames.add(name);
       }
     });
   }
@@ -171,6 +198,24 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
           icon: Icons.auto_fix_high,
           title: l10n.batchScrape,
           onTap: _scrapeSelected));
+    }
+
+    if (tab == _ScraperTab.unscraped || tab == _ScraperTab.scraped) {
+      actions.add(ActionItem(
+          icon: Icons.restore,
+          title: l10n.restoreOriginalInfo,
+          onTap: _restoreSelected));
+    }
+
+    if (tab == _ScraperTab.artists) {
+      actions.add(ActionItem(
+          icon: Icons.person_search,
+          title: l10n.batchScrapeArtistAvatars,
+          onTap: _batchScrapeSelectedArtists));
+      actions.add(ActionItem(
+          icon: Icons.restore,
+          title: l10n.restoreArtistAvatars,
+          onTap: _restoreSelectedArtists));
     }
 
     if (tab == _ScraperTab.noLyrics ||
@@ -208,6 +253,42 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
         .scrapeArtistsForSongs(songs);
     if (mounted) {
       CapsuleToast.show(context, l10n.scrapeArtistAvatarsResult(ok));
+      _clearSelection();
+    }
+  }
+
+  Future<void> _batchScrapeSelectedArtists() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedArtistNames.isEmpty) return;
+    int successCount = 0;
+    for (final name in _selectedArtistNames) {
+      final ok = await ref
+          .read(artistScraperControllerProvider)
+          .scrapeArtist(name, force: true);
+      if (ok) successCount++;
+    }
+    if (mounted) {
+      CapsuleToast.show(context, l10n.scrapeArtistAvatarsResult(successCount));
+      _clearSelection();
+    }
+  }
+
+  Future<void> _restoreSelectedArtists() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedArtistNames.isEmpty) return;
+    int restored = 0;
+    for (final name in _selectedArtistNames) {
+      final ok = await ref
+          .read(artistScraperControllerProvider)
+          .restoreArtistAvatar(name);
+      if (ok) restored++;
+    }
+    if (mounted) {
+      CapsuleToast.show(
+          context,
+          restored > 0
+              ? l10n.restoreArtistAvatarsResult(restored)
+              : l10n.restoreArtistAvatarsFailed);
       _clearSelection();
     }
   }
@@ -270,11 +351,7 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
       return;
     }
 
-    final prefs = ref.read(preferencesServiceProvider);
-    if (!prefs.scraperSourceMusicBrainz && !prefs.scraperSourceItunes) {
-      if (mounted) CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-      return;
-    }
+    // Proceed even if all scraper sources are disabled; allow user control.
 
     final notifier = ref.read(batchScraperProvider.notifier);
     if (ref.read(batchScraperProvider).isRunning) {
@@ -321,18 +398,27 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
                       onChanged: (val) => setState(() => _searchQuery = val),
                     )
                   : Text(_isSelectionMode
-                      ? l10n.selectedCount(_selectedIds.length)
+                      ? (_currentTab() == _ScraperTab.artists
+                          ? l10n.selectedCount(_selectedArtistNames.length)
+                          : l10n.selectedCount(_selectedIds.length))
                       : l10n.scraperCenter),
               actions: _isSelectionMode
                   ? [
                       IconButton(
                         icon: const Icon(Icons.select_all),
                         onPressed: () {
-                          final songs = songsAsync.value;
-                          if (songs == null) return;
-                          final filtered =
-                              _filterSongs(songs, _currentTab(), prefs);
-                          _selectAll(filtered);
+                          if (_currentTab() == _ScraperTab.artists) {
+                            final artists = _buildArtistItems(songsAsync.value ?? []);
+                            final filtered = _searchQuery.isEmpty
+                                ? artists
+                                : artists.where((a) => a.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+                            _selectAllArtists(filtered);
+                          } else {
+                            final songs = songsAsync.value;
+                            if (songs == null) return;
+                            final filtered = _filterSongs(songs, _currentTab(), prefs);
+                            _selectAll(filtered);
+                          }
                         },
                         tooltip: l10n.selectAll,
                       ),
@@ -446,21 +532,28 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
         itemBuilder: (context, index) {
           final item = filtered[index];
           final avatar = _artistAvatarMap[item.name];
-          final sourceKey = _artistSourceMap[item.name];
-          final sourceLabel = sourceKey == 'musicbrainz'
+            final sourceKey = _artistSourceMap[item.name];
+            final sourceLabel = sourceKey == 'musicbrainz'
               ? l10n.scraperSourceMusicBrainz
               : sourceKey == 'itunes'
-                  ? l10n.scraperSourceItunes
+                ? l10n.scraperSourceItunes
+                : sourceKey == 'qq'
+                  ? l10n.scraperSourceQQMusic
                   : null;
+          final isSelected = _selectedArtistNames.contains(item.name);
           return ListTile(
-            leading: ClipOval(
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child:
-                    CoverArt(path: avatar, fit: BoxFit.cover, isVideo: false),
-              ),
-            ),
+            leading: _isSelectionMode
+                ? Checkbox(
+                    value: isSelected,
+                    onChanged: (v) => _toggleArtistSelection(item.name))
+                : ClipOval(
+                    child: SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: CoverArt(
+                          path: avatar, fit: BoxFit.cover, isVideo: false),
+                    ),
+                  ),
             title: Text(item.name,
                 style: Theme.of(context)
                     .textTheme
@@ -480,16 +573,37 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
                   ),
               ],
             ),
+            selected: isSelected,
+            onLongPress: () => _toggleArtistSelection(item.name),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      ArtistSearchDialog(artistName: item.name, asPage: true),
-                ),
-              );
+              if (_isSelectionMode) {
+                _toggleArtistSelection(item.name);
+              } else {
+                final width = MediaQuery.of(context).size.width;
+                // On large screens show dialog, on small screens push new page
+                if (width >= 720) {
+                  showDialog(
+                    context: context,
+                    builder: (_) => ArtistSearchDialog(artistName: item.name),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ArtistSearchDialog(
+                          artistName: item.name, asPage: true),
+                    ),
+                  );
+                }
+              }
             },
-            onLongPress: () => _showArtistActions(context, item.name),
+            trailing: _isSelectionMode
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    tooltip: l10n.more,
+                    onPressed: () => _showArtistActions(context, item.name),
+                  ),
           );
         },
       );
@@ -597,13 +711,21 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
           icon: Icons.person_search,
           title: l10n.manualMatchArtist,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    ArtistSearchDialog(artistName: artistName, asPage: true),
-              ),
-            );
+            final width = MediaQuery.of(context).size.width;
+            if (width >= 720) {
+              showDialog(
+                context: context,
+                builder: (_) => ArtistSearchDialog(artistName: artistName),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      ArtistSearchDialog(artistName: artistName, asPage: true),
+                ),
+              );
+            }
           },
         ),
         ActionItem(
@@ -709,6 +831,39 @@ class _ScraperCenterScreenState extends ConsumerState<ScraperCenterScreen> {
               context: context,
               builder: (_) => TagEditorDialog(songs: [song]),
             );
+          },
+        ),
+        ActionItem(
+          icon: Icons.restore,
+          title: l10n.restoreOriginalInfo,
+          onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(l10n.restoreOriginalInfo),
+                content: Text(l10n.restoreOriginalInfoConfirm(1)),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(l10n.cancel)),
+                  FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(l10n.confirm)),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              final restored = await ref
+                  .read(scraperControllerProvider)
+                  .restoreSongsMetadata([song.id]);
+              if (mounted) {
+                CapsuleToast.show(
+                    context,
+                    restored > 0
+                        ? l10n.restoreOriginalInfoSuccess(restored)
+                        : l10n.restoreOriginalInfoFailed);
+              }
+            }
           },
         ),
         ActionItem(

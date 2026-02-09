@@ -60,6 +60,7 @@
     "scraperMatchSources": "匹配来源",
     "scraperSourceAtLeastOne": "请至少启用一个来源",
     "scraperSongSources": "歌曲刮削源",
+    "scraperSourceQQMusic": "QQ 音乐",
     "scraperArtistSources": "歌手刮削源",
     "scraperLyricsSources": "歌词刮削源",
     "audioSettings": "音频与播放",
@@ -226,6 +227,15 @@
     "clearLyrics": "清除歌词",
     "clearSongInfo": "清除歌曲信息",
     "restoreArtistAvatar": "恢复歌手头像",
+    "batchScrapeArtistAvatars": "批量刮削歌手头像",
+    "restoreArtistAvatars": "恢复歌手头像",
+    "restoreArtistAvatarsResult": "成功恢复 {count} 个歌手头像",
+    "@restoreArtistAvatarsResult": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "restoreArtistAvatarsFailed": "恢复歌手头像失败",
     "refresh": "刷新",
     "taskRunningBackground": "任务已后台运行",
     

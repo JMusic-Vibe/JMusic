@@ -1,6 +1,7 @@
 enum ScrapeSource {
   musicBrainz,
   itunes,
+  qqMusic,
 }
 
 class ScrapeResult {

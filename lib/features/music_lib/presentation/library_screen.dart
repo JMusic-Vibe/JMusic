@@ -24,7 +24,7 @@ import 'package:jmusic/features/music_lib/domain/entities/playlist.dart';
 import 'package:jmusic/features/playlists/presentation/playlist_selection_dialog.dart';
 import 'package:jmusic/features/playlists/data/playlist_repository.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_search_dialog.dart';
-import 'package:jmusic/features/scraper/data/musicbrainz_service.dart';
+import 'package:jmusic/features/scraper/data/track_sources/musicbrainz_service.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
 import 'package:jmusic/features/scraper/presentation/scrape_progress_dialog.dart';
 import 'package:jmusic/features/scraper/presentation/artist_search_dialog.dart';
@@ -198,7 +198,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           query = query.albumEqualTo(widget.filter!.value);
           break;
         case FilterType.folder:
-           query = query.pathStartsWith(widget.filter!.value);
+           var folderValue = widget.filter!.value;
+           if (folderValue.startsWith('/') || folderValue.contains('://')) {
+             folderValue = folderValue.replaceAll('\\', '/');
+           }
+           if (folderValue.contains('://')) {
+             try {
+               final uri = Uri.parse(folderValue);
+               if (uri.path.isNotEmpty) {
+                 folderValue = uri.path;
+               }
+             } catch (_) {
+               // Keep original if URL parsing fails.
+             }
+           }
+           query = query.pathStartsWith(folderValue);
           break;
       }
     }
@@ -242,8 +256,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final prefs = ref.read(preferencesServiceProvider);
     final configs = await syncRepo.getAllConfigs();
     final Map<int, String> configUrlMap = {};
+    final Map<int?, String?> configRootMap = {};
     for (final c in configs) {
       configUrlMap[c.id] = c.url;
+      final root = _normalizeRemoteRoot(c.path ?? '');
+      if (root != null && root.isNotEmpty) {
+        configRootMap[c.id] = root;
+      }
     }
 
     final stream = db.songs.where().watch(fireImmediately: true);
@@ -274,7 +293,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         for (final s in songs.where((s) => s.sourceType == SourceType.webdav || s.sourceType == SourceType.openlist)) {
           final key = s.syncConfigId;
           remoteDirsByConfig.putIfAbsent(key, () => []);
-          remoteDirsByConfig[key]!.add(p.dirname(s.path));
+          remoteDirsByConfig[key]!.add(_normalizeRemotePath(p.posix.dirname(s.path)));
         }
         for (final entry in remoteDirsByConfig.entries) {
           commonRemoteRoots[entry.key] = _commonPathPrefix(entry.value);
@@ -303,21 +322,32 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           }
         } else if (_viewMode == LibraryViewMode.folders) {
            // Parent dir; for WebDAV include base URL
-           String dir = p.dirname(song.path);
+               final isRemote = song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist;
+               final pathContext = isRemote
+                 ? p.Context(style: p.Style.posix)
+                 : p.Context(style: p.Style.platform);
+            String dir = pathContext.dirname(song.path);
            String display = dir;
            String? baseRoot;
 
            if (widget.filter?.type == FilterType.folder) {
              baseRoot = widget.filter!.value;
            } else if (song.sourceType == SourceType.local) {
-             final rootPrefix = p.rootPrefix(dir);
+             final rootPrefix = pathContext.rootPrefix(dir);
              baseRoot = rootPrefix.isNotEmpty ? rootPrefix : null;
-           } else if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
-             baseRoot = commonRemoteRoots[song.syncConfigId];
+           } else if (isRemote) {
+             baseRoot = configRootMap[song.syncConfigId];
+             baseRoot ??= _normalizeRemoteRoot(prefs.webDavPath);
+             baseRoot ??= commonRemoteRoots[song.syncConfigId];
+           }
+
+           if (isRemote) {
+             dir = _normalizeRemotePath(dir);
+             baseRoot = _normalizeRemoteRoot(baseRoot);
            }
 
            if (baseRoot != null && _isWithinOrEqual(baseRoot, dir)) {
-             final relative = p.relative(dir, from: baseRoot);
+             final relative = pathContext.relative(dir, from: baseRoot);
              final firstSegment = _firstSegment(relative);
              if (relative.isEmpty || relative == '.') {
                // Skip the base folder itself to avoid self-recursive navigation.
@@ -325,15 +355,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
              }
              if (firstSegment.isNotEmpty && firstSegment != '.') {
                if (song.sourceType == SourceType.local && widget.filter?.type != FilterType.folder) {
-                 display = p.join(baseRoot, firstSegment);
+                 display = pathContext.join(baseRoot, firstSegment);
                } else {
                  display = firstSegment;
                }
-               dir = p.join(baseRoot, firstSegment);
+               dir = pathContext.join(baseRoot, firstSegment);
              } else {
-               display = p.basename(dir);
+               display = pathContext.basename(dir);
              }
-           } else if (song.sourceType == SourceType.webdav || song.sourceType == SourceType.openlist) {
+           } else if (isRemote) {
              String base = '';
              if (song.syncConfigId != null && configUrlMap.containsKey(song.syncConfigId)) {
                base = configUrlMap[song.syncConfigId]!;
@@ -435,6 +465,23 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final normalizedBase = base.replaceAll('\\', '/');
     final normalizedPath = path.replaceAll('\\', '/');
     return normalizedPath == normalizedBase || normalizedPath.startsWith('$normalizedBase/');
+  }
+
+  String _normalizeRemotePath(String path) {
+    var normalized = path.replaceAll('\\', '/');
+    normalized = p.posix.normalize(normalized);
+    if (!normalized.startsWith('/')) normalized = '/$normalized';
+    if (normalized.endsWith('/') && normalized.length > 1) {
+      normalized = normalized.substring(0, normalized.length - 1);
+    }
+    return normalized;
+  }
+
+  String? _normalizeRemoteRoot(String? path) {
+    if (path == null) return null;
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return null;
+    return _normalizeRemotePath(trimmed);
   }
 
   void _addFolderItem(Set<String> items, String display, String path) {
@@ -687,11 +734,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       return;
     }
 
-    final prefs = ref.read(preferencesServiceProvider);
-    if (!prefs.scraperSourceMusicBrainz && !prefs.scraperSourceItunes) {
-      if (mounted) CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-      return;
-    }
+    // Proceed with batch scrape even if user has disabled all scraper sources.
 
     ref.read(batchScraperProvider.notifier).startBatchScrape(_selectedIds.toList());
 
@@ -926,10 +969,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                  IconButton(
                   icon: const Icon(Icons.person_search),
                   onPressed: () async {
-                    await showDialog(
-                      context: context,
-                      builder: (_) => ArtistSearchDialog(artistName: widget.filter!.value),
-                    );
+                    final width = MediaQuery.of(context).size.width;
+                    if (width >= 720) {
+                      await showDialog(
+                        context: context,
+                        builder: (_) => ArtistSearchDialog(artistName: widget.filter!.value),
+                      );
+                    } else {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ArtistSearchDialog(artistName: widget.filter!.value, asPage: true),
+                        ),
+                      );
+                    }
                   },
                   tooltip: l10n.scrapeArtistAvatars,
                 ),
@@ -1550,7 +1603,7 @@ class _ScanProgressDialogState extends State<ScanProgressDialog> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
-    final progress = _total > 0 ? _current / _total : 0.0;
+    final double? progress = _total > 0 ? _current / _total : null;
     
     return WillPopScope(
       onWillPop: () async => false, // Prevent back button from closing dialog
@@ -1581,7 +1634,7 @@ class _ScanProgressDialogState extends State<ScanProgressDialog> {
                       backgroundColor: theme.colorScheme.surfaceVariant,
                     ),
                     Text(
-                      _total > 0 ? '$_current/$_total' : '0/0',
+                      _total > 0 ? '$_current/$_total' : '...',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w600,

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/core/widgets/cover_art.dart';
 import 'package:jmusic/features/music_lib/domain/entities/song.dart';
-import 'package:jmusic/features/scraper/data/musicbrainz_service.dart';
 import 'package:jmusic/features/scraper/domain/musicbrainz_result.dart';
-import 'package:jmusic/features/scraper/data/itunes_service.dart';
+// track services moved to track_sources
+import 'package:jmusic/features/scraper/data/track_sources/musicbrainz_service.dart';
+import 'package:jmusic/features/scraper/data/track_sources/itunes_service.dart';
+import 'package:jmusic/features/scraper/data/track_sources/qq_music_service.dart';
 import 'package:jmusic/features/scraper/data/lyrics_service.dart';
 import 'package:jmusic/features/scraper/domain/scrape_result.dart';
 import 'package:jmusic/features/scraper/presentation/scraper_providers.dart';
@@ -65,12 +67,7 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
     final prefs = ref.read(preferencesServiceProvider);
     final useMb = prefs.scraperSourceMusicBrainz;
     final useItunes = prefs.scraperSourceItunes;
-    if (!useMb && !useItunes) {
-      if (mounted) {
-        CapsuleToast.show(context, l10n.scraperSourceAtLeastOne);
-      }
-      return;
-    }
+    final useQq = prefs.scraperSourceQQMusic;
 
     setState(() => _isLoading = true);
 
@@ -93,10 +90,16 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
           )
         : Future.value(<ScrapeResult>[]);
 
-    final results = await Future.wait([mbFuture, itFuture]);
+    final qqService = ref.read(qqMusicServiceProvider);
+    final qqFuture = useQq
+        ? qqService.searchTrack(title, artist: artist, album: album)
+        : Future.value(<ScrapeResult>[]);
+
+    final results = await Future.wait([mbFuture, itFuture, qqFuture]);
 
     final mbResults = results[0] as List<MusicBrainzResult>;
     final itResults = results[1] as List<ScrapeResult>;
+    final qqResults = results[2] as List<ScrapeResult>;
 
     final combined = <ScrapeResult>[
       ...mbResults.map((r) => ScrapeResult(
@@ -109,6 +112,7 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
             releaseId: r.releaseId,
           )),
       ...itResults,
+      ...qqResults,
     ];
 
     setState(() {
@@ -189,7 +193,7 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
                   ?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (coverUrl != null)
                 SizedBox(
@@ -200,17 +204,21 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
                 ),
               const SizedBox(height: 8),
               Text('${l10n.songTitleLabel}: ${result.title}',
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface)),
               Text('${l10n.artistLabel}: ${result.artist}',
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface)),
               Text('${l10n.albumLabel}: ${result.album}',
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface)),
               const SizedBox(height: 6),
               if (lyricsSourceLabel != null)
                 Text(l10n.scraperSourceLabel(lyricsSourceLabel),
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant)),
               if (durationStr != null)
@@ -356,15 +364,17 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
                             ),
                             trailing: Text(
                               item.source == ScrapeSource.musicBrainz
-                                  ? l10n.scraperSourceMusicBrainz
+                                ? l10n.scraperSourceMusicBrainz
+                                : item.source == ScrapeSource.qqMusic
+                                  ? l10n.scraperSourceQQMusic
                                   : l10n.scraperSourceItunes,
                               style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                    .colorScheme
+                                    .primary),
                             ),
                             // Disable interaction while processing selection
                             enabled: !_isProcessingSelection,

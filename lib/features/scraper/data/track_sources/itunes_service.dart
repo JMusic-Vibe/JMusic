@@ -79,9 +79,8 @@ class ItunesSearchService {
           final albumName = item['collectionName']?.toString() ?? (album ?? 'Unknown');
           final date = item['releaseDate']?.toString();
           final artwork = item['artworkUrl100']?.toString();
-          // Try to get higher resolution cover if possible
           final coverUrl = artwork?.replaceAll('100x100bb', '600x600bb');
-            final durationMs = item['trackTimeMillis'] is int
+          final durationMs = item['trackTimeMillis'] is int
               ? item['trackTimeMillis'] as int
               : int.tryParse(item['trackTimeMillis']?.toString() ?? '');
 

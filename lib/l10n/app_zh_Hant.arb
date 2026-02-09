@@ -57,6 +57,7 @@
     "scraperMatchSources": "匹配來源",
     "scraperSourceAtLeastOne": "請至少啟用一個來源",
     "scraperSongSources": "歌曲刮削來源",
+    "scraperSourceQQMusic": "QQ 音樂",
     "scraperArtistSources": "歌手刮削來源",
     "scraperLyricsSources": "歌詞刮削來源",
     "scraperSourceLrclib": "lrclib",

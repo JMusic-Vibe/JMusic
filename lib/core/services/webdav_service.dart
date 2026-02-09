@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:collection';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,10 +40,18 @@ class WebDavService {
       _prefs.webDavUrl,
       user: _prefs.webDavUser,
       password: _prefs.webDavPassword,
-      debug: true,
+      debug: false,
     );
     // Set root path if needed, usually just handled in list
   }
+
+  // Limit concurrent remote directory listing and processing
+  static const int _listConcurrency = 4;
+  static const int _processConcurrency = 4;
+
+  final _listPool = _AsyncPool(_listConcurrency);
+  final _processPool = _AsyncPool(_processConcurrency);
+  final _counterPool = _AsyncPool(1);
 
   Future<int> scanAndImport() async {
     _initClient();
@@ -55,39 +64,51 @@ class WebDavService {
 
     // Recursive helper
     Future<void> traverse(String path, int depth) async {
-       if (depth > 5) return; // Prevent too deep recursion
-       try {
-         final files = await _client!.readDir(path);
-         for (final file in files) {
-           final isDir = file.isDir ?? false;
-           if (isDir) {
-             var subPath = file.path;
-             if (subPath == null) continue;
-             if (!subPath.endsWith('/')) subPath += '/';
-             // Avoid infinite loop if server returns current dir
-             if (subPath == path) continue;
-             
-             await traverse(subPath, depth + 1);
-           } else {
-             final filename = file.name ?? '';
-             final ext = p.extension(filename).toLowerCase();
-             if (supportedExtensions.contains(ext)) {
-               // Found audio file
-               final fullPath = file.path; // WebDAV remote path
-               if (fullPath != null) {
-                  foundPaths.add(fullPath);
-                  await _processAndSaveSong(fullPath, file);
-                  count++;
-               }
-             }
-           }
-         }
-       } catch (e) {
-         print('Error reading dir $path: $e');
-       }
+      if (depth > 5) return; // Prevent too deep recursion
+      try {
+        final files = await _listPool.run(() => _client!.readDir(path));
+        final subDirs = <String>[];
+        for (final file in files) {
+          final isDir = file.isDir ?? false;
+          if (isDir) {
+            var subPath = file.path;
+            if (subPath == null) continue;
+            if (!subPath.endsWith('/')) subPath += '/';
+            // Avoid infinite loop if server returns current dir
+            if (subPath == path) continue;
+            subDirs.add(subPath);
+          } else {
+            final filename = file.name ?? '';
+            final ext = p.extension(filename).toLowerCase();
+            if (supportedExtensions.contains(ext)) {
+              final fullPath = file.path; // WebDAV remote path
+              if (fullPath != null) {
+                foundPaths.add(fullPath);
+                _processPool.run(() async {
+                  try {
+                    await _processAndSaveSong(fullPath, file);
+                  } catch (e) {
+                    print('Error processing $fullPath: $e');
+                  } finally {
+                    await _counterPool.run(() async {
+                      count++;
+                    });
+                  }
+                });
+              }
+            }
+          }
+        }
+        if (subDirs.isNotEmpty) {
+          await Future.wait(subDirs.map((dir) => traverse(dir, depth + 1)));
+        }
+      } catch (e) {
+        print('Error reading dir $path: $e');
+      }
     }
 
     await traverse(rootPath, 0);
+    await _processPool.drain();
 
     // Clean up erased files from DB
     // Only delete songs that are sourceType.webdav and NOT in foundPaths.
@@ -352,6 +373,40 @@ class WebDavService {
 
   void notifyCacheUpdate(String path) {
     _cacheUpdateController.add(path);
+  }
+}
+
+class _AsyncPool {
+  final int _max;
+  int _running = 0;
+  int _pending = 0;
+  final Queue<Completer<void>> _waiters = Queue<Completer<void>>();
+
+  _AsyncPool(this._max);
+
+  Future<T> run<T>(Future<T> Function() task) async {
+    _pending++;
+    if (_running >= _max) {
+      final gate = Completer<void>();
+      _waiters.addLast(gate);
+      await gate.future;
+    }
+    _running++;
+    try {
+      return await task();
+    } finally {
+      _running--;
+      _pending--;
+      if (_waiters.isNotEmpty) {
+        _waiters.removeFirst().complete();
+      }
+    }
+  }
+
+  Future<void> drain() async {
+    while (_pending > 0) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
   }
 }
 

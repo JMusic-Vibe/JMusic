@@ -223,22 +223,25 @@ class _SyncConfigCardState extends ConsumerState<_SyncConfigCard> {
     );
     
     try {
-        await ref.read(syncServiceProvider).syncAccount(widget.config, onProgress: (current, total, fileName) {
-          currentNotifier.value = current;
-          totalNotifier.value = total;
-          fileNameNotifier.value = fileName;
-        });
-        completedNotifier.value = true;
-        if (mounted) {
-            CapsuleToast.show(context, 'Sync completed');
-        }
+      final result = await ref.read(syncServiceProvider).syncAccount(widget.config, onProgress: (current, total, fileName) {
+        currentNotifier.value = current;
+        totalNotifier.value = total;
+        fileNameNotifier.value = fileName;
+      });
+      completedNotifier.value = true;
+      if (mounted) {
+        CapsuleToast.show(
+          context,
+          'Sync completed: scanned ${result.totalScanned}, added ${result.added}, updated ${result.updated}, removed ${result.removed}, failed ${result.failed}',
+        );
+      }
     } catch (e) {
-        completedNotifier.value = true;
-        if (mounted) {
-            CapsuleToast.show(context, 'Sync failed: $e');
-        }
+      completedNotifier.value = true;
+      if (mounted) {
+        CapsuleToast.show(context, 'Sync failed: $e');
+      }
     } finally {
-        if (mounted) setState(() => _isSyncing = false);
+      if (mounted) setState(() => _isSyncing = false);
     }
   }
 
