@@ -1120,22 +1120,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String autoScrapeLyricsSuccess(Object title) {
-    return '自動刮削成功：$title（僅歌詞）';
+    return '自動刮削成功：僅歌詞\n$title';
   }
 
   @override
   String autoScrapeLyricsFail(Object title) {
-    return '自動刮削失敗：$title（歌詞）';
+    return '自動刮削失敗：歌詞\n$title';
   }
 
   @override
   String autoScrapeFullSuccess(Object title) {
-    return '自動刮削成功：$title（資訊+歌詞）';
+    return '自動刮削成功：資訊+歌詞\n$title';
   }
 
   @override
   String autoScrapeFullFail(Object title) {
-    return '自動刮削失敗：$title（資訊+歌詞）';
+    return '自動刮削失敗：資訊+歌詞\n$title';
   }
 
   @override

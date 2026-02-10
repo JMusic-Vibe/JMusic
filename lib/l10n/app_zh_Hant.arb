@@ -48,7 +48,7 @@
     "clearLogs": "清空日誌",
     "clearLogsConfirm": "清空日誌？",
     "logsCleared": "日誌已清空",
-    "autoScrapeLyricsSuccess": "自動刮削成功：僅歌詞\n{title},
+    "autoScrapeLyricsSuccess": "自動刮削成功：僅歌詞\n{title}",
     "@autoScrapeLyricsSuccess": {
         "placeholders": { "title": {} }
     },
