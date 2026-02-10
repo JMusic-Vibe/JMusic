@@ -55,7 +55,7 @@
 - 后端源码：`openlist-backend/`
 - 前端资源：由 `openlist-jmusic-lib/frontends/dist` 缓存
 - Android 以 AAR + 本地资源方式打包，资源位于 `android/app/src/main/assets/openlist/`
-- 桌面端运行时路径（Windows/macOS/Linux）：`~/Documents/j_music/openlist/`
+- 桌面端运行时路径（优先顺序）：优先使用应用可执行文件所在目录的 `openlist/` 子目录（开发或已安装时通常存在于应用目录）；若不存在，则回退到应用文档目录下的 `j_music/openlist/`（例如 Windows: `C:\Users\<user>\Documents\j_music\openlist\`，macOS/Linux: `~/Documents/j_music/openlist/`）。
 
 内嵌 WebView 仅在 Android 与 iOS 启用，桌面端将使用外部浏览器打开管理页面。
 
@@ -111,8 +111,8 @@ flutter run
 - Android OpenList 资源：`android/app/src/main/assets/openlist/dist`
 - iOS xcframework：`ios/Frameworks`
 - 桌面端运行时：
-  - Windows：`C:\Users\<user>\Documents\j_music\openlist\openlist.exe`
-  - macOS/Linux：`~/Documents/j_music/openlist/openlist`
+  - Windows：优先使用应用可执行文件所在目录的 `openlist\openlist.exe`（若存在），否则使用 `C:\Users\<user>\Documents\j_music\openlist\openlist.exe`
+  - macOS/Linux：优先使用应用可执行文件所在目录的 `openlist/openlist`（若存在），否则使用 `~/Documents/j_music/openlist/openlist`
 
 更多平台依赖请查看 `openlist-jmusic-lib/README.md`（MSYS2 UCRT64、gomobile 等）。
 

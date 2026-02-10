@@ -86,13 +86,9 @@ From the JMusic repo root:
   - xcframework output: ios/Frameworks
 
 - Windows (runtime)
-  - EXE runtime path:
-    C:\Users\<username>\Documents\j_music\openlist\openlist.exe
-  - Frontend runtime path:
-    C:\Users\<username>\Documents\j_music\openlist\public\dist
+  - EXE runtime path: 优先使用应用可执行文件所在目录的 `openlist\openlist.exe`（若存在），否则使用 `C:\Users\<username>\Documents\j_music\openlist\openlist.exe`
+  - Frontend runtime path: 优先使用应用可执行文件所在目录的 `openlist\public\dist`（若存在），否则使用 `C:\Users\<username>\Documents\j_music\openlist\public\dist`
 
 - Linux/macOS (runtime)
-  - Binary runtime path:
-    ~/Documents/j_music/openlist/openlist
-  - Frontend runtime path:
-    ~/Documents/j_music/openlist/public/dist
+  - Binary runtime path: 优先使用应用可执行文件所在目录的 `openlist/openlist`（若存在），否则使用 `~/Documents/j_music/openlist/openlist`
+  - Frontend runtime path: 优先使用应用可执行文件所在目录的 `openlist/public/dist`（若存在），否则使用 `~/Documents/j_music/openlist/public/dist`
