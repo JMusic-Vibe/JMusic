@@ -1,0 +1,184 @@
+name: Build and Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.3) - optional when triggering from a tag push'
+        required: false
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  FLUTTER_CHANNEL: stable
+
+jobs:
+  android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Build AAB
+        run: flutter build appbundle --release
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-artifacts
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+
+  linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Build Linux
+        run: flutter build linux --release
+      - name: Package Linux bundle
+        run: |
+          mkdir -p release
+          if [ -d build/linux/x64/release/bundle ]; then
+            cd build/linux/x64/release/bundle
+            zip -r "$GITHUB_WORKSPACE/release/jmusic-linux.zip" .
+          else
+            zip -r "$GITHUB_WORKSPACE/release/jmusic-linux.zip" build/linux/x64/release
+          fi
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-artifact
+          path: release/jmusic-linux.zip
+
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Build Windows
+        run: flutter build windows --release
+      - name: Package Windows bundle
+        run: |
+          powershell -Command "New-Item -ItemType Directory -Force -Path release | Out-Null"
+          powershell -Command "Compress-Archive -Path build\\windows\\runner\\Release\\* -DestinationPath release\\jmusic-windows.zip -Force"
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-artifact
+          path: release/jmusic-windows.zip
+
+  web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Build Web
+        run: flutter build web --release
+      - name: Package Web
+        run: |
+          mkdir -p release
+          cd build/web
+          zip -r "$GITHUB_WORKSPACE/release/jmusic-web.zip" .
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-artifact
+          path: release/jmusic-web.zip
+
+  create_release:
+    name: Create GitHub Release and upload assets
+    runs-on: ubuntu-latest
+    needs: [android, linux, windows, web]
+    steps:
+      - name: Download Android artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: android-artifacts
+          path: artifacts/android
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: linux-artifact
+          path: artifacts/linux
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-artifact
+          path: artifacts/windows
+      - name: Download Web artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: web-artifact
+          path: artifacts/web
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          release_name: Release ${{ github.event.inputs.tag || github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Android APK
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/android/build/app/outputs/flutter-apk/app-release.apk
+          asset_name: jmusic-android.apk
+          asset_content_type: application/vnd.android.package-archive
+      - name: Upload Android AAB
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/android/build/app/outputs/bundle/release/app-release.aab
+          asset_name: jmusic-android.aab
+          asset_content_type: application/octet-stream
+      - name: Upload Linux zip
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/linux/release/jmusic-linux.zip
+          asset_name: jmusic-linux.zip
+          asset_content_type: application/zip
+      - name: Upload Windows zip
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/windows/release/jmusic-windows.zip
+          asset_name: jmusic-windows.zip
+          asset_content_type: application/zip
+      - name: Upload Web zip
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/web/release/jmusic-web.zip
+          asset_name: jmusic-web.zip
+          asset_content_type: application/zip
