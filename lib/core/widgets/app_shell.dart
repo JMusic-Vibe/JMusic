@@ -64,6 +64,18 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
           final title = event.args?['title'] ?? '';
           final msg = l10n.cannotAccessSong(title);
           if (mounted) CapsuleToast.show(context, msg);
+        } else if (event.key == 'autoScrapeLyricsSuccess') {
+          final title = event.args?['title'] ?? '';
+          if (mounted) CapsuleToast.show(context, l10n.autoScrapeLyricsSuccess(title));
+        } else if (event.key == 'autoScrapeLyricsFail') {
+          final title = event.args?['title'] ?? '';
+          if (mounted) CapsuleToast.show(context, l10n.autoScrapeLyricsFail(title));
+        } else if (event.key == 'autoScrapeFullSuccess') {
+          final title = event.args?['title'] ?? '';
+          if (mounted) CapsuleToast.show(context, l10n.autoScrapeFullSuccess(title));
+        } else if (event.key == 'autoScrapeFullFail') {
+          final title = event.args?['title'] ?? '';
+          if (mounted) CapsuleToast.show(context, l10n.autoScrapeFullFail(title));
         } else {
           // Fallback: display raw key or title
           final msg = event.args?['message'] ?? event.key;

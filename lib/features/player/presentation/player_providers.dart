@@ -55,15 +55,10 @@ final currentMediaItemProvider = StreamProvider<MediaItem?>((ref) async* {
   final service = ref.watch(audioPlayerServiceProvider);
   // 等待AudioService初始化
   final handler = await service.audioHandlerAsync;
-  
-  // 从player的sequenceState获取，这样更可靠
-  await for (final sequenceState in service.player.sequenceStateStream) {
-    if (sequenceState != null && sequenceState.currentSource != null) {
-      final mediaItem = sequenceState.currentSource!.tag as MediaItem?;
-      yield mediaItem;
-    } else {
-      yield null;
-    }
+
+  // 使用 AudioHandler 的 mediaItem 流以确保封面等元数据能即时刷新
+  await for (final item in handler.mediaItem) {
+    yield item;
   }
 });
 

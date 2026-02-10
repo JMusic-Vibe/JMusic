@@ -191,6 +191,8 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
         title: song.title,
         artist: artistForQuery,
         album: song.album,
+        source: song.scrapedSource,
+        sourceId: song.scrapedSourceId,
       );
 
       if (lyricsRes?.text != null && lyricsRes!.text!.trim().isNotEmpty) {
@@ -210,6 +212,169 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
       print('Error scraping lyrics for $songId: $e');
       state = state.copyWith(failCount: state.failCount + 1);
     }
+  }
+
+  /// Quietly fetch lyrics for a single song in background without touching
+  /// the public `state` fields or triggering UI overlays. Returns true on
+  /// success (lyrics saved) or false on failure.
+  Future<bool> quietLyricsScrape(int songId) async {
+    final lyricsService = _ref.read(lyricsServiceProvider);
+    final scraperController = _ref.read(scraperControllerProvider);
+    final dbService = _ref.read(databaseServiceProvider);
+    final db = await dbService.db;
+
+    try {
+      final song = await db.songs.get(songId);
+      if (song == null) return false;
+
+      final usePrimary = _ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
+      final artistForQuery = usePrimary ? song.artist : (song.artists.isNotEmpty ? song.artists.join(' / ') : song.artist);
+
+      final lyricsRes = await lyricsService.fetchLyrics(
+        title: song.title,
+        artist: artistForQuery,
+        album: song.album,
+        source: song.scrapedSource,
+        sourceId: song.scrapedSourceId,
+      );
+
+      if (lyricsRes?.text != null && lyricsRes!.text!.trim().isNotEmpty) {
+        await scraperController.updateSongMetadata(
+          songId,
+          title: song.title,
+          artist: artistForQuery,
+          album: song.album,
+          lyrics: lyricsRes.text,
+          lyricsDurationMs: lyricsRes.durationMs,
+        );
+        return true;
+      }
+    } catch (e) {
+      print('Quiet lyrics scrape error for $songId: $e');
+    }
+    return false;
+  }
+
+  /// Quietly perform full metadata+lyrics scrape for a single song (background).
+  /// Returns true if metadata was updated, false otherwise.
+  Future<bool> quietFullScrape(int songId) async {
+    final mbService = _ref.read(musicBrainzServiceProvider);
+    final itunesService = _ref.read(itunesServiceProvider);
+    final qqService = _ref.read(qqMusicServiceProvider);
+    final lyricsService = _ref.read(lyricsServiceProvider);
+    final prefs = _ref.read(preferencesServiceProvider);
+    final useMb = prefs.scraperSourceMusicBrainz;
+    final useItunes = prefs.scraperSourceItunes;
+    final useQq = prefs.scraperSourceQQMusic;
+    final scraperController = _ref.read(scraperControllerProvider);
+    final dbService = _ref.read(databaseServiceProvider);
+    final db = await dbService.db;
+
+    try {
+      final song = await db.songs.get(songId);
+      if (song == null) return false;
+
+      final usePrimary = _ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
+      final artistForQuery = usePrimary ? song.artist : (song.artists.isNotEmpty ? song.artists.join(' / ') : song.artist);
+      final normalizedArtist = _normalizeQueryParam(artistForQuery);
+      final normalizedAlbum = _normalizeQueryParam(song.album);
+
+      ScrapeResult? bestResult;
+      String? coverUrl;
+      String? mbId;
+      int? year;
+
+      final mbResults = useMb
+        ? await mbService.searchRecording(song.title, normalizedArtist, normalizedAlbum)
+        : <MusicBrainzResult>[];
+      if (mbResults.isNotEmpty) {
+        final best = _pickMusicBrainzResult(mbResults, song.duration);
+        if (best != null) {
+          bestResult = ScrapeResult(
+            source: ScrapeSource.musicBrainz,
+            id: best.id,
+            title: best.title,
+            artist: best.artist,
+            album: best.album,
+            date: best.date,
+            releaseId: best.releaseId,
+            durationMs: best.durationMs,
+          );
+          if (best.releaseId != null) {
+            coverUrl = await mbService.getCoverArtUrl(best.releaseId!);
+          }
+          mbId = best.id;
+        }
+      }
+
+      if (bestResult == null && useItunes) {
+        final itResults = await itunesService.searchTrack(
+          song.title,
+          artist: normalizedArtist,
+          album: normalizedAlbum,
+        );
+        if (itResults.isNotEmpty) {
+          bestResult = _pickItunesResult(itResults, song.duration);
+          if (bestResult != null) {
+            coverUrl = bestResult.coverUrl;
+          }
+        }
+      }
+
+      if (bestResult == null && useQq) {
+        final qqResults = await qqService.searchTrack(
+          song.title,
+          artist: normalizedArtist,
+          album: normalizedAlbum,
+        );
+        if (qqResults.isNotEmpty) {
+          final pick = _pickItunesResult(qqResults, song.duration);
+          if (pick != null) {
+            bestResult = pick;
+            coverUrl = pick.coverUrl;
+          }
+        }
+      }
+
+      if (bestResult != null) {
+        if (bestResult.date != null) {
+          year = int.tryParse(bestResult.date!.split('-').first);
+        }
+
+        String? sourceStr;
+        if (bestResult.source == ScrapeSource.qqMusic) sourceStr = 'qqmusic';
+        else if (bestResult.source == ScrapeSource.itunes) sourceStr = 'itunes';
+        else if (bestResult.source == ScrapeSource.musicBrainz) sourceStr = 'musicbrainz';
+
+        final lyricsRes = prefs.scraperLyricsEnabled
+            ? await lyricsService.fetchLyrics(
+                title: bestResult.title,
+                artist: bestResult.artist,
+                album: bestResult.album,
+                source: sourceStr,
+                sourceId: bestResult.id,
+              )
+            : null;
+
+        await scraperController.updateSongMetadata(
+          songId,
+          title: bestResult.title,
+          artist: bestResult.artist,
+          album: bestResult.album,
+          mbId: mbId,
+          scrapedSource: sourceStr,
+          scrapedSourceId: bestResult.id,
+          coverUrl: coverUrl,
+          year: year,
+          lyrics: lyricsRes?.text,
+          lyricsDurationMs: lyricsRes?.durationMs,
+        );
+        return true;
+      }
+    } catch (e) {
+      print('Quiet full scrape error for $songId: $e');
+    }
+    return false;
   }
 
   void cancel() {
@@ -331,11 +496,18 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
             if (bestResult.date != null) {
               year = int.tryParse(bestResult.date!.split('-').first);
             }
+            String? sourceStr;
+            if (bestResult.source == ScrapeSource.qqMusic) sourceStr = 'qqmusic';
+            else if (bestResult.source == ScrapeSource.itunes) sourceStr = 'itunes';
+            else if (bestResult.source == ScrapeSource.musicBrainz) sourceStr = 'musicbrainz';
+
             final lyricsRes = lyricsEnabled
                 ? await lyricsService.fetchLyrics(
                     title: bestResult.title,
                     artist: bestResult.artist,
                     album: bestResult.album,
+                    source: sourceStr,
+                    sourceId: bestResult.id,
                   )
                 : null;
 
@@ -345,6 +517,8 @@ class BatchScraperNotifier extends StateNotifier<BatchScraperState> {
               artist: bestResult.artist,
               album: bestResult.album,
               mbId: mbId,
+              scrapedSource: sourceStr,
+              scrapedSourceId: bestResult.id,
               coverUrl: coverUrl,
               year: year,
               lyrics: lyricsRes?.text,

@@ -131,3 +131,8 @@ ios/Runner.xcworkspace/
 # test
 test/
 test/*
+
+# 忽略本地或 CI 产生的 Release 打包文件夹与临时 artifact
+/release/
+/artifacts/
+/.github/

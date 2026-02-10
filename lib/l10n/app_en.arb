@@ -50,11 +50,29 @@
     "logsCleared": "Logs cleared",
     "scrapeCompleteWithLyrics": "Scrape complete: album info updated, lyrics found",
     "scrapeCompleteNoLyrics": "Scrape complete: album info updated, lyrics not found",
+    "autoScrapeLyricsSuccess": "Auto scrape succeeded:(lyrics)\n{title}",
+    "@autoScrapeLyricsSuccess": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeLyricsFail": "Auto scrape failed:lyrics\n{title}",
+    "@autoScrapeLyricsFail": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeFullSuccess": "Auto scrape succeeded: info + lyrics\n{title}",
+    "@autoScrapeFullSuccess": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeFullFail": "Auto scrape failed: info + lyrics\n{title}",
+    "@autoScrapeFullFail": {
+        "placeholders": { "title": {} }
+    },
     "artistNameLabel": "Artist Name",
     "syncSettings": "Sync Settings",
     "serverSettings": "Server Settings",
     "defaultPage": "Default Page",
     "scraperSettings": "Scraper Settings",
+    "autoScrapeOnPlayTitle": "Auto scrape on play",
+    "autoScrapeOnPlayDesc": "When playback starts, run full metadata + lyrics scraping in background (off by default)",
     "usePrimaryArtistForScraper": "Use primary artist for scraping",
     "usePrimaryArtistForScraperDesc": "When enabled, the scraper will query using the primary artist only; otherwise it will include featured and collaborating artists.",
     "scraperMatchSources": "Match Sources",

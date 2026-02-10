@@ -129,6 +129,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Scrape complete: album info updated, lyrics not found';
 
   @override
+  String autoScrapeLyricsSuccess(Object title) {
+    return 'Auto scrape succeeded:(lyrics)\n$title';
+  }
+
+  @override
+  String autoScrapeLyricsFail(Object title) {
+    return 'Auto scrape failed:lyrics\n$title';
+  }
+
+  @override
+  String autoScrapeFullSuccess(Object title) {
+    return 'Auto scrape succeeded: info + lyrics\n$title';
+  }
+
+  @override
+  String autoScrapeFullFail(Object title) {
+    return 'Auto scrape failed: info + lyrics\n$title';
+  }
+
+  @override
   String get artistNameLabel => 'Artist Name';
 
   @override
@@ -142,6 +162,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scraperSettings => 'Scraper Settings';
+
+  @override
+  String get autoScrapeOnPlayTitle => 'Auto scrape on play';
+
+  @override
+  String get autoScrapeOnPlayDesc =>
+      'When playback starts, run full metadata + lyrics scraping in background (off by default)';
 
   @override
   String get usePrimaryArtistForScraper => 'Use primary artist for scraping';
@@ -160,62 +187,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scraperSongSources => 'Song scraping sources';
 
   @override
+  String get scraperSourceQQMusic => 'QQ Music';
+
+  @override
   String get scraperArtistSources => 'Artist scraping sources';
 
   @override
   String get scraperLyricsSources => 'Lyrics scraping sources';
-
-  @override
-  String get scraperTemplates => 'Scraper templates';
-
-  @override
-  String get scraperTemplateSong => 'Song scraper template';
-
-  @override
-  String get scraperTemplateSongDesc => 'Required functions and output format';
-
-  @override
-  String get scraperTemplateArtist => 'Artist scraper template';
-
-  @override
-  String get scraperTemplateArtistDesc => 'Artist search and image rules';
-
-  @override
-  String get scraperTemplateLyrics => 'Lyrics scraper template';
-
-  @override
-  String get scraperTemplateLyricsDesc => 'Lyrics output format and timing';
-
-  @override
-  String get scraperTemplateLoadFailed => 'Template loading failed';
-
-  @override
-  String get scraperScripts => 'Scraper scripts';
-
-  @override
-  String get importScraperScript => 'Import script';
-
-  @override
-  String get importScraperScriptHint =>
-      'Select a folder that contains manifest.json';
-
-  @override
-  String get scraperScriptImported => 'Script imported';
-
-  @override
-  String get scraperScriptImportFailed => 'Script import failed';
-
-  @override
-  String get scraperScriptMissingFunctions =>
-      'Script missing required functions';
-
-  @override
-  String get scraperScriptEmpty => 'No scripts found';
-
-  @override
-  String scraperScriptCapabilities(Object caps) {
-    return 'Capabilities: $caps';
-  }
 
   @override
   String get audioSettings => 'Audio & Playback';
@@ -531,9 +509,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scraperSourceItunes => 'iTunes';
 
   @override
-  String get scraperSourceQQMusic => 'QQ Music';
-
-  @override
   String scraperSourceLabel(Object source) {
     return 'Source: $source';
   }
@@ -549,6 +524,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreArtistAvatar => 'Restore Artist Avatar';
+
+  @override
+  String get batchScrapeArtistAvatars => 'Batch Scrape Artist Avatars';
+
+  @override
+  String get restoreArtistAvatars => 'Restore Artist Avatars';
+
+  @override
+  String restoreArtistAvatarsResult(Object count) {
+    return 'Restored $count artist avatars';
+  }
+
+  @override
+  String get restoreArtistAvatarsFailed => 'Failed to restore artist avatars';
 
   @override
   String get refresh => 'Refresh';
@@ -1026,3 +1015,4 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoStartOpenListDescription =>
       'When enabled, the app will automatically start the OpenList service on launch';
+}

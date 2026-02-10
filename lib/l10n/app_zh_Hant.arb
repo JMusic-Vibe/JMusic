@@ -48,10 +48,28 @@
     "clearLogs": "清空日誌",
     "clearLogsConfirm": "清空日誌？",
     "logsCleared": "日誌已清空",
+    "autoScrapeLyricsSuccess": "自動刮削成功：僅歌詞\n{title},
+    "@autoScrapeLyricsSuccess": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeLyricsFail": "自動刮削失敗：歌詞\n{title}",
+    "@autoScrapeLyricsFail": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeFullSuccess": "自動刮削成功：資訊+歌詞\n{title}",
+    "@autoScrapeFullSuccess": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeFullFail": "自動刮削失敗：資訊+歌詞\n{title}",
+    "@autoScrapeFullFail": {
+        "placeholders": { "title": {} }
+    },
     "syncSettings": "同步設定",
     "serverSettings": "服務器設定",
     "defaultPage": "默認啟動頁",
     "scraperSettings": "刮削設定",
+    "autoScrapeOnPlayTitle": "播放時自動刮削",
+    "autoScrapeOnPlayDesc": "播放開始時於後台執行完整歌曲資訊+歌詞刮削（默認關閉）",
     "usePrimaryArtistForScraper": "刮削僅使用主歌手",
     "usePrimaryArtistForScraperDesc": "啟用後，刮削將僅使用主歌手進行查詢；停用時會包含客席/合作歌手。",
     "scraperMatchSources": "匹配來源",

@@ -57,6 +57,7 @@ class PreferencesService {
   static const String keyScraperLyricsSourceQQMusic =
       'scraper_lyrics_source_qq_music';
   static const String keyScraperSourceQQMusic = 'scraper_source_qq_music';
+    static const String keyScraperAutoScrapeOnPlay = 'scraper_auto_scrape_on_play';
 
   // Audio playback
   static const String keyCrossfadeEnabled = 'crossfade_enabled';
@@ -114,6 +115,9 @@ class PreferencesService {
       _prefs.getBool(keyScraperLyricsSourceItunes) ?? true;
   bool get scraperLyricsSourceQQMusic =>
       _prefs.getBool(keyScraperLyricsSourceQQMusic) ?? true;
+
+  bool get scraperAutoScrapeOnPlay =>
+      _prefs.getBool(keyScraperAutoScrapeOnPlay) ?? false;
 
   // Audio playback
   bool getCrossfadeEnabled() => _prefs.getBool(keyCrossfadeEnabled) ?? false;
@@ -197,6 +201,9 @@ class PreferencesService {
       await _prefs.setBool(keyScraperLyricsSourceItunes, v);
   Future<void> setScraperLyricsSourceQQMusic(bool v) async =>
       await _prefs.setBool(keyScraperLyricsSourceQQMusic, v);
+
+  Future<void> setScraperAutoScrapeOnPlay(bool v) async =>
+      await _prefs.setBool(keyScraperAutoScrapeOnPlay, v);
 
   // Audio playback
   Future<void> setCrossfadeEnabled(bool enabled) async =>

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jmusic/l10n/app_localizations.dart';
 import 'package:jmusic/core/services/preferences_service.dart';
-import 'package:jmusic/core/widgets/capsule_toast.dart';
 
 class ScraperSettingsDialog extends ConsumerStatefulWidget {
   const ScraperSettingsDialog({super.key});
@@ -14,6 +13,7 @@ class ScraperSettingsDialog extends ConsumerStatefulWidget {
 
 class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
   late bool _usePrimary;
+  late bool _autoScrapeOnPlay;
   late bool _useSongMusicBrainz;
   late bool _useSongItunes;
   late bool _useSongQQMusic;
@@ -30,6 +30,7 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
   void initState() {
     super.initState();
     _usePrimary = ref.read(preferencesServiceProvider).scraperUsePrimaryArtist;
+    _autoScrapeOnPlay = ref.read(preferencesServiceProvider).scraperAutoScrapeOnPlay;
     _useSongMusicBrainz =
         ref.read(preferencesServiceProvider).scraperSourceMusicBrainz;
     _useSongItunes = ref.read(preferencesServiceProvider).scraperSourceItunes;
@@ -63,6 +64,17 @@ class _ScraperSettingsDialogState extends ConsumerState<ScraperSettingsDialog> {
           Card(
             child: Column(
               children: [
+                SwitchListTile(
+                  title: Text(l10n.autoScrapeOnPlayTitle),
+                  // subtitle: Text(l10n.autoScrapeOnPlayDesc),
+                  value: _autoScrapeOnPlay,
+                  onChanged: (v) async {
+                    setState(() => _autoScrapeOnPlay = v);
+                    await ref
+                        .read(preferencesServiceProvider)
+                        .setScraperAutoScrapeOnPlay(v);
+                  },
+                ),
                 SwitchListTile(
                   title: Text(l10n.usePrimaryArtistForScraper),
                   // subtitle: Text(l10n.usePrimaryArtistForScraperDesc),

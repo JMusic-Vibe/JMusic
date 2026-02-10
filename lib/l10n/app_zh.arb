@@ -50,11 +50,29 @@
     "logsCleared": "日志已清空",
     "scrapeCompleteWithLyrics": "刮削完成：专辑信息已更新，歌词已找到",
     "scrapeCompleteNoLyrics": "刮削完成：专辑信息已更新，未找到歌词",
+    "autoScrapeLyricsSuccess": "自动刮削成功：仅歌词\n{title}",
+    "@autoScrapeLyricsSuccess": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeLyricsFail": "自动刮削失败：歌词\n{title}",
+    "@autoScrapeLyricsFail": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeFullSuccess": "自动刮削成功：信息+歌词\n{title}",
+    "@autoScrapeFullSuccess": {
+        "placeholders": { "title": {} }
+    },
+    "autoScrapeFullFail": "自动刮削失败：信息+歌词\n{title}",
+    "@autoScrapeFullFail": {
+        "placeholders": { "title": {} }
+    },
     "artistNameLabel": "歌手名称",
     "syncSettings": "同步设置",
     "serverSettings": "服务器设置",
     "defaultPage": "默认启动页",
     "scraperSettings": "刮削设置",
+    "autoScrapeOnPlayTitle": "播放时自动刮削",
+    "autoScrapeOnPlayDesc": "播放开始时后台执行完整歌曲信息+歌词刮削（默认关闭）",
     "usePrimaryArtistForScraper": "刮削仅使用主歌手",
     "usePrimaryArtistForScraperDesc": "启用后，刮削将仅使用主歌手进行查询；禁用时会包含客座/合作歌手。",
     "scraperMatchSources": "匹配来源",

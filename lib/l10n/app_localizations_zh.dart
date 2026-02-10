@@ -127,6 +127,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scrapeCompleteNoLyrics => '刮削完成：专辑信息已更新，未找到歌词';
 
   @override
+  String autoScrapeLyricsSuccess(Object title) {
+    return '自动刮削成功：仅歌词\n$title';
+  }
+
+  @override
+  String autoScrapeLyricsFail(Object title) {
+    return '自动刮削失败：歌词\n$title';
+  }
+
+  @override
+  String autoScrapeFullSuccess(Object title) {
+    return '自动刮削成功：信息+歌词\n$title';
+  }
+
+  @override
+  String autoScrapeFullFail(Object title) {
+    return '自动刮削失败：信息+歌词\n$title';
+  }
+
+  @override
   String get artistNameLabel => '歌手名称';
 
   @override
@@ -140,6 +160,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scraperSettings => '刮削设置';
+
+  @override
+  String get autoScrapeOnPlayTitle => '播放时自动刮削';
+
+  @override
+  String get autoScrapeOnPlayDesc => '播放开始时后台执行完整歌曲信息+歌词刮削（默认关闭）';
 
   @override
   String get usePrimaryArtistForScraper => '刮削仅使用主歌手';
@@ -158,60 +184,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scraperSongSources => '歌曲刮削源';
 
   @override
+  String get scraperSourceQQMusic => 'QQ 音乐';
+
+  @override
   String get scraperArtistSources => '歌手刮削源';
 
   @override
   String get scraperLyricsSources => '歌词刮削源';
-
-  @override
-  String get scraperTemplates => '刮削模板';
-
-  @override
-  String get scraperTemplateSong => '歌曲刮削模板';
-
-  @override
-  String get scraperTemplateSongDesc => '必须实现的函数与输出格式';
-
-  @override
-  String get scraperTemplateArtist => '歌手刮削模板';
-
-  @override
-  String get scraperTemplateArtistDesc => '歌手搜索与图片规则';
-
-  @override
-  String get scraperTemplateLyrics => '歌词刮削模板';
-
-  @override
-  String get scraperTemplateLyricsDesc => '歌词输出与时间格式';
-
-  @override
-  String get scraperTemplateLoadFailed => '模板加载失败';
-
-  @override
-  String get scraperScripts => '刮削脚本';
-
-  @override
-  String get importScraperScript => '导入脚本';
-
-  @override
-  String get importScraperScriptHint => '选择包含 manifest.json 的脚本目录';
-
-  @override
-  String get scraperScriptImported => '脚本已导入';
-
-  @override
-  String get scraperScriptImportFailed => '脚本导入失败';
-
-  @override
-  String get scraperScriptMissingFunctions => '脚本缺少必要函数';
-
-  @override
-  String get scraperScriptEmpty => '暂无脚本';
-
-  @override
-  String scraperScriptCapabilities(Object caps) {
-    return '能力：$caps';
-  }
 
   @override
   String get audioSettings => '音频与播放';
@@ -533,6 +512,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreArtistAvatar => '恢复歌手头像';
+
+  @override
+  String get batchScrapeArtistAvatars => '批量刮削歌手头像';
+
+  @override
+  String get restoreArtistAvatars => '恢复歌手头像';
+
+  @override
+  String restoreArtistAvatarsResult(Object count) {
+    return '成功恢复 $count 个歌手头像';
+  }
+
+  @override
+  String get restoreArtistAvatarsFailed => '恢复歌手头像失败';
 
   @override
   String get refresh => '刷新';
@@ -1126,6 +1119,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get logsCleared => '日誌已清空';
 
   @override
+  String autoScrapeLyricsSuccess(Object title) {
+    return '自動刮削成功：$title（僅歌詞）';
+  }
+
+  @override
+  String autoScrapeLyricsFail(Object title) {
+    return '自動刮削失敗：$title（歌詞）';
+  }
+
+  @override
+  String autoScrapeFullSuccess(Object title) {
+    return '自動刮削成功：$title（資訊+歌詞）';
+  }
+
+  @override
+  String autoScrapeFullFail(Object title) {
+    return '自動刮削失敗：$title（資訊+歌詞）';
+  }
+
+  @override
   String get syncSettings => '同步設定';
 
   @override
@@ -1138,12 +1151,74 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get scraperSettings => '刮削設定';
 
   @override
+  String get autoScrapeOnPlayTitle => '播放時自動刮削';
+
+  @override
+  String get autoScrapeOnPlayDesc => '播放開始時於後台執行完整歌曲資訊+歌詞刮削（默認關閉）';
+
+  @override
   String get usePrimaryArtistForScraper => '刮削僅使用主歌手';
 
   @override
   String get usePrimaryArtistForScraperDesc =>
       '啟用後，刮削將僅使用主歌手進行查詢；停用時會包含客席/合作歌手。';
-eEnabledInfo => '已啟用淡入淡出,歌曲將平滑過渡';
+
+  @override
+  String get scraperMatchSources => '匹配來源';
+
+  @override
+  String get scraperSourceAtLeastOne => '請至少啟用一個來源';
+
+  @override
+  String get scraperSongSources => '歌曲刮削來源';
+
+  @override
+  String get scraperSourceQQMusic => 'QQ 音樂';
+
+  @override
+  String get scraperArtistSources => '歌手刮削來源';
+
+  @override
+  String get scraperLyricsSources => '歌詞刮削來源';
+
+  @override
+  String get audioSettings => '音頻與播放';
+
+  @override
+  String get playbackSettings => '播放設置';
+
+  @override
+  String get crossfadeEnabled => '啟用淡入淡出';
+
+  @override
+  String get crossfadeEnabledDesc => '歌曲切換時啟用淡入淡出效果，提供更流暢的聽覺體驗';
+
+  @override
+  String get crossfadeDuration => '淡入淡出時長';
+
+  @override
+  String get mute => '靜音';
+
+  @override
+  String get unmute => '取消靜音';
+
+  @override
+  String get loopingOn => '循環：開';
+
+  @override
+  String get loopingOff => '循環：關';
+
+  @override
+  String get scraperSourceLrclib => 'lrclib';
+
+  @override
+  String get scraperSourceRangotec => 'rangotec';
+
+  @override
+  String get scraperLyricsSourcesFixed => '歌詞刮削來源固定為 lrclib + rangotec';
+
+  @override
+  String get crossfadeEnabledInfo => '已啟用淡入淡出,歌曲將平滑過渡';
 
   @override
   String get crossfadeDisabledInfo => '淡入淡出已禁用,歌曲將直接切換';

@@ -63,6 +63,8 @@ class ScraperController {
     required String artist,
     required String album,
     String? mbId,
+    String? scrapedSource,
+    String? scrapedSourceId,
     String? coverUrl,
     int? year,
     String? lyrics,
@@ -103,6 +105,13 @@ class ScraperController {
         } else {
           print(
               '[ScraperController] No coverUrl provided. Existing path: ${song.coverPath}');
+        }
+        // 保存刮削来源信息（可用于后续直接按来源ID查找歌词等优化）
+        if (scrapedSource != null && scrapedSource.trim().isNotEmpty) {
+          song.scrapedSource = scrapedSource;
+        }
+        if (scrapedSourceId != null && scrapedSourceId.trim().isNotEmpty) {
+          song.scrapedSourceId = scrapedSourceId;
         }
 
         await isar.songs.put(song);

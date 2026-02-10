@@ -12,6 +12,8 @@ import 'package:jmusic/core/services/webdav_service.dart';
 import 'package:jmusic/features/sync/data/sync_config_repository.dart';
 import 'package:jmusic/features/sync/domain/entities/sync_config.dart';
 import 'package:jmusic/core/services/my_audio_handler.dart';
+import 'package:jmusic/features/scraper/presentation/batch_scraper_service.dart';
+import 'package:jmusic/core/services/toast_service.dart';
 import 'package:path_provider/path_provider.dart';
 
 // 全局AudioService初始化标 
@@ -28,12 +30,13 @@ final audioPlayerServiceProvider = Provider<AudioPlayerService>((ref) {
   final webDavService = ref.watch(webDavServiceProvider);
   final syncRepo = ref.watch(syncConfigRepositoryProvider);
   final audioHandler = ref.watch(myAudioHandlerProvider);
-  return AudioPlayerService(prefs, dbService, webDavService, syncRepo, audioHandler);
+  return AudioPlayerService(prefs, dbService, webDavService, syncRepo, audioHandler, ref);
 });
 
 class AudioPlayerService {
   late final AudioPlayer _player;
   final MyAudioHandler _audioHandler;
+  final Ref _ref;
   
   // Getter proxy
   AudioPlayer get player => _player;
@@ -63,6 +66,7 @@ class AudioPlayerService {
     this._webDavService,
     this._syncRepo,
     this._audioHandler,
+    this._ref,
   ) {
     _player = _audioHandler.player; 
     // Init immediately because handler is ready
@@ -162,6 +166,35 @@ class AudioPlayerService {
       if (index != null && index >= 0) {
         _savePlaybackState();
         _updateLastPlayed();
+        // 自动刮削：根据偏好和当前歌曲信息决定是否触发刮削
+        try {
+          final prefs = _prefs;
+          final auto = prefs.scraperAutoScrapeOnPlay;
+          if (auto) {
+            final queue = _audioHandler.queue.value;
+            if (index >= 0 && index < queue.length) {
+              final song = _audioHandler.getSongById(queue[index].id);
+              if (song != null) {
+                final hasCover = song.coverPath != null && song.coverPath!.trim().isNotEmpty;
+                final hasArtist = (song.artists.isNotEmpty && song.artists.any((a) => a.trim().isNotEmpty)) || (song.artist.trim().isNotEmpty && !song.artist.toLowerCase().contains('unknown'));
+                final hasAlbum = song.album.trim().isNotEmpty && !song.album.toLowerCase().contains('unknown');
+
+                final batchNotifier = _ref.read(batchScraperProvider.notifier);
+                // 如果已有歌词则不再触发
+                final hasLyrics = song.lyrics != null && song.lyrics!.trim().isNotEmpty;
+                if (!hasLyrics) {
+                  // Always run full metadata + lyrics scrape in background.
+                  batchNotifier.quietFullScrape(song.id).then((ok) {
+                    final key = ok ? 'autoScrapeFullSuccess' : 'autoScrapeFullFail';
+                    toastService.show(key, args: {'title': song.title});
+                  });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print('[AudioPlayerService] auto scrape error: $e');
+        }
       }
     });
     

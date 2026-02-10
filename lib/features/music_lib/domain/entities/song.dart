@@ -67,6 +67,9 @@ class Song {
   // 刮削信息
   String? musicBrainzId; // Recording MBID
   double? acousticFingerprintConfidence; // 识别置信度
+  // 刮削来源与来源ID（例如: qqmusic + songmid, musicbrainz + mbid）
+  String? scrapedSource;
+  String? scrapedSourceId;
   
   /// 创建副本并更新指定字段
   Song copyWith({
@@ -93,6 +96,8 @@ class Song {
     String? remoteId,
     String? remoteUrl,
     String? musicBrainzId,
+    String? scrapedSource,
+    String? scrapedSourceId,
     double? acousticFingerprintConfidence,
   }) {
     final copy = Song()
@@ -120,6 +125,8 @@ class Song {
       ..remoteId = remoteId ?? this.remoteId
       ..remoteUrl = remoteUrl ?? this.remoteUrl
       ..musicBrainzId = musicBrainzId ?? this.musicBrainzId
+      ..scrapedSource = scrapedSource ?? this.scrapedSource
+      ..scrapedSourceId = scrapedSourceId ?? this.scrapedSourceId
       ..acousticFingerprintConfidence = acousticFingerprintConfidence ?? this.acousticFingerprintConfidence;
     return copy;
   }

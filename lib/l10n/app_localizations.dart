@@ -327,6 +327,30 @@ abstract class AppLocalizations {
   /// **'刮削完成：专辑信息已更新，未找到歌词'**
   String get scrapeCompleteNoLyrics;
 
+  /// No description provided for @autoScrapeLyricsSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动刮削成功：仅歌词\n{title}'**
+  String autoScrapeLyricsSuccess(Object title);
+
+  /// No description provided for @autoScrapeLyricsFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动刮削失败：歌词\n{title}'**
+  String autoScrapeLyricsFail(Object title);
+
+  /// No description provided for @autoScrapeFullSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动刮削成功：信息+歌词\n{title}'**
+  String autoScrapeFullSuccess(Object title);
+
+  /// No description provided for @autoScrapeFullFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动刮削失败：信息+歌词\n{title}'**
+  String autoScrapeFullFail(Object title);
+
   /// No description provided for @artistNameLabel.
   ///
   /// In zh, this message translates to:
@@ -356,6 +380,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'刮削设置'**
   String get scraperSettings;
+
+  /// No description provided for @autoScrapeOnPlayTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放时自动刮削'**
+  String get autoScrapeOnPlayTitle;
+
+  /// No description provided for @autoScrapeOnPlayDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放开始时后台执行完整歌曲信息+歌词刮削（默认关闭）'**
+  String get autoScrapeOnPlayDesc;
 
   /// No description provided for @usePrimaryArtistForScraper.
   ///
@@ -387,6 +423,12 @@ abstract class AppLocalizations {
   /// **'歌曲刮削源'**
   String get scraperSongSources;
 
+  /// No description provided for @scraperSourceQQMusic.
+  ///
+  /// In zh, this message translates to:
+  /// **'QQ 音乐'**
+  String get scraperSourceQQMusic;
+
   /// No description provided for @scraperArtistSources.
   ///
   /// In zh, this message translates to:
@@ -398,102 +440,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'歌词刮削源'**
   String get scraperLyricsSources;
-
-  /// No description provided for @scraperTemplates.
-  ///
-  /// In zh, this message translates to:
-  /// **'刮削模板'**
-  String get scraperTemplates;
-
-  /// No description provided for @scraperTemplateSong.
-  ///
-  /// In zh, this message translates to:
-  /// **'歌曲刮削模板'**
-  String get scraperTemplateSong;
-
-  /// No description provided for @scraperTemplateSongDesc.
-  ///
-  /// In zh, this message translates to:
-  /// **'必须实现的函数与输出格式'**
-  String get scraperTemplateSongDesc;
-
-  /// No description provided for @scraperTemplateArtist.
-  ///
-  /// In zh, this message translates to:
-  /// **'歌手刮削模板'**
-  String get scraperTemplateArtist;
-
-  /// No description provided for @scraperTemplateArtistDesc.
-  ///
-  /// In zh, this message translates to:
-  /// **'歌手搜索与图片规则'**
-  String get scraperTemplateArtistDesc;
-
-  /// No description provided for @scraperTemplateLyrics.
-  ///
-  /// In zh, this message translates to:
-  /// **'歌词刮削模板'**
-  String get scraperTemplateLyrics;
-
-  /// No description provided for @scraperTemplateLyricsDesc.
-  ///
-  /// In zh, this message translates to:
-  /// **'歌词输出与时间格式'**
-  String get scraperTemplateLyricsDesc;
-
-  /// No description provided for @scraperTemplateLoadFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'模板加载失败'**
-  String get scraperTemplateLoadFailed;
-
-  /// No description provided for @scraperScripts.
-  ///
-  /// In zh, this message translates to:
-  /// **'刮削脚本'**
-  String get scraperScripts;
-
-  /// No description provided for @importScraperScript.
-  ///
-  /// In zh, this message translates to:
-  /// **'导入脚本'**
-  String get importScraperScript;
-
-  /// No description provided for @importScraperScriptHint.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择包含 manifest.json 的脚本目录'**
-  String get importScraperScriptHint;
-
-  /// No description provided for @scraperScriptImported.
-  ///
-  /// In zh, this message translates to:
-  /// **'脚本已导入'**
-  String get scraperScriptImported;
-
-  /// No description provided for @scraperScriptImportFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'脚本导入失败'**
-  String get scraperScriptImportFailed;
-
-  /// No description provided for @scraperScriptMissingFunctions.
-  ///
-  /// In zh, this message translates to:
-  /// **'脚本缺少必要函数'**
-  String get scraperScriptMissingFunctions;
-
-  /// No description provided for @scraperScriptEmpty.
-  ///
-  /// In zh, this message translates to:
-  /// **'暂无脚本'**
-  String get scraperScriptEmpty;
-
-  /// No description provided for @scraperScriptCapabilities.
-  ///
-  /// In zh, this message translates to:
-  /// **'能力：{caps}'**
-  String scraperScriptCapabilities(Object caps);
 
   /// No description provided for @audioSettings.
   ///
@@ -1059,12 +1005,6 @@ abstract class AppLocalizations {
   /// **'iTunes'**
   String get scraperSourceItunes;
 
-  /// No description provided for @scraperSourceQQMusic.
-  ///
-  /// In zh, this message translates to:
-  /// **'QQ 音乐'**
-  String get scraperSourceQQMusic;
-
   /// No description provided for @scraperSourceLabel.
   ///
   /// In zh, this message translates to:
@@ -1094,6 +1034,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'恢复歌手头像'**
   String get restoreArtistAvatar;
+
+  /// No description provided for @batchScrapeArtistAvatars.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量刮削歌手头像'**
+  String get batchScrapeArtistAvatars;
+
+  /// No description provided for @restoreArtistAvatars.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复歌手头像'**
+  String get restoreArtistAvatars;
+
+  /// No description provided for @restoreArtistAvatarsResult.
+  ///
+  /// In zh, this message translates to:
+  /// **'成功恢复 {count} 个歌手头像'**
+  String restoreArtistAvatarsResult(Object count);
+
+  /// No description provided for @restoreArtistAvatarsFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复歌手头像失败'**
+  String get restoreArtistAvatarsFailed;
 
   /// No description provided for @refresh.
   ///
@@ -1991,3 +1955,4 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       'an issue with the localizations generation tool. Please file an issue '
       'on GitHub with a reproducible sample app and the gen-l10n configuration '
       'that was used.');
+}

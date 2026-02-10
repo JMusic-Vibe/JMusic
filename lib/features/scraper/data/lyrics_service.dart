@@ -118,6 +118,8 @@ class LyricsService {
     required String title,
     required String artist,
     String? album,
+    String? source,
+    String? sourceId,
   }) async {
     final cleanTitle = _sanitizeQuery(title).toLowerCase();
     final cleanArtist = _sanitizeQuery(artist).toLowerCase();
@@ -126,6 +128,28 @@ class LyricsService {
     if (cleanTitle.isEmpty) return null;
 
     try {
+      // 优化: 如果 caller 提供了明确的来源和 id（例如 QQ 音乐的 songmid），且用户启用了 QQ 歌词源，
+      // 直接通过 id 获取歌词以避免重复搜索。仅对 QQ 生效，不影响其他来源。
+      if (source != null && sourceId != null && source == 'qqmusic' && prefs.scraperLyricsSourceQQMusic) {
+        try {
+          final qq = ref.read(qqLyricsServiceProvider);
+          final raw = await qq.fetchLyricBySongmid(sourceId);
+          if (raw != null) {
+            final normalized = _normalizeTimeBrackets(raw);
+            if (_hasMeaningfulLyrics(normalized)) {
+              final durationMs = _calcLrcDurationMs(normalized);
+              if (_isValidDuration(durationMs)) {
+                return LyricsResult(
+                    text: normalized,
+                    durationMs: durationMs,
+                    source: 'qqmusic');
+              }
+            }
+          }
+        } catch (e) {
+          print('QQ direct lyric fetch failed: $e');
+        }
+      }
       final useItunes = prefs.scraperLyricsSourceItunes;
       final useLrclib = prefs.scraperLyricsSourceLrclib;
       final useRangotec = prefs.scraperLyricsSourceRangotec;

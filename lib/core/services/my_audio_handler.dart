@@ -82,6 +82,15 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     _player.sequenceStateStream.listen((sequenceState) {
       if (sequenceState != null) {
         queue.add(_playlist);
+        // For cloud songs, currentIndex may lag; use sequenceState to update UI promptly.
+        final idx = sequenceState.currentIndex;
+        if (idx != null && idx >= 0 && idx < _playlist.length) {
+          final currentItem = _playlist[idx];
+          final currentId = mediaItem.value?.id;
+          if (currentId != currentItem.id) {
+            mediaItem.add(currentItem);
+          }
+        }
       }
     });
 
@@ -639,6 +648,19 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> updateSongMetadata(Song updatedSong) async {
     final index = _playlist.indexWhere((item) => item.id == updatedSong.id.toString());
     if (index != -1) {
+        final oldSong = _songCache[updatedSong.id.toString()];
+        final needsAudioSourceUpdate = oldSong == null
+          ? false
+          : oldSong.path != updatedSong.path ||
+            oldSong.sourceType != updatedSong.sourceType ||
+            oldSong.remoteUrl != updatedSong.remoteUrl;
+        final shouldUpdateMediaItem = oldSong == null
+          ? true
+          : oldSong.title != updatedSong.title ||
+            oldSong.artist != updatedSong.artist ||
+            oldSong.album != updatedSong.album ||
+            oldSong.coverPath != updatedSong.coverPath ||
+            oldSong.duration != updatedSong.duration;
       // 如果这是当前播放的歌曲，使用当前的播放器duration
       final overrideDuration = (index == _player.currentIndex) ? _player.duration : null;
       final newMediaItem = _createMediaItem(updatedSong, overrideDuration: overrideDuration);
@@ -650,7 +672,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       // 同步更新播放器内部的 AudioSource  tag，确 sequenceState 中的 tag 也被更新
       try {
         final concatenating = _player.audioSource as ConcatenatingAudioSource?;
-        if (concatenating != null && index >= 0 && index < concatenating.length) {
+        if (needsAudioSourceUpdate && concatenating != null && index >= 0 && index < concatenating.length) {
           // 保留当前播放位置以便恢复（如果需要）
           final currentIndex = _player.currentIndex;
           final currentPosition = _player.position;
@@ -672,8 +694,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         print('[MyAudioHandler] Failed to update audioSource tag: $e');
       }
 
-      // 如果是当前播放的歌曲，更新mediaItem（通知客户 UI 
-      if (_player.currentIndex == index) {
+      // 如果是当前播放的歌曲，且元数据有变化，更新mediaItem（通知客户端 UI）
+      if (_player.currentIndex == index && shouldUpdateMediaItem) {
         mediaItem.add(newMediaItem);
       }
     }

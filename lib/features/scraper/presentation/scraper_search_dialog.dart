@@ -154,12 +154,19 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
 
       // 预先尝试获取歌词，以便在确认窗口显示来源与时长
       final prefs = ref.read(preferencesServiceProvider);
-      final lyricsRes = widget.includeLyrics && prefs.scraperLyricsEnabled
+        String? resultSource;
+        if (result.source == ScrapeSource.qqMusic) resultSource = 'qqmusic';
+        else if (result.source == ScrapeSource.itunes) resultSource = 'itunes';
+        else if (result.source == ScrapeSource.musicBrainz) resultSource = 'musicbrainz';
+
+        final lyricsRes = widget.includeLyrics && prefs.scraperLyricsEnabled
           ? await ref.read(lyricsServiceProvider).fetchLyrics(
-                title: result.title,
-                artist: result.artist,
-                album: result.album,
-              )
+            title: result.title,
+            artist: result.artist,
+            album: result.album,
+            source: resultSource,
+            sourceId: result.id,
+            )
           : null;
 
       String? lyricsSourceLabel;
@@ -241,18 +248,25 @@ class _ScraperSearchDialogState extends ConsumerState<ScraperSearchDialog> {
       if (confirm == true && mounted) {
         // 使用已预取的歌词结果
         await ref.read(scraperControllerProvider).updateSongMetadata(
-              widget.song.id,
-              title: result.title,
-              artist: result.artist,
-              album: result.album,
-              mbId:
-                  result.source == ScrapeSource.musicBrainz ? result.id : null,
-              coverUrl: coverUrl,
-              year: int.tryParse(result.date?.split('-').first ?? ''),
-              lyrics: widget.includeLyrics ? lyricsRes?.text : null,
-              lyricsDurationMs:
-                  widget.includeLyrics ? lyricsRes?.durationMs : null,
-            );
+            widget.song.id,
+            title: result.title,
+            artist: result.artist,
+            album: result.album,
+            mbId: result.source == ScrapeSource.musicBrainz ? result.id : null,
+            scrapedSource: result.source == ScrapeSource.qqMusic
+              ? 'qqmusic'
+              : result.source == ScrapeSource.itunes
+                ? 'itunes'
+                : result.source == ScrapeSource.musicBrainz
+                  ? 'musicbrainz'
+                  : null,
+            scrapedSourceId: result.id,
+            coverUrl: coverUrl,
+            year: int.tryParse(result.date?.split('-').first ?? ''),
+            lyrics: widget.includeLyrics ? lyricsRes?.text : null,
+            lyricsDurationMs:
+              widget.includeLyrics ? lyricsRes?.durationMs : null,
+          );
 
         final lyricsFound = widget.includeLyrics &&
             lyricsRes?.text != null &&
